@@ -1,0 +1,27 @@
+{
+  "cli": { "version": ">= 18.0.1", "appVersionSource": "remote" },
+  "build": {
+    "base": {
+      "env": { "SENTRY_DISABLE_AUTO_UPLOAD": "true" }
+    },
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "env": { "EXPO_PUBLIC_API_MODE": "mock" }
+    },
+    "preview": {
+      "extends": "base",
+      "distribution": "internal",
+      "channel": "preview",
+      "env": { "EXPO_PUBLIC_API_MODE": "mock" }
+    },
+    "production": {
+      "extends": "base",
+      "autoIncrement": true,
+      "channel": "production"
+    }
+  },
+  "submit": { "production": {} }
+}

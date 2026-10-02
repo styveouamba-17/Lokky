@@ -1,0 +1,25 @@
+{
+  "name": "lokky",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.9.9"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "overrides": {
+    "react": "19.2.3",
+    "react-native-gesture-handler": "~2.32.0"
+  }
+}

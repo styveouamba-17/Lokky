@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "421092754029",
+    "project_id": "lokkyapp",
+    "storage_bucket": "lokkyapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:421092754029:android:383d99423514a907293564",
+        "android_client_info": {
+          "package_name": "com.nach17.lokky"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "421092754029-btb5eggsvqfsbgo8ii2da9cubli9s6ic.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nach17.lokky",
+            "certificate_hash": "8b1e918e33c40dec9593b2ae49cea81b1290ec11"
+          }
+        },
+        {
+          "client_id": "421092754029-qio486739a47igklo9dagdg02a33peku.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzhttK4Xi2T4pqfVu2PogYy1jG670qxAo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "421092754029-qio486739a47igklo9dagdg02a33peku.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "421092754029-gpu127go8mj7qm6464462fvtvmt301m7.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.nach17.lokky"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
