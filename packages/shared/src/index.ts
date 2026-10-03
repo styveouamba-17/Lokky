@@ -9,6 +9,8 @@ export * from './schemas/safety';
 export * from './schemas/auth';
 export * from './schemas/errors';
 export * from './api/request';
+export * from './api/query';
 export * from './api/routes';
 export * from './realtime';
 export * from './places';
+export * from './push';

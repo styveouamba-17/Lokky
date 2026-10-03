@@ -3,7 +3,8 @@ import { emailStartInputSchema } from '@lokky/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from '@/i18n';
 import { makeStyles } from '@/theme';
@@ -50,10 +51,7 @@ export function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <LokkyLogo variant="symbol" size={64} />
@@ -108,7 +106,25 @@ export function LoginScreen() {
           </View>
 
           <Text variant="caption" color="textMuted" align="center">
-            {t('login.legal')}
+            {t('login.legal.before')}
+            <Text
+              variant="caption"
+              color="action"
+              accessibilityRole="link"
+              onPress={() => router.push('/legal/terms')}
+            >
+              {t('login.legal.terms')}
+            </Text>
+            {t('login.legal.middle')}
+            <Text
+              variant="caption"
+              color="action"
+              accessibilityRole="link"
+              onPress={() => router.push('/legal/privacy')}
+            >
+              {t('login.legal.privacy')}
+            </Text>
+            {t('login.legal.after')}
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>

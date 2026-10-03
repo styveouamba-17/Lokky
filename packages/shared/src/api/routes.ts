@@ -41,6 +41,7 @@ import {
   meSchema,
   onboardingProfileSchema,
   updateMeInputSchema,
+  userProfileSchema,
   userSchema,
 } from '../schemas/user';
 import type { HttpMethod } from './request';
@@ -223,7 +224,16 @@ export const routes = {
     path: '/users/:id',
     auth: true,
     input: byId,
-    output: userSchema,
+    output: userProfileSchema,
+  }),
+  // Profil public : seulement les prochaines sorties que la personne organise (jamais celles
+  // où elle va, pour ne pas révéler où elle sera).
+  'users.activities': route({
+    method: 'GET',
+    path: '/users/:id/activities',
+    auth: true,
+    input: paginationQuerySchema.extend({ id: idSchema }),
+    output: paginatedSchema(activitySchema),
   }),
 
   // Messagerie

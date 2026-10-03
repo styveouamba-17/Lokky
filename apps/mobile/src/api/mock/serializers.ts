@@ -1,14 +1,19 @@
 import {
   getActivityStatus,
   haversineKm,
+  isChatReadOnly,
   LIMITS,
   type Activity,
+  type Conversation,
   type Coordinates,
+  type Message,
   type Me,
   type User,
   type UserPreview,
+  type UserProfile,
 } from '@lokky/shared';
-import type { MockActivity, MockDb, MockUser } from './db';
+import type { MockActivity, MockDb, MockDirect, MockMessage, MockUser } from './db';
+import { groupConversationId } from './ids';
 
 export const toUserPreview = (u: MockUser): UserPreview => ({
   id: u.id,
@@ -24,18 +29,25 @@ export const toPublicUser = (u: MockUser): User => ({
   trust: u.trust,
 });
 
-// Préférences et modération ne sont pas stockées par le client simulé : valeurs par défaut.
+export const DEFAULT_PREFERENCES: Me['preferences'] = {
+  language: 'fr',
+  theme: 'system',
+  notifications: { messages: true, activityUpdates: true, reminders: true },
+};
+
+// La modération n'est pas simulée : compte toujours actif.
 export const toMe = (u: MockUser): Me => ({
   ...toPublicUser(u),
   email: u.email,
   birthDate: u.birthDate,
-  preferences: {
-    language: 'fr',
-    theme: 'system',
-    notifications: { messages: true, activityUpdates: true, reminders: true },
-  },
+  preferences: u.preferences ?? DEFAULT_PREFERENCES,
   moderation: { status: 'active', suspendedUntil: null },
 });
+
+export const toUserProfile = (
+  u: MockUser,
+  relationship: UserProfile['relationship'],
+): UserProfile => ({ ...toPublicUser(u), relationship });
 
 function getUser(db: MockDb, id: string): MockUser {
   const found = db.users.get(id);
@@ -87,8 +99,90 @@ export function toActivity(
       isCreator,
       canJoin: upcoming && !isParticipant && !isFull,
       canLeave: upcoming && isParticipant && !isCreator,
-      canReview: status === 'past' && isParticipant && !isCreator,
+      canReview:
+        status === 'past' &&
+        isParticipant &&
+        !isCreator &&
+        !(db.reviewedBy.get(a.id)?.has(viewerId) ?? false),
+      canDeclareAttendance:
+        status === 'past' &&
+        isCreator &&
+        a.participantIds.length > 1 &&
+        !db.attendanceDeclared.has(a.id),
+      conversationId: isParticipant ? groupConversationId(a.id) : null,
     },
     createdAt: a.createdAt,
+  };
+}
+
+export const toMessage = (m: MockMessage, db: MockDb): Message => {
+  const sender = m.senderId ? db.users.get(m.senderId) : undefined;
+  return {
+    id: m.id,
+    clientId: m.clientId,
+    conversationId: m.conversationId,
+    sender: sender ? toUserPreview(sender) : null,
+    type: m.type,
+    body: m.body,
+    createdAt: m.createdAt,
+  };
+};
+
+// Non lus : messages des autres (hors messages système) après la dernière lecture.
+export function unreadCount(db: MockDb, conversationId: string, viewerId: string): number {
+  const readAt = db.readAt.get(conversationId) ?? '';
+  return (db.messages.get(conversationId) ?? []).filter(
+    (m) => m.type === 'text' && m.senderId !== viewerId && m.createdAt > readAt,
+  ).length;
+}
+
+export function toGroupConversation(
+  a: MockActivity,
+  db: MockDb,
+  viewerId: string,
+  now: Date,
+): Conversation {
+  const id = groupConversationId(a.id);
+  const last = (db.messages.get(id) ?? []).at(-1);
+  return {
+    id,
+    type: 'group',
+    activityId: a.id,
+    peer: null,
+    title: a.title,
+    avatarUrl: null,
+    lastMessage: last ? toMessage(last, db) : null,
+    unreadCount: unreadCount(db, id, viewerId),
+    isReadOnly: isChatReadOnly(
+      new Date(a.startsAt),
+      a.cancelledAt ? new Date(a.cancelledAt) : null,
+      now,
+    ),
+    updatedAt: last?.createdAt ?? a.createdAt,
+  };
+}
+
+// Conversation privée vue par le spectateur : titre et photo de l'autre personne. Fermée en
+// lecture seule dès que l'un a bloqué l'autre.
+export function toDirectConversation(
+  d: MockDirect,
+  db: MockDb,
+  viewerId: string,
+  isBlocked: boolean,
+): Conversation {
+  const peerId = d.userIds.find((id) => id !== viewerId) ?? d.userIds[0];
+  const peer = getUser(db, peerId);
+  const last = (db.messages.get(d.id) ?? []).at(-1);
+  return {
+    id: d.id,
+    type: 'direct',
+    activityId: null,
+    peer: toUserPreview(peer),
+    title: peer.firstName,
+    avatarUrl: peer.avatarUrl,
+    lastMessage: last ? toMessage(last, db) : null,
+    unreadCount: unreadCount(db, d.id, viewerId),
+    isReadOnly: isBlocked,
+    updatedAt: last?.createdAt ?? d.createdAt,
   };
 }

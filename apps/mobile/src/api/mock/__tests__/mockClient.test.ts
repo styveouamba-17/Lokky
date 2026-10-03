@@ -100,8 +100,8 @@ describe('client simulé : comportement général', () => {
   });
 
   it('signale clairement une route non simulée', async () => {
-    await expect(makeClient().request('me.delete', {})).rejects.toThrow(
-      /Route non simulée : me.delete/,
+    await expect(makeClient().request('activities.cancel', { id: 'a_foot' })).rejects.toThrow(
+      /Route non simulée : activities.cancel/,
     );
   });
 

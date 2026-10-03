@@ -5,3 +5,4 @@ dist
 coverage
 docs
 .superpowers
+apps/api/dist-load/

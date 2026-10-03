@@ -118,7 +118,13 @@ La slide 2 (« Viens, même si tu ne connais personne ») garde sa composition e
 
 ## 4. Couvertures de catégorie
 
-Couverture par défaut de chaque activité (les utilisateurs ne fournissent pas de photo). Scène complète, sujet dans la bande centrale. Ces prompts n'utilisent pas le complément « états vides ».
+Couverture de chaque activité (les utilisateurs ne fournissent pas de photo en v1). Scène complète, sujet dans la bande centrale. Ces prompts n'utilisent pas le complément « états vides ».
+
+**Variantes** : chaque catégorie peut avoir plusieurs images, pour que trois sorties sport à la suite n'aient pas la même couverture. Nomme-les `category-sport.png`, `category-sport-2.png`, `category-sport-3.png`… puis décommente (ou ajoute) leur ligne dans `CATEGORY_COVERS` (`index.ts`). Une activité garde toujours la même variante. Une seule image par catégorie suffit pour commencer.
+
+Tant qu'une catégorie n'a aucune image, ses cartes s'affichent **sans bandeau** (catégorie en puce, titre, date, lieu) : rien ne casse.
+
+### Variante 1
 
 | Fichier | Catégorie | Prompt |
 |---|---|---|
@@ -132,6 +138,22 @@ Couverture par défaut de chaque activité (les utilisateurs ne fournissent pas 
 | `category-culture.png` | Culture | A historic colonial-style building with arches in Dakar (Gorée or the Plateau), bright sky, bougainvillea, a few visitors walking in front. |
 | `category-walk.png` | Balade | The Corniche walkway in Dakar at sunset, friends walking and chatting, the ocean on one side, palm trees, the coastline curving into the distance. |
 
+### Variante 2
+
+Même cadrage, une autre scène de la même catégorie.
+
+| Fichier | Catégorie | Prompt |
+|---|---|---|
+| `category-sport-2.png` | Sport | A group of friends playing basketball on an outdoor city court in Dakar in the late afternoon, one player mid-jump toward the hoop, long warm shadows on the ground. |
+| `category-beach-2.png` | Plage | Friends sitting on colorful towels on the sand at Ngor at sunset, a small island visible across the water, a beach ball and a cooler between them. |
+| `category-cinema-2.png` | Ciné | A cozy small cinema room seen from the back rows, friends sharing a big bowl of popcorn, the glow of the screen lighting their faces. |
+| `category-study-2.png` | Études | Two students revising on a shaded bench on a university campus, open notebooks and highlighters, a flame tree in bloom above them. |
+| `category-music-2.png` | Musique et sorties | A rooftop evening in Dakar with friends dancing to a sabar drummer, string lights, the city lights in the background. |
+| `category-games-2.png` | Jeux | Friends around a low table on a terrace playing a lively game of cards, one laughing with a winning hand, attaya teapot on a small burner. |
+| `category-food-2.png` | Food et thé | A small street-food stall at dusk with dibi grilled meat and onions, friends waiting with smiles, smoke rising in warm light. |
+| `category-culture-2.png` | Culture | The African Renaissance Monument seen from a distance at golden hour, a small group of friends walking up the wide stairs. |
+| `category-walk-2.png` | Balade | Friends walking through a colorful Dakar market street, fabrics and fruit stalls on both sides, soft afternoon light, relaxed pace. |
+
 ## Récapitulatif
 
 | # | Fichier | Écran | Branché dans le code |
@@ -142,19 +164,19 @@ Couverture par défaut de chaque activité (les utilisateurs ne fournissent pas 
 | 4 | `empty-no-activity.png` | Découvrir | Oui |
 | 5 | `empty-offline.png` | Découvrir (erreur) | Oui |
 | 6 | `empty-upcoming.png` | Mes activités › À venir | Oui |
-| 7 | `empty-past.png` | Mes activités › Passées | Jalon 6 |
-| 8 | `empty-created.png` | Mes activités › Créées | Jalon 6 |
+| 7 | `empty-past.png` | Mes activités › Passées | Oui |
+| 8 | `empty-created.png` | Mes activités › Créées | Oui |
 | 9 | `empty-messages.png` | Messages | Oui |
-| 10 | `chat-first-message.png` | Chat de groupe | Jalon 5 |
-| 11 | `dm-locked.png` | Message privé | Jalon 7 |
+| 10 | `chat-first-message.png` | Chat de groupe | Oui |
+| 11 | `dm-locked.png` | Profil › « Écrire » impossible | Oui |
 | 12 | `activity-gone.png` | Détail d'activité | Oui |
 | 13 | `create-published.png` | Création | Jalon 4 |
-| 14 | `review-thanks.png` | Avis | Jalon 6 |
-| 15 | `empty-blocked.png` | Réglages › Bloqués | Jalon 7 |
+| 14 | `review-thanks.png` | Avis | Oui |
+| 15 | `empty-blocked.png` | Réglages › Bloqués | Oui |
 | 16 | `moderation-suspended.png` | Compte suspendu | Jalon 7 |
 | 17 | `moderation-banned.png` | Compte banni | Jalon 7 |
 | 18 | `error-generic.png` | Erreur inattendue | Jalon 8 |
-| 19 | `account-deleted.png` | Suppression de compte | Jalon 7 |
-| 20–28 | `category-*.png` (9) | Couvertures d'activité | Oui |
+| 19 | `account-deleted.png` | Suppression de compte | Oui |
+| 20–37 | `category-*.png` (9 × 2 variantes) | Couvertures d'activité | Oui (`CATEGORY_COVERS`) |
 
-**Priorité** si tu veux commencer petit : 1, 4, 9, puis les 9 catégories. Ce sont les images vues par tout le monde dès la première ouverture.
+**Priorité** si tu veux commencer petit : 1, 4, 9, puis les 9 catégories (variante 1), puis les variantes 2. Ce sont les images vues par tout le monde dès la première ouverture.

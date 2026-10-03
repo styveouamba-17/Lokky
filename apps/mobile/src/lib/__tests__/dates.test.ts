@@ -1,4 +1,4 @@
-import { formatActivityWhen } from '../dates';
+import { formatActivityWhen, formatDayLabel, formatMessageTime } from '../dates';
 
 // Mercredi 7 octobre 2026, 10h à Dakar. Jest tourne en UTC+14 (jest.global-setup.js).
 const NOW = new Date('2026-10-07T10:00:00Z');
@@ -28,5 +28,25 @@ describe('formatActivityWhen', () => {
   });
   it('« Hier » pour la veille', () => {
     expect(when('2026-10-06T19:00:00Z')).toBe('Hier · 19h');
+  });
+});
+
+describe('formatDayLabel', () => {
+  const now = new Date('2026-10-07T10:00:00Z'); // mercredi
+  it('aujourd’hui, hier, jour de la semaine, puis date', () => {
+    expect(formatDayLabel('2026-10-07T08:00:00Z', now)).toBe('Aujourd’hui');
+    expect(formatDayLabel('2026-10-06T23:00:00Z', now)).toBe('Hier');
+    expect(formatDayLabel('2026-10-03T12:00:00Z', now)).toBe('Samedi');
+    expect(formatDayLabel('2026-09-28T12:00:00Z', now)).toBe('28 sept.');
+  });
+});
+
+describe('formatMessageTime', () => {
+  const now = new Date('2026-10-07T10:00:00Z');
+  it('heure du jour, hier, jour abrégé, puis date', () => {
+    expect(formatMessageTime('2026-10-07T09:05:00Z', now)).toBe('9h05');
+    expect(formatMessageTime('2026-10-06T09:05:00Z', now)).toBe('Hier');
+    expect(formatMessageTime('2026-10-03T09:05:00Z', now)).toBe('Sam.');
+    expect(formatMessageTime('2026-09-20T09:05:00Z', now)).toBe('20 sept.');
   });
 });

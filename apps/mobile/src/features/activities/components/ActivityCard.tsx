@@ -5,14 +5,13 @@ import { NEIGHBORHOODS, type Activity } from '@lokky/shared';
 import { router } from 'expo-router';
 import { View } from 'react-native';
 import { useTranslation } from '@/i18n';
-import { formatActivityWhen, formatDistance } from '@/lib';
+import { formatActivityWhen, formatDistance, isTonight, isTrustedCreator } from '@/lib';
 import { makeStyles } from '@/theme';
 import { AvatarStack, Badge, Card, Text } from '@/ui';
-import { isTrustedCreator } from '../trust';
-import { ActivityCover } from './ActivityCover';
+import { ActivityCover, CategoryTag } from './ActivityCover';
 import { CostBadge } from './CostBadge';
 
-const COVER_HEIGHT = 120;
+const COVER_HEIGHT = 128;
 
 export function placeLabel(activity: Activity) {
   const { neighborhood, name } = activity.location;
@@ -20,7 +19,8 @@ export function placeLabel(activity: Activity) {
   return activity.distanceKm === null ? place : `${place} · ${formatDistance(activity.distanceKm)}`;
 }
 
-// Carte du fil Découvrir (spec §6.2) : couverture, titre, quand, où, coût, qui vient.
+// Carte du fil Découvrir (spec §6.2) : couverture peinte (si la catégorie en a une), catégorie,
+// titre, quand, où, coût, qui vient.
 // preview : aperçu non cliquable (récapitulatif de création).
 export function ActivityCard({
   activity,
@@ -49,15 +49,17 @@ export function ActivityCard({
           : () => router.push({ pathname: '/activity/[id]', params: { id: activity.id } })
       }
     >
-      <ActivityCover category={activity.category} height={COVER_HEIGHT}>
-        {when.startsWith('Ce soir') ? (
-          <Badge label={t('discover.filters.tonight')} tone="accent" icon={SunHorizon} />
-        ) : null}
-        {activity.viewerState.isParticipant ? (
-          <Badge label={t('activity.going')} tone="neutral" icon={CheckCircle} />
-        ) : null}
-      </ActivityCover>
+      <ActivityCover activity={activity} height={COVER_HEIGHT} />
       <View style={styles.body}>
+        <View style={styles.tags}>
+          <CategoryTag category={activity.category} />
+          {isTonight(activity.startsAt, now) ? (
+            <Badge label={t('discover.filters.tonight')} tone="accent" icon={SunHorizon} />
+          ) : null}
+          {activity.viewerState.isParticipant ? (
+            <Badge label={t('activity.going')} tone="trust" icon={CheckCircle} />
+          ) : null}
+        </View>
         <Text variant="heading" numberOfLines={2}>
           {activity.title}
         </Text>
@@ -95,6 +97,7 @@ export function ActivityCard({
 const useStyles = makeStyles((t) => ({
   card: { padding: 0, overflow: 'hidden' },
   body: { padding: t.spacing.lg, gap: t.spacing.xs },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: t.spacing.xs, marginBottom: t.spacing.xs },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

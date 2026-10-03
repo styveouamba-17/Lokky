@@ -1,5 +1,6 @@
 import type { Activity, UserPreview } from '@lokky/shared';
-import { ScrollView, View } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useTranslation } from '@/i18n';
 import { makeStyles } from '@/theme';
 import { Avatar, Text } from '@/ui';
@@ -35,14 +36,26 @@ export function Participants({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.row}
       >
-        {people.map((p) => (
-          <View key={p.id} style={styles.person}>
-            <Avatar name={p.firstName} uri={p.avatarUrl} size="md" />
-            <Text variant="caption" numberOfLines={1}>
-              {p.id === viewerId ? t('activity.you') : p.firstName}
-            </Text>
-          </View>
-        ))}
+        {people.map((p) => {
+          const self = p.id === viewerId;
+          return (
+            <Pressable
+              key={p.id}
+              accessibilityRole={self ? undefined : 'button'}
+              accessibilityLabel={
+                self ? t('activity.you') : t('profile.openProfile', { name: p.firstName })
+              }
+              disabled={self}
+              onPress={() => router.push({ pathname: '/user/[id]', params: { id: p.id } })}
+              style={({ pressed }) => [styles.person, pressed && styles.pressed]}
+            >
+              <Avatar name={p.firstName} uri={p.avatarUrl} size="md" />
+              <Text variant="caption" numberOfLines={1}>
+                {self ? t('activity.you') : p.firstName}
+              </Text>
+            </Pressable>
+          );
+        })}
       </ScrollView>
       {activity.firstTimerCount > 0 ? (
         <Text variant="caption" color="secondary">
@@ -57,4 +70,5 @@ const useStyles = makeStyles((t) => ({
   section: { gap: t.spacing.md },
   row: { gap: t.spacing.lg },
   person: { alignItems: 'center', gap: t.spacing.xs, width: 56 },
+  pressed: { opacity: 0.6 },
 }));

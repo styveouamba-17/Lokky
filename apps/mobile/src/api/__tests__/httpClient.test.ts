@@ -24,6 +24,7 @@ const user = {
     creatorRating: null,
     creatorReviewCount: 0,
   },
+  relationship: { canMessage: false, isBlocked: false },
 };
 
 function setup(fetchImpl: (url: string, init: RequestInit) => Promise<Response>) {

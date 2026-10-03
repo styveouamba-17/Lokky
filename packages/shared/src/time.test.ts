@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { ageInYears, getActivityStatus, getWhenRange, isAdult, startOfDakarDay } from './time';
+import {
+  ageInYears,
+  getActivityStatus,
+  getWhenRange,
+  isAdult,
+  isChatReadOnly,
+  startOfDakarDay,
+} from './time';
 
 // 2026-10-07 est un mercredi.
 const WED_10H = new Date('2026-10-07T10:00:00Z');
@@ -74,5 +81,20 @@ describe('âge', () => {
   });
   it('rejette une date mal formée', () => {
     expect(() => ageInYears('07/10/2008', WED_10H)).toThrow();
+  });
+});
+
+describe('isChatReadOnly', () => {
+  const start = new Date('2026-10-01T18:00:00Z');
+  it('reste ouvert pendant 7 jours après la fin de la sortie (début + 3 h)', () => {
+    expect(isChatReadOnly(start, null, new Date('2026-10-08T20:59:00Z'))).toBe(false);
+  });
+  it('passe en lecture seule ensuite', () => {
+    expect(isChatReadOnly(start, null, new Date('2026-10-08T21:00:00Z'))).toBe(true);
+  });
+  it('une sortie annulée garde son chat 7 jours après l’annulation', () => {
+    const cancelled = new Date('2026-09-20T10:00:00Z');
+    expect(isChatReadOnly(start, cancelled, new Date('2026-09-26T10:00:00Z'))).toBe(false);
+    expect(isChatReadOnly(start, cancelled, new Date('2026-09-27T10:00:00Z'))).toBe(true);
   });
 });

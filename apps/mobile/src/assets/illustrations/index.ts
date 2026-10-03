@@ -1,3 +1,4 @@
+import type { ActivityCategory } from '@lokky/shared';
 import type { ImageSourcePropType } from 'react-native';
 
 // Illustrations peintes de Lokky (spec §3). Liste complète, scènes et formats :
@@ -28,16 +29,6 @@ export const ILLUSTRATION_NAMES = [
   'moderation-banned',
   'error-generic',
   'account-deleted',
-  // Couvertures de catégorie
-  'category-sport',
-  'category-beach',
-  'category-cinema',
-  'category-study',
-  'category-music',
-  'category-games',
-  'category-food',
-  'category-culture',
-  'category-walk',
 ] as const;
 
 export type IllustrationName = (typeof ILLUSTRATION_NAMES)[number];
@@ -47,28 +38,62 @@ export const ILLUSTRATIONS: Partial<Record<IllustrationName, ImageSourcePropType
   'welcome-together': require('../../../assets/welcome-together.png'),
   // 'onboarding-permissions': require('./onboarding-permissions.png'),
   'empty-no-activity': require('../../../assets/empty-no-activity.png'),
-  // 'empty-offline': require('./empty-offline.png'),
+  'empty-offline': require('../../../assets/empty-offline.png'),
+  'empty-past': require('../../../assets/empty-past.png'),
   'empty-upcoming': require('../../../assets/empty-upcoming.png'),
-  // 'empty-past': require('./empty-past.png'),
   'empty-created': require('../../../assets/empty-created.png'),
   'empty-messages': require('../../../assets/empty-messages.png'),
   'chat-first-message': require('../../../assets/chat-first-message.png'),
-  // 'dm-locked': require('./dm-locked.png'),
+  'dm-locked': require('../../../assets/dm-locked.png'),
   // 'activity-gone': require('./activity-gone.png'),
-  // 'create-published': require('./create-published.png'),
-  // 'review-thanks': require('./review-thanks.png'),
-  // 'empty-blocked': require('./empty-blocked.png'),
+  'create-published': require('../../../assets/create-published.png'),
+  'review-thanks': require('../../../assets/review-thanks.png'),
+  'empty-blocked': require('../../../assets/empty-blocked.png'),
   // 'moderation-suspended': require('./moderation-suspended.png'),
   // 'moderation-banned': require('./moderation-banned.png'),
   // 'error-generic': require('./error-generic.png'),
   // 'account-deleted': require('./account-deleted.png'),
-  // 'category-sport': require('./category-sport.png'),
-  // 'category-beach': require('./category-beach.png'),
-  // 'category-cinema': require('./category-cinema.png'),
-  // 'category-study': require('./category-study.png'),
-  // 'category-music': require('./category-music.png'),
-  // 'category-games': require('./category-games.png'),
-  // 'category-food': require('./category-food.png'),
-  // 'category-culture': require('./category-culture.png'),
-  // 'category-walk': require('./category-walk.png'),
+};
+
+// Couvertures d'activité : une ou plusieurs variantes par catégorie (docs/illustrations.md).
+// Une activité garde toujours la même variante. Tant qu'une catégorie n'a aucune image, ses
+// cartes s'affichent sans bandeau. Pour en ajouter : déposer le fichier, décommenter sa ligne
+// (ou en ajouter une : category-sport-3.png…).
+export const CATEGORY_COVERS: Record<ActivityCategory, ImageSourcePropType[]> = {
+  sport: [
+    // require('./category-sport.png'),
+    // require('./category-sport-2.png'),
+  ],
+  beach: [
+    // require('./category-beach.png'),
+    // require('./category-beach-2.png'),
+  ],
+  cinema: [
+    // require('./category-cinema.png'),
+    // require('./category-cinema-2.png'),
+  ],
+  study: [
+    // require('./category-study.png'),
+    // require('./category-study-2.png'),
+  ],
+  music: [
+    // require('./category-music.png'),
+    // require('./category-music-2.png'),
+  ],
+  games: [
+    // require('./category-games.png'),
+    // require('./category-games-2.png'),
+  ],
+  food: [
+    // require('./category-food.png'),
+    // require('./category-food-2.png'),
+  ],
+  culture: [
+    // require('./category-culture.png'),
+    // require('./category-culture-2.png'),
+  ],
+  walk: [
+    // require('./category-walk.png'),
+    // require('./category-walk-2.png'),
+  ],
 };

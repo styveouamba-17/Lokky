@@ -125,6 +125,8 @@ export function previewActivity(input: CreateActivityInput, me: Me, now: Date): 
       canJoin: false,
       canLeave: false,
       canReview: false,
+      canDeclareAttendance: false,
+      conversationId: null,
     },
     createdAt: now.toISOString(),
   };

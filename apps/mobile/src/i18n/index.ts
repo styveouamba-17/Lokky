@@ -1,9 +1,11 @@
 import { createInstance } from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import en from './en.json';
 import fr from './fr.json';
 
-// Français d'abord (spec §4.2). L'anglais réutilisera les mêmes clés dans en.json.
-export const resources = { fr: { translation: fr } } as const;
+// Français et anglais (mêmes clés : vérifié par un test). Le français reste la langue de
+// départ et de repli ; la langue choisie (préférences) est appliquée par app/_layout.tsx.
+export const resources = { fr: { translation: fr }, en: { translation: en } } as const;
 
 const i18n = createInstance();
 void i18n.use(initReactI18next).init({

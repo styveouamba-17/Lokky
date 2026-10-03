@@ -9,3 +9,7 @@ android/
 .env*.local
 .DS_Store
 .superpowers/
+
+# Backend : secrets locaux
+apps/api/.env
+apps/api/dist-load/

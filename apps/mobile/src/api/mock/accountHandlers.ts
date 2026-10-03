@@ -43,6 +43,9 @@ export const accountHandlers: MockHandlers = {
   // Le client simulé accepte tout jeton Apple ou Google : aucun backend pour les vérifier.
   'auth.oauth': (_input, ctx) => signedIn(ctx),
 
+  // Aucun push n'est envoyé en mode mock : le jeton est simplement accepté.
+  'me.registerPushToken': () => ({ ok: true }),
+
   'me.get': (_input, ctx) => {
     if (!ctx.db.viewerOnboarded) {
       throw new ApiError('onboarding_required', 'Profil à compléter.', 403);

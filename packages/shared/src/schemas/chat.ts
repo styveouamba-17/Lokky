@@ -18,6 +18,8 @@ export const conversationSchema = z
     id: idSchema,
     type: z.enum(['group', 'direct']),
     activityId: idSchema.nullable(),
+    // Conversation privée : l'autre personne (null pour un groupe).
+    peer: userPreviewSchema.nullable(),
     title: z.string().min(1),
     avatarUrl: z.url().nullable(),
     lastMessage: messageSchema.nullable(),
@@ -27,6 +29,9 @@ export const conversationSchema = z
   })
   .refine((c) => (c.type === 'group') === (c.activityId !== null), {
     message: 'errors.group_requires_activity',
+  })
+  .refine((c) => (c.type === 'direct') === (c.peer !== null), {
+    message: 'errors.direct_requires_peer',
   });
 
 export const sendMessageInputSchema = z.object({

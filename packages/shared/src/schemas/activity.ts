@@ -35,7 +35,11 @@ export const activityViewerStateSchema = z.object({
   isCreator: z.boolean(),
   canJoin: z.boolean(),
   canLeave: z.boolean(),
-  canReview: z.boolean(),
+  canReview: z.boolean(), // participant, sortie passée, pas encore d'avis
+  // Créateur d'une sortie passée qui n'a pas encore indiqué qui est venu.
+  canDeclareAttendance: z.boolean(),
+  // Chat du groupe : null tant que le spectateur ne participe pas (spec §6.3, règle 1).
+  conversationId: idSchema.nullable(),
 });
 
 const titleSchema = z.string().trim().min(L.titleMin).max(L.titleMax);
@@ -122,3 +126,5 @@ export type ActivityViewerState = z.infer<typeof activityViewerStateSchema>;
 export type Activity = z.infer<typeof activitySchema>;
 export type ActivityListQuery = z.input<typeof activityListQuerySchema>;
 export type CreateActivityInput = z.input<typeof createActivityInputSchema>;
+export type MyActivitiesQuery = z.input<typeof myActivitiesQuerySchema>;
+export type MyActivitiesScope = MyActivitiesQuery['scope'];

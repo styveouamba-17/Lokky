@@ -1,4 +1,9 @@
-import { ACTIVITY_ONGOING_HOURS, LIMITS, type ActivityStatus } from './constants';
+import {
+  ACTIVITY_ONGOING_HOURS,
+  CHAT_READONLY_AFTER_DAYS,
+  LIMITS,
+  type ActivityStatus,
+} from './constants';
 
 // Africa/Dakar est à UTC+0 toute l'année (pas d'heure d'été) :
 // tous les calculs de « jour » utilisent les accesseurs UTC.
@@ -36,6 +41,15 @@ export function getActivityStatus(
   if (t < start) return 'upcoming';
   if (t < start + ACTIVITY_ONGOING_HOURS * HOUR_MS) return 'ongoing';
   return 'past';
+}
+
+// Le chat reste actif 7 jours après la fin de la sortie (ou son annulation), puis passe en
+// lecture seule (spec §6.3, règle 2).
+export function isChatReadOnly(startsAt: Date, cancelledAt: Date | null, now: Date): boolean {
+  const end = cancelledAt
+    ? cancelledAt.getTime()
+    : startsAt.getTime() + ACTIVITY_ONGOING_HOURS * HOUR_MS;
+  return now.getTime() >= end + CHAT_READONLY_AFTER_DAYS * DAY_MS;
 }
 
 export function ageInYears(birthDate: string, now: Date): number {

@@ -4,7 +4,8 @@ import { router } from 'expo-router';
 import { X } from 'phosphor-react-native/src/icons/X';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from '@/i18n';
 import { useSessionStore } from '@/state/session';
@@ -120,10 +121,7 @@ export function CreateActivityScreen() {
       <View style={styles.progress}>
         <Stepper step={step + 1} total={STEP_COUNT} />
       </View>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <KeyboardAvoidingView style={styles.flex} behavior="padding">
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {step === 0 ? <StepWhat control={control} errors={formState.errors} /> : null}
           {step === 1 ? <StepWhen control={control} now={now} /> : null}

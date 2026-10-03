@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { Modal, Pressable, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from '@/i18n';
 import { makeStyles } from '@/theme';
 import { Text } from './Text';
 
@@ -17,6 +18,7 @@ export function Sheet({
 }) {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   return (
     <Modal
       visible={visible}
@@ -26,10 +28,12 @@ export function Sheet({
       statusBarTranslucent
       navigationBarTranslucent
     >
-      <View style={styles.root}>
+      {/* Le Modal est plein écran (bord à bord) : la fenêtre ne se redimensionne pas quand le
+          clavier s'ouvre. La feuille remonte d'elle-même pour garder le champ visible. */}
+      <KeyboardAvoidingView behavior="padding" style={styles.root}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Fermer"
+          accessibilityLabel={t('common.close')}
           onPress={onClose}
           style={styles.backdrop}
         />
@@ -47,7 +51,7 @@ export function Sheet({
           ) : null}
           {children}
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -63,6 +67,7 @@ const useStyles = makeStyles((t) => ({
     backgroundColor: t.colors.overlay,
   },
   sheet: {
+    maxHeight: '92%',
     backgroundColor: t.colors.surface,
     borderTopLeftRadius: t.radius.lg,
     borderTopRightRadius: t.radius.lg,

@@ -28,6 +28,16 @@ export const userSchema = userPreviewSchema.extend({
   trust: trustStatsSchema,
 });
 
+// Profil public vu par quelqu'un d'autre : ce que le spectateur peut faire avec cette personne.
+export const userProfileSchema = userSchema.extend({
+  relationship: z.object({
+    // Messages privés seulement après une sortie partagée (spec §6.3, règle 4).
+    canMessage: z.boolean(),
+    // Le spectateur a bloqué cette personne (spec §6.3, règle 6).
+    isBlocked: z.boolean(),
+  }),
+});
+
 export const preferencesSchema = z.object({
   language: z.enum(['fr', 'en']),
   theme: z.enum(['system', 'light', 'dark']),
@@ -89,6 +99,7 @@ export type ModerationStatus = z.infer<typeof moderationStatusSchema>;
 export type TrustStats = z.infer<typeof trustStatsSchema>;
 export type UserPreview = z.infer<typeof userPreviewSchema>;
 export type User = z.infer<typeof userSchema>;
+export type UserProfile = z.infer<typeof userProfileSchema>;
 export type Preferences = z.infer<typeof preferencesSchema>;
 export type Me = z.infer<typeof meSchema>;
 export type OnboardingProfile = z.infer<typeof onboardingProfileSchema>;

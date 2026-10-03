@@ -1,6 +1,7 @@
 import { ArrowLeft } from 'phosphor-react-native/src/icons/ArrowLeft';
 import type { ReactNode } from 'react';
 import { View } from 'react-native';
+import { useTranslation } from '@/i18n';
 import { makeStyles, useTheme } from '@/theme';
 import { IconButton } from './IconButton';
 import { Text } from './Text';
@@ -16,12 +17,13 @@ export function ScreenHeader({
 }) {
   const styles = useStyles();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={styles.row}>
       <View style={styles.side}>
         {onBack ? (
           <IconButton
-            accessibilityLabel="Retour"
+            accessibilityLabel={t('common.back')}
             onPress={onBack}
             icon={<ArrowLeft size={24} color={colors.text} weight="bold" />}
           />

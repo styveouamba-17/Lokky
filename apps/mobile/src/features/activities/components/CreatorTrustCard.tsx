@@ -1,14 +1,22 @@
 import { SealCheck } from 'phosphor-react-native/src/icons/SealCheck';
 import { Star } from 'phosphor-react-native/src/icons/Star';
 import type { Activity } from '@lokky/shared';
+import { router } from 'expo-router';
 import { View } from 'react-native';
 import { useTranslation } from '@/i18n';
 import { makeStyles, useTheme } from '@/theme';
 import { Avatar, Badge, Card, Text } from '@/ui';
-import { formatRate, isTrustedCreator } from '../trust';
+import { formatRate, isTrustedCreator } from '@/lib';
 
 // Réduire la gêne de venir seul (spec §2) : qui organise, et peut-on lui faire confiance ?
-export function CreatorTrustCard({ creator }: { creator: Activity['creator'] }) {
+// Touchée, la carte ouvre le profil du créateur (sauf le sien).
+export function CreatorTrustCard({
+  creator,
+  viewerId,
+}: {
+  creator: Activity['creator'];
+  viewerId?: string;
+}) {
   const styles = useStyles();
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -29,7 +37,15 @@ export function CreatorTrustCard({ creator }: { creator: Activity['creator'] }) 
         });
 
   return (
-    <Card style={styles.card}>
+    <Card
+      style={styles.card}
+      accessibilityLabel={`${t('activity.creator')} ${creator.firstName}. ${rating}. ${stats}`}
+      onPress={
+        creator.id === viewerId
+          ? undefined
+          : () => router.push({ pathname: '/user/[id]', params: { id: creator.id } })
+      }
+    >
       <Avatar name={creator.firstName} uri={creator.avatarUrl} size="lg" />
       <View style={styles.copy}>
         <Text variant="caption" color="textMuted">

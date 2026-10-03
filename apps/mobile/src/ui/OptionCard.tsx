@@ -17,7 +17,7 @@ export function OptionCard({
 }: {
   icon: IconComponent;
   title: string;
-  body: string;
+  body?: string;
   selected?: boolean;
   onPress?: () => void;
   right?: ReactNode;
@@ -36,9 +36,11 @@ export function OptionCard({
       </View>
       <View style={styles.copy}>
         <Text variant="bodyStrong">{title}</Text>
-        <Text variant="caption" color="textMuted">
-          {body}
-        </Text>
+        {body ? (
+          <Text variant="caption" color="textMuted">
+            {body}
+          </Text>
+        ) : null}
       </View>
       {right ?? (selected ? <CheckCircle size={24} color={colors.action} weight="fill" /> : null)}
     </>
@@ -48,7 +50,7 @@ export function OptionCard({
   return (
     <Pressable
       accessibilityRole={role}
-      accessibilityLabel={`${title}. ${body}`}
+      accessibilityLabel={body ? `${title}. ${body}` : title}
       accessibilityState={role === 'radio' ? { checked: selected } : undefined}
       onPress={onPress}
       style={({ pressed }) => [styles.card, selected && styles.selected, pressed && styles.pressed]}

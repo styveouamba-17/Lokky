@@ -1,4 +1,4 @@
-import type { OnboardingProfile } from '@lokky/shared';
+import type { OnboardingProfile, UpdateMeInput } from '@lokky/shared';
 import { apiClient } from '@/api/client';
 import { env } from '@/lib/env';
 
@@ -21,3 +21,6 @@ export async function uploadAvatar(localUri: string): Promise<string> {
 }
 
 export const setAvatarUrl = (avatarUrl: string) => apiClient.request('me.update', { avatarUrl });
+
+// Modification du profil depuis les réglages.
+export const updateProfile = (changes: UpdateMeInput) => apiClient.request('me.update', changes);

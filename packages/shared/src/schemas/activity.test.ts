@@ -59,6 +59,8 @@ function makeActivity(overrides: Record<string, unknown> = {}) {
       canJoin: true,
       canLeave: false,
       canReview: false,
+      canDeclareAttendance: false,
+      conversationId: null,
     },
     createdAt: NOW.toISOString(),
     ...overrides,

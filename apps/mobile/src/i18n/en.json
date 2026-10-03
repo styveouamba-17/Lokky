@@ -1,0 +1,533 @@
+{
+  "common": {
+    "next": "Next",
+    "skip": "Skip",
+    "or": "or",
+    "back": "Back",
+    "continue": "Continue",
+    "validate": "Confirm",
+    "retry": "Try again",
+    "close": "Close",
+    "offline": "You're offline. Your messages will be sent as soon as you're back online.",
+    "cancel": "Cancel"
+  },
+  "welcome": {
+    "slides": {
+      "tonight": {
+        "title": "What are you up to tonight?",
+        "body": "Football on the Corniche, a movie, tea with friends… outings near you, created by people like you."
+      },
+      "alone": {
+        "title": "Come along, even if you don't know anyone",
+        "body": "See who's coming and break the ice in the group before the big day. Everyone here is looking to make friends."
+      },
+      "trust": {
+        "title": "Free, or everyone pays their share",
+        "body": "No payments in the app. Rated organizers, 18+ only, and reporting is always one tap away."
+      }
+    },
+    "start": "Nanu dem!",
+    "slideLabel": "Screen {{current}} of {{total}}",
+    "demo": {
+      "q1": "Anyone coming alone?",
+      "a1": "Me! First time",
+      "a2": "Same, let's meet in front of the lighthouse",
+      "title": "Football on the Corniche",
+      "when": "Tonight · 7 pm",
+      "where": "Corniche Ouest · 1.2 km",
+      "free": "Free",
+      "spots": "6/10 spots",
+      "trusted": "Trusted organizer",
+      "chips": {
+        "tonight": "Tonight",
+        "sport": "Sport",
+        "cine": "Movies",
+        "tea": "Tea"
+      }
+    }
+  },
+  "login": {
+    "title": "Sign in",
+    "subtitle": "No password: pick your account, or get a code by email.",
+    "apple": "Continue with Apple",
+    "google": "Continue with Google",
+    "emailLabel": "Your email",
+    "emailPlaceholder": "name@example.com",
+    "emailSubmit": "Get a code",
+    "legal": {
+      "before": "By continuing, you accept Lokky's ",
+      "terms": "terms of use",
+      "middle": " and ",
+      "privacy": "privacy policy",
+      "after": ". You must be 18 or older."
+    },
+    "signedIn": "You're in!",
+    "errors": {
+      "email": "This email doesn't look right.",
+      "generic": "Oops, that didn't work. Try again in a moment.",
+      "network": "No connection. Check your network and try again.",
+      "provider": "Signing in with {{provider}} failed. Try again, or use your email."
+    }
+  },
+  "code": {
+    "title": "Check your emails",
+    "body": "We sent a 6-digit code to {{email}}.",
+    "label": "6-digit code",
+    "demoHint": "Demo mode: the code is {{code}}",
+    "resend": "Resend the code",
+    "resendIn": "Resend the code in {{seconds}} s",
+    "resent": "New code sent",
+    "changeEmail": "Change email",
+    "errors": {
+      "invalid": "Wrong code. Check it and try again."
+    }
+  },
+  "categories": {
+    "sport": "Sport",
+    "beach": "Beach",
+    "cinema": "Movies",
+    "study": "Study",
+    "music": "Music & nights out",
+    "games": "Games",
+    "food": "Food & tea",
+    "culture": "Culture",
+    "walk": "Walks"
+  },
+  "statuses": {
+    "student": "Student",
+    "newcomer": "Newcomer",
+    "other": "Other"
+  },
+  "errors": {
+    "age_min": "Lokky is for people aged 18 and over.",
+    "age_max": "Check your date of birth.",
+    "duplicate_interests": "The same interest was picked twice.",
+    "code_format": "The code has 6 digits.",
+    "screen": {
+      "title": "Oops, something got stuck",
+      "body": "It's not you, it's us. We've been notified. Try again in a moment."
+    }
+  },
+  "onboarding": {
+    "stepLabel": "Step {{current}} of {{total}}",
+    "finish": "Let's go!",
+    "saving": "Setting up your profile…",
+    "you": {
+      "title": "Let's get to know you",
+      "body": "Just the essentials: your first name shows on your profile, your date of birth stays private.",
+      "firstName": "Your first name",
+      "firstNamePlaceholder": "Awa",
+      "firstNameError": "Your first name must be 2 to 30 characters long.",
+      "birthDate": "Your date of birth",
+      "birthDatePlaceholder": "Pick a date",
+      "photo": "Add a photo",
+      "changePhoto": "Change photo",
+      "photoHint": "Optional, but it reassures others."
+    },
+    "situation": {
+      "title": "About you",
+      "body": "So we can suggest outings that suit you.",
+      "statusLabel": "You are…",
+      "neighborhoodLabel": "Your neighborhood",
+      "statusHints": {
+        "student": "At UCAD, ESP, or elsewhere",
+        "newcomer": "You just arrived in Dakar",
+        "other": "Working, chilling, exploring"
+      }
+    },
+    "interests": {
+      "title": "What you're into",
+      "body": "Pick at least 3 interests.",
+      "counter": "{{count}} of 3 minimum"
+    },
+    "permissions": {
+      "title": "Last step",
+      "body": "Two permissions to make the most of Lokky. You can change them anytime.",
+      "location": "Your location",
+      "locationBody": "To see outings near you. Only while you use the app.",
+      "notifications": "Notifications",
+      "notificationsBody": "To know when someone joins your outing or messages you.",
+      "allow": "Allow",
+      "granted": "On",
+      "denied": "Denied"
+    },
+    "errors": {
+      "save": "Couldn't save your profile. Try again.",
+      "photo": "Couldn't load this photo."
+    }
+  },
+  "tabs": {
+    "discover": "Discover",
+    "mine": "My outings",
+    "create": "Create an outing",
+    "messages": "Messages",
+    "profile": "Profile"
+  },
+  "discover": {
+    "greeting": "Hi {{name}}",
+    "title": "What are you up to tonight?",
+    "filters": {
+      "tonight": "Tonight",
+      "weekend": "This weekend",
+      "free": "Free"
+    },
+    "empty": {
+      "title": "No outings for these filters…",
+      "body": "Why not create one? Others are waiting for just that.",
+      "action": "Create an outing"
+    },
+    "error": {
+      "title": "Couldn't load outings",
+      "body": "Check your connection and try again."
+    },
+    "nearby": "Around you"
+  },
+  "activity": {
+    "spots": "{{count}}/{{capacity}} spots",
+    "full": "Full",
+    "free": "Free",
+    "split": "Everyone pays their share",
+    "splitEstimate": "Everyone pays their share (~{{amount}})",
+    "trusted": "Trusted organizer",
+    "cancelled": "Cancelled",
+    "ongoing": "Happening now",
+    "past": "Over",
+    "when": "When?",
+    "where": "Where?",
+    "meetingPoint": "Meeting point: {{place}}",
+    "openMaps": "Open in Maps",
+    "cost": "How much?",
+    "whoComes": "Who's coming?",
+    "firstTimers_one": "First time? {{count}} person is new to Lokky too.",
+    "firstTimers_other": "First time? {{count}} people are new to Lokky too.",
+    "about": "The plan",
+    "creator": "Organized by",
+    "creatorRating": "{{rating}} ({{count}} reviews)",
+    "creatorNew": "New on Lokky",
+    "creatorStats": "{{created}} outings organized · {{rate}} attendance",
+    "creatorStatsNoRate": "{{created}} outings organized",
+    "join": "I'm in!",
+    "leave": "I can't make it",
+    "going": "You're going!",
+    "joined": "Got it, see you there!",
+    "left": "You're no longer going to this outing.",
+    "you": "You",
+    "errors": {
+      "activity_full": "Too late, the outing is full.",
+      "activity_started": "The outing has already started.",
+      "generic": "Oops, that didn't work. Try again."
+    },
+    "notFound": "This outing no longer exists.",
+    "openChat": "Chat with the group",
+    "report": "Report this outing",
+    "share": "Share the outing",
+    "shareMessage": "{{title}} · {{when}} on Lokky. Come along!"
+  },
+  "mine": {
+    "title": "My outings",
+    "tabs": {
+      "upcoming": "Upcoming",
+      "past": "Past",
+      "created": "Created by me"
+    },
+    "empty": {
+      "upcoming": {
+        "title": "Nothing planned yet",
+        "body": "The outings you join will show up here.",
+        "action": "Discover outings"
+      },
+      "past": {
+        "title": "No memories yet",
+        "body": "Your past outings will show up here.",
+        "action": "Discover outings"
+      },
+      "created": {
+        "title": "You haven't organized anything yet",
+        "body": "Start your first outing: others are waiting for just that.",
+        "action": "Create an outing"
+      }
+    },
+    "error": "Couldn't load your outings."
+  },
+  "messages": {
+    "title": "Messages",
+    "emptyTitle": "No conversations yet",
+    "emptyBody": "Join an outing: its group chat will show up here.",
+    "action": "Discover outings",
+    "you": "You: {{body}}",
+    "noMessage": "No messages yet",
+    "unread_one": "{{count}} unread message",
+    "unread_other": "{{count}} unread messages",
+    "error": "Couldn't load your conversations."
+  },
+  "create": {
+    "title": "Create an outing",
+    "stepLabel": "Step {{current}} of {{total}}",
+    "publish": "Publish",
+    "published": "It's live! Nanu dem!",
+    "edit": "Edit",
+    "discardTitle": "Discard this outing?",
+    "discardBody": "What you've filled in will be lost.",
+    "discard": "Discard",
+    "keep": "Keep editing",
+    "errors": {
+      "generic": "Couldn't publish right now. Try again.",
+      "startsAt": "This time has passed: pick another one."
+    },
+    "what": {
+      "title": "What?",
+      "body": "Pick a category and give it a name that makes people want to come.",
+      "category": "Category",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Beach football, open-air movie…",
+      "titleError": "The title must be 3 to 60 characters long.",
+      "description": "The plan (optional)",
+      "descriptionPlaceholder": "What you'll do, what to bring…"
+    },
+    "when": {
+      "title": "When?",
+      "body": "A concrete date makes it easier to say yes.",
+      "shortcuts": "Shortcuts",
+      "tonight": "Tonight",
+      "tomorrow": "Tomorrow",
+      "saturday": "Saturday",
+      "day": "Which day?",
+      "time": "What time?",
+      "noSlots": "No more slots today: pick another day."
+    },
+    "where": {
+      "title": "Where?",
+      "body": "The place and the meeting point, so nobody gets lost.",
+      "popular": "Popular places",
+      "place": "Place name",
+      "placePlaceholder": "Ngor beach, Point E café…",
+      "placeError": "Enter the place (at least 2 characters).",
+      "neighborhood": "Neighborhood",
+      "meetingPoint": "Meeting point (optional)",
+      "meetingPointPlaceholder": "In front of the main entrance, at the lighthouse…"
+    },
+    "count": {
+      "title": "How many?",
+      "body": "Including you. A small group makes it easier to come alone.",
+      "people_one": "{{count}} person",
+      "people_other": "{{count}} people",
+      "less": "One spot fewer",
+      "more": "One more spot"
+    },
+    "cost": {
+      "title": "How much does it cost?",
+      "body": "No payments in the app: you sort it out in the group chat.",
+      "free": "Free",
+      "freeBody": "Nothing to pay, just show up.",
+      "split": "Everyone pays their share",
+      "splitBody": "Tickets, transport, drinks… everyone covers themselves.",
+      "estimate": "Estimate per person (optional)",
+      "estimatePlaceholder": "3000",
+      "estimateError": "Between 1 and 100,000 FCFA."
+    },
+    "review": {
+      "title": "Summary",
+      "body": "Here's your outing as it will appear in Discover.",
+      "when": "When",
+      "where": "Where",
+      "meetingPoint": "Meeting point",
+      "count": "Spots",
+      "cost": "Cost"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "newMember": "New",
+    "attended": "Outings",
+    "attendance": "Attendance",
+    "created": "Organized",
+    "interests": "Interests",
+    "rating": "Rating",
+    "ratingValue": "{{rating}} ({{count}} reviews)",
+    "upcomingOrganized": "Upcoming outings",
+    "myUpcomingOrganized": "My upcoming outings",
+    "noUpcoming": "No outings planned for now.",
+    "notFound": "This profile is no longer available.",
+    "openProfile": "See {{name}}'s profile",
+    "edit": "Edit my profile",
+    "settings": "Settings",
+    "message": "Message",
+    "more": "More options",
+    "report": "Report",
+    "block": "Block",
+    "unblock": "Unblock",
+    "blockedNotice": "You blocked {{name}}. You no longer see each other's outings and can't message each other.",
+    "blockTitle": "Block {{name}}?",
+    "blockBody": "You won't see each other's outings or be able to message each other. {{name}} won't be notified.",
+    "blocked": "{{name}} is blocked.",
+    "unblocked": "{{name}} is unblocked.",
+    "dmLockedTitle": "Not yet",
+    "dmLockedBody": "On Lokky, you can message someone privately after sharing an outing. Join an outing with {{name}}, and you'll be able to chat afterwards.",
+    "dmLockedAction": "See outings",
+    "error": "Oops, that didn't work. Try again."
+  },
+  "moderation": {
+    "suspended": {
+      "title": "Your account is suspended",
+      "until": "Until {{date}}.",
+      "indefinite": "For an indefinite period.",
+      "body": "Following reports, you can't join or create outings for now. Lokky's rules protect everyone: please follow them when you're back.",
+      "check": "Check again",
+      "stillSuspended": "Your account is still suspended."
+    },
+    "banned": {
+      "title": "Your account has been closed",
+      "body": "Following repeated breaches of Lokky's rules, your account can no longer be used. If you think this is a mistake, write to us from your account's email address."
+    },
+    "signOut": "Sign out"
+  },
+  "chat": {
+    "pinned": "Meeting point",
+    "pinnedHint": "See the outing",
+    "firstMessage": "Break the ice: say hi to the group!",
+    "firstMessageBody": "Introduce yourself, ask who's coming alone, or offer to travel together.",
+    "placeholder": "Write to the group…",
+    "inputLabel": "Your message",
+    "send": "Send",
+    "sending": "Sending…",
+    "waiting": "Waiting for network",
+    "failed": "Not sent. Tap to retry.",
+    "readOnly": "This conversation is closed: the outing ended more than 7 days ago.",
+    "typing_one": "{{name}} is typing…",
+    "typing_other": "{{count}} people are typing…",
+    "loadError": "Couldn't load the conversation.",
+    "notMember": "Join the outing to chat with the group.",
+    "openActivity": "See the outing",
+    "readOnlyDirect": "You can no longer message this person.",
+    "reportMessage": "Report this message",
+    "openProfile": "See profile",
+    "firstMessageDirect": "Say hi to {{name}}!"
+  },
+  "review": {
+    "cta": "Leave a review",
+    "title": "How was it?",
+    "body": "Rate {{name}}, who organized it. Your review helps others come with confidence.",
+    "ratingLabel": "Rating from 1 to 5",
+    "star_one": "{{count}} star",
+    "star_other": "{{count}} stars",
+    "ratingHints": {
+      "1": "Disappointing",
+      "2": "Meh",
+      "3": "OK",
+      "4": "Great",
+      "5": "Awesome!"
+    },
+    "comment": "A word for {{name}} (optional)",
+    "commentPlaceholder": "What you liked, what could be better…",
+    "submit": "Send my review",
+    "thanksTitle": "Thank you!",
+    "thanksBody": "Your review helps the whole community.",
+    "error": "Couldn't send your review. Try again."
+  },
+  "attendance": {
+    "cta": "Who came?",
+    "title": "Who came?",
+    "body": "Untick those who didn't show up. It counts toward their attendance rate, so be fair.",
+    "present": "Came",
+    "absent": "Didn't come",
+    "submit": "Confirm",
+    "done": "Thanks, noted!",
+    "error": "Couldn't save attendance. Try again."
+  },
+  "report": {
+    "title": "Report",
+    "targets": {
+      "user": "this profile",
+      "activity": "this outing",
+      "message": "this message"
+    },
+    "body": "Why do you want to report {{target}}? Your report is anonymous.",
+    "reasons": {
+      "harassment": "Harassment or threats",
+      "inappropriate": "Inappropriate content",
+      "fake": "Fake profile or scam",
+      "dangerous": "Dangerous behavior",
+      "spam": "Spam or advertising",
+      "other": "Something else"
+    },
+    "details": "Tell us more",
+    "detailsOptional": "Tell us more (optional)",
+    "detailsPlaceholder": "What happened, when, with whom…",
+    "detailsError": "Describe what happened (at least {{count}} characters).",
+    "submit": "Send report",
+    "done": "Thank you. The Lokky team will review your report.",
+    "error": "Couldn't send the report. Try again.",
+    "safety": "In immediate danger? Call 17 (police) or 18 (fire department)."
+  },
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "account": "My account",
+      "preferences": "Preferences",
+      "safety": "Safety",
+      "about": "About"
+    },
+    "profile": "Edit my profile",
+    "notifications": "Notifications",
+    "appearance": "Appearance & language",
+    "blocked": "Blocked people",
+    "terms": "Terms of use",
+    "privacy": "Privacy policy",
+    "signOut": "Sign out",
+    "deleteAccount": "Delete my account",
+    "version": "Version {{version}}",
+    "saved": "Saved.",
+    "error": "Couldn't save. Try again.",
+    "editProfile": {
+      "title": "My profile",
+      "save": "Save",
+      "firstName": "Your first name",
+      "firstNameError": "Your first name must be 2 to 30 characters long."
+    },
+    "notif": {
+      "title": "Notifications",
+      "body": "Choose what deserves to buzz your phone.",
+      "messages": "Messages",
+      "messagesBody": "New messages in your groups and private chats.",
+      "activityUpdates": "My outings",
+      "activityUpdatesBody": "Someone joins your outing, an outing is changed or cancelled.",
+      "reminders": "Reminders",
+      "remindersBody": "A reminder before each outing, and the review to leave afterwards.",
+      "phoneOffTitle": "Notifications are blocked on this phone",
+      "phoneOffBody": "Until your phone allows them, you won't receive anything, even if everything is on below.",
+      "allow": "Allow notifications",
+      "openSettings": "Open phone settings"
+    },
+    "look": {
+      "title": "Appearance & language",
+      "theme": "Theme",
+      "system": "Same as phone",
+      "light": "Light",
+      "dark": "Dark",
+      "language": "Language",
+      "fr": "Français",
+      "en": "English"
+    },
+    "blockedList": {
+      "title": "Blocked people",
+      "since": "Blocked on {{date}}",
+      "emptyTitle": "Nobody is blocked",
+      "emptyBody": "If someone makes you uncomfortable, you can block them from their profile."
+    },
+    "delete": {
+      "title": "Delete my account",
+      "body": "This is permanent. Your profile, your upcoming outings and your messages will be deleted, and you'll leave all your outings.",
+      "confirmLabel": "To confirm, type DELETE",
+      "confirmWord": "DELETE",
+      "submit": "Delete permanently",
+      "error": "Couldn't delete your account. Try again."
+    },
+    "signOutTitle": "Sign out?",
+    "signOutBody": "You can sign back in anytime with your email, Apple or Google. Your outings and messages will be waiting for you."
+  },
+  "goodbye": {
+    "title": "Your account has been deleted",
+    "body": "Thanks for being part of Lokky. See you around, maybe!",
+    "action": "Back to home"
+  }
+}

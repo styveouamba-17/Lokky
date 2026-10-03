@@ -7,7 +7,9 @@
     "continue": "Continuer",
     "validate": "Valider",
     "retry": "Réessayer",
-    "close": "Fermer"
+    "close": "Fermer",
+    "offline": "Hors connexion. Tes messages partiront dès le retour du réseau.",
+    "cancel": "Annuler"
   },
   "welcome": {
     "slides": {
@@ -52,7 +54,13 @@
     "emailLabel": "Ton email",
     "emailPlaceholder": "prenom@exemple.com",
     "emailSubmit": "Recevoir un code",
-    "legal": "En continuant, tu acceptes les conditions d’utilisation et la politique de confidentialité de Lokky. Tu dois avoir 18 ans ou plus.",
+    "legal": {
+      "before": "En continuant, tu acceptes les ",
+      "terms": "conditions d’utilisation",
+      "middle": " et la ",
+      "privacy": "politique de confidentialité",
+      "after": " de Lokky. Tu dois avoir 18 ans ou plus."
+    },
     "signedIn": "Te voilà connecté·e !",
     "errors": {
       "email": "Cet email n’a pas l’air valide.",
@@ -94,7 +102,11 @@
     "age_min": "Lokky est réservé aux 18 ans et plus.",
     "age_max": "Vérifie ta date de naissance.",
     "duplicate_interests": "Un même centre d’intérêt est choisi deux fois.",
-    "code_format": "Le code fait 6 chiffres."
+    "code_format": "Le code fait 6 chiffres.",
+    "screen": {
+      "title": "Oups, quelque chose a coincé",
+      "body": "Ce n’est pas toi, c’est nous. On a été prévenus. Réessaie dans un instant."
+    }
   },
   "onboarding": {
     "stepLabel": "Étape {{current}} sur {{total}}",
@@ -205,19 +217,48 @@
       "activity_started": "La sortie a déjà commencé.",
       "generic": "Oups, ça n’a pas marché. Réessaie."
     },
-    "notFound": "Cette sortie n’existe plus."
+    "notFound": "Cette sortie n’existe plus.",
+    "openChat": "Discuter avec le groupe",
+    "report": "Signaler cette sortie",
+    "share": "Partager la sortie",
+    "shareMessage": "{{title}} · {{when}} sur Lokky. Viens avec nous !"
   },
   "mine": {
     "title": "Mes activités",
-    "emptyTitle": "Rien de prévu pour l’instant",
-    "emptyBody": "Tes sorties à venir, passées et créées apparaîtront ici.",
-    "action": "Découvrir des sorties"
+    "tabs": {
+      "upcoming": "À venir",
+      "past": "Passées",
+      "created": "Créées par moi"
+    },
+    "empty": {
+      "upcoming": {
+        "title": "Rien de prévu pour l’instant",
+        "body": "Les sorties que tu rejoins apparaîtront ici.",
+        "action": "Découvrir des sorties"
+      },
+      "past": {
+        "title": "Pas encore de souvenirs",
+        "body": "Tes souvenirs de sorties apparaîtront ici.",
+        "action": "Découvrir des sorties"
+      },
+      "created": {
+        "title": "Tu n’as encore rien organisé",
+        "body": "Lance ta première sortie : d’autres n’attendent que ça.",
+        "action": "Créer une activité"
+      }
+    },
+    "error": "Impossible de charger tes sorties."
   },
   "messages": {
     "title": "Messages",
     "emptyTitle": "Pas encore de discussion",
     "emptyBody": "Rejoins une sortie : le chat du groupe apparaîtra ici.",
-    "action": "Découvrir des sorties"
+    "action": "Découvrir des sorties",
+    "you": "Toi : {{body}}",
+    "noMessage": "Aucun message pour l’instant",
+    "unread_one": "{{count}} message non lu",
+    "unread_other": "{{count}} messages non lus",
+    "error": "Impossible de charger tes discussions."
   },
   "create": {
     "title": "Créer une activité",
@@ -296,13 +337,34 @@
   },
   "profile": {
     "title": "Profil",
-    "signOut": "Se déconnecter",
-    "designSystem": "Design system (dev)",
     "newMember": "Nouveau",
     "attended": "Sorties",
     "attendance": "Présence",
     "created": "Organisées",
-    "interests": "Ses envies"
+    "interests": "Ses envies",
+    "rating": "Note",
+    "ratingValue": "{{rating}} ({{count}} avis)",
+    "upcomingOrganized": "Ses prochaines sorties",
+    "myUpcomingOrganized": "Mes prochaines sorties organisées",
+    "noUpcoming": "Aucune sortie prévue pour le moment.",
+    "notFound": "Ce profil n’est plus disponible.",
+    "openProfile": "Voir le profil de {{name}}",
+    "edit": "Modifier mon profil",
+    "settings": "Réglages",
+    "message": "Écrire",
+    "more": "Plus d’options",
+    "report": "Signaler",
+    "block": "Bloquer",
+    "unblock": "Débloquer",
+    "blockedNotice": "Tu as bloqué {{name}}. Vous ne voyez plus vos sorties respectives et ne pouvez plus vous écrire.",
+    "blockTitle": "Bloquer {{name}} ?",
+    "blockBody": "Vous ne verrez plus les sorties de l’autre et ne pourrez plus vous écrire. {{name}} ne sera pas prévenu·e.",
+    "blocked": "{{name}} est bloqué·e.",
+    "unblocked": "{{name}} est débloqué·e.",
+    "dmLockedTitle": "Pas encore possible",
+    "dmLockedBody": "Sur Lokky, on s’écrit en privé après avoir partagé une sortie. Rejoins une sortie avec {{name}}, et vous pourrez discuter ensuite.",
+    "dmLockedAction": "Voir les sorties",
+    "error": "Oups, ça n’a pas marché. Réessaie."
   },
   "moderation": {
     "suspended": {
@@ -318,5 +380,154 @@
       "body": "Suite à des manquements répétés aux règles de Lokky, ton compte ne peut plus être utilisé. Si tu penses qu’il s’agit d’une erreur, écris-nous depuis l’adresse email de ton compte."
     },
     "signOut": "Se déconnecter"
+  },
+  "chat": {
+    "pinned": "Rendez-vous",
+    "pinnedHint": "Voir la sortie",
+    "firstMessage": "Brise la glace : dis bonjour au groupe !",
+    "firstMessageBody": "Présente-toi, demande qui vient seul·e ou propose de faire la route ensemble.",
+    "placeholder": "Écris au groupe…",
+    "inputLabel": "Ton message",
+    "send": "Envoyer",
+    "sending": "Envoi…",
+    "waiting": "En attente de réseau",
+    "failed": "Non envoyé. Touche pour réessayer.",
+    "readOnly": "Cette discussion est fermée : la sortie est terminée depuis plus de 7 jours.",
+    "typing_one": "{{name}} écrit…",
+    "typing_other": "{{count}} personnes écrivent…",
+    "loadError": "Impossible de charger la discussion.",
+    "notMember": "Rejoins la sortie pour discuter avec le groupe.",
+    "openActivity": "Voir la sortie",
+    "readOnlyDirect": "Tu ne peux plus écrire à cette personne.",
+    "reportMessage": "Signaler ce message",
+    "openProfile": "Voir le profil",
+    "firstMessageDirect": "Dis bonjour à {{name}} !"
+  },
+  "review": {
+    "cta": "Laisser un avis",
+    "title": "Comment c’était ?",
+    "body": "Note {{name}}, qui organisait. Ton avis aide les autres à venir en confiance.",
+    "ratingLabel": "Note de 1 à 5",
+    "star_one": "{{count}} étoile",
+    "star_other": "{{count}} étoiles",
+    "ratingHints": {
+      "1": "Décevant",
+      "2": "Bof",
+      "3": "Correct",
+      "4": "Très bien",
+      "5": "Génial !"
+    },
+    "comment": "Un mot pour {{name}} (facultatif)",
+    "commentPlaceholder": "Ce qui t’a plu, ce qui pourrait être mieux…",
+    "submit": "Envoyer mon avis",
+    "thanksTitle": "Merci !",
+    "thanksBody": "Ton avis aide toute la communauté.",
+    "error": "Impossible d’envoyer ton avis. Réessaie."
+  },
+  "attendance": {
+    "cta": "Qui est venu ?",
+    "title": "Qui est venu ?",
+    "body": "Décoche ceux qui ne sont pas venus. Ça compte dans leur taux de présence, alors sois juste.",
+    "present": "Présent·e",
+    "absent": "Absent·e",
+    "submit": "Valider",
+    "done": "Merci, c’est noté !",
+    "error": "Impossible d’enregistrer la présence. Réessaie."
+  },
+  "report": {
+    "title": "Signaler",
+    "targets": {
+      "user": "ce profil",
+      "activity": "cette sortie",
+      "message": "ce message"
+    },
+    "body": "Pourquoi veux-tu signaler {{target}} ? Ton signalement est anonyme.",
+    "reasons": {
+      "harassment": "Harcèlement ou menaces",
+      "inappropriate": "Contenu inapproprié",
+      "fake": "Faux profil ou arnaque",
+      "dangerous": "Comportement dangereux",
+      "spam": "Spam ou publicité",
+      "other": "Autre chose"
+    },
+    "details": "Dis-nous en plus",
+    "detailsOptional": "Dis-nous en plus (facultatif)",
+    "detailsPlaceholder": "Ce qui s’est passé, quand, avec qui…",
+    "detailsError": "Décris ce qui s’est passé ({{count}} caractères minimum).",
+    "submit": "Envoyer le signalement",
+    "done": "Merci. L’équipe Lokky va examiner ton signalement.",
+    "error": "Impossible d’envoyer le signalement. Réessaie.",
+    "safety": "En danger immédiat ? Appelle le 17 (police) ou le 18 (pompiers)."
+  },
+  "settings": {
+    "title": "Réglages",
+    "sections": {
+      "account": "Mon compte",
+      "preferences": "Préférences",
+      "safety": "Sécurité",
+      "about": "À propos"
+    },
+    "profile": "Modifier mon profil",
+    "notifications": "Notifications",
+    "appearance": "Apparence et langue",
+    "blocked": "Personnes bloquées",
+    "terms": "Conditions d’utilisation",
+    "privacy": "Politique de confidentialité",
+    "signOut": "Se déconnecter",
+    "deleteAccount": "Supprimer mon compte",
+    "version": "Version {{version}}",
+    "saved": "C’est enregistré.",
+    "error": "Impossible d’enregistrer. Réessaie.",
+    "editProfile": {
+      "title": "Mon profil",
+      "save": "Enregistrer",
+      "firstName": "Ton prénom",
+      "firstNameError": "Ton prénom doit faire entre 2 et 30 caractères."
+    },
+    "notif": {
+      "title": "Notifications",
+      "body": "Choisis ce qui mérite de te faire vibrer le téléphone.",
+      "messages": "Messages",
+      "messagesBody": "Nouveaux messages dans tes groupes et en privé.",
+      "activityUpdates": "Mes sorties",
+      "activityUpdatesBody": "Quelqu’un rejoint ta sortie, une sortie est modifiée ou annulée.",
+      "reminders": "Rappels",
+      "remindersBody": "Un rappel avant chaque sortie, et l’avis à laisser après.",
+      "phoneOffTitle": "Notifications bloquées sur ce téléphone",
+      "phoneOffBody": "Tant que ton téléphone ne les autorise pas, tu ne recevras rien, même si tout est activé ci-dessous.",
+      "allow": "Autoriser les notifications",
+      "openSettings": "Ouvrir les réglages du téléphone"
+    },
+    "look": {
+      "title": "Apparence et langue",
+      "theme": "Thème",
+      "system": "Comme le téléphone",
+      "light": "Clair",
+      "dark": "Sombre",
+      "language": "Langue",
+      "fr": "Français",
+      "en": "English"
+    },
+    "blockedList": {
+      "title": "Personnes bloquées",
+      "since": "Bloqué·e le {{date}}",
+      "emptyTitle": "Personne n’est bloqué",
+      "emptyBody": "Si quelqu’un te met mal à l’aise, tu peux le bloquer depuis son profil."
+    },
+    "delete": {
+      "title": "Supprimer mon compte",
+      "body": "C’est définitif. Ton profil, tes sorties créées à venir et tes messages seront supprimés, et tu quitteras toutes tes sorties.",
+      "confirmLabel": "Pour confirmer, écris SUPPRIMER",
+      "confirmWord": "SUPPRIMER",
+      "submit": "Supprimer définitivement",
+      "error": "Impossible de supprimer ton compte. Réessaie."
+    },
+    "signOutTitle": "Se déconnecter ?",
+    "signOutBody": "Tu pourras te reconnecter à tout moment avec ton email, Apple ou Google. Tes sorties et tes messages t’attendront."
+  },
+  "goodbye": {
+    "title": "Ton compte a été supprimé",
+    "body": "Merci d’avoir fait partie de Lokky. À bientôt, peut-être !",
+    "action": "Retour à l’accueil"
   }
 }

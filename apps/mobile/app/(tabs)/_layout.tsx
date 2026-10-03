@@ -5,6 +5,12 @@ import { Compass } from 'phosphor-react-native/src/icons/Compass';
 import { UserCircle } from 'phosphor-react-native/src/icons/UserCircle';
 import type { ComponentType } from 'react';
 import type { ColorValue } from 'react-native';
+import { useActivityRealtime } from '@/features/activities/hooks/useActivityRealtime';
+import { useOpenPendingLink } from '@/features/activities/hooks/useOpenPendingLink';
+import { useChatRealtime } from '@/features/chat/hooks/useChatRealtime';
+import { useUnreadTotal } from '@/features/chat/hooks/useConversations';
+import { useModerationRealtime } from '@/features/moderation/hooks/useModerationRealtime';
+import { usePushNotifications } from '@/features/notifications/hooks/usePushNotifications';
 import { useTranslation } from '@/i18n';
 import { fontFamilies, useTheme } from '@/theme';
 import { CreateButton } from '@/ui';
@@ -17,9 +23,16 @@ const tabIcon = (Glyph: Icon) =>
   };
 
 // Découvrir · Mes activités · [+] Créer · Messages · Profil (spec §6.2).
+// Les onglets restent montés tant que l'utilisateur est connecté : le temps réel vit ici.
 export default function TabsLayout() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  useChatRealtime();
+  useModerationRealtime();
+  useActivityRealtime();
+  usePushNotifications();
+  useOpenPendingLink();
+  const unread = useUnreadTotal();
   return (
     <Tabs
       screenOptions={{
@@ -52,7 +65,12 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="messages"
-        options={{ title: t('tabs.messages'), tabBarIcon: tabIcon(ChatsCircle) }}
+        options={{
+          title: t('tabs.messages'),
+          tabBarIcon: tabIcon(ChatsCircle),
+          tabBarBadge: unread > 0 ? (unread > 99 ? '99+' : unread) : undefined,
+          tabBarBadgeStyle: { backgroundColor: colors.action, color: colors.onAction },
+        }}
       />
       <Tabs.Screen
         name="profile"

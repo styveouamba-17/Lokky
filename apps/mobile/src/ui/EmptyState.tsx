@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { View } from 'react-native';
-import { makeStyles } from '@/theme';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { makeStyles, motion } from '@/theme';
 import { Button } from './Button';
 import { Illustration, type IllustrationName } from './Illustration';
 import { Text } from './Text';
@@ -21,7 +21,7 @@ export function EmptyState({
 }) {
   const styles = useStyles();
   return (
-    <View style={styles.container}>
+    <Animated.View entering={FadeIn.duration(motion.slow)} style={styles.container}>
       {artwork ? (
         <Illustration name={artwork} fallback={illustration} style={styles.artwork} />
       ) : (
@@ -36,7 +36,7 @@ export function EmptyState({
         </Text>
       ) : null}
       {action ? <Button label={action.label} onPress={action.onPress} /> : null}
-    </View>
+    </Animated.View>
   );
 }
 

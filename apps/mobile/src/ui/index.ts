@@ -25,3 +25,5 @@ export * from './Illustration';
 export * from './IconDisc';
 export * from './StepIntro';
 export * from './OptionCard';
+export * from './OfflineBanner';
+export * from './RouteErrorBoundary';

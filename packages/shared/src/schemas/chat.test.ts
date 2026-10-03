@@ -22,6 +22,7 @@ describe('conversation', () => {
     id: 'c1',
     type: 'group',
     activityId: 'a1',
+    peer: null,
     title: 'Foot à la plage',
     avatarUrl: null,
     lastMessage: null,
@@ -34,6 +35,17 @@ describe('conversation', () => {
   });
   it('refuse un groupe sans activité', () => {
     expect(conversationSchema.safeParse({ ...conv, activityId: null }).success).toBe(false);
+  });
+  it('accepte une conversation privée avec l’autre personne', () => {
+    const peer = { id: 'u2', firstName: 'Moussa', avatarUrl: null };
+    expect(
+      conversationSchema.safeParse({ ...conv, type: 'direct', activityId: null, peer }).success,
+    ).toBe(true);
+  });
+  it('refuse une conversation privée sans l’autre personne', () => {
+    expect(
+      conversationSchema.safeParse({ ...conv, type: 'direct', activityId: null }).success,
+    ).toBe(false);
   });
   it('refuse une conversation privée liée à une activité', () => {
     expect(conversationSchema.safeParse({ ...conv, type: 'direct' }).success).toBe(false);

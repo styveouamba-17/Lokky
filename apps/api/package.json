@@ -1,0 +1,49 @@
+{
+  "name": "@lokky/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/main.ts",
+    "worker": "tsx watch --env-file-if-exists=.env src/worker.ts",
+    "build": "tsup",
+    "start": "node dist/main.js",
+    "start:worker": "node dist/worker.js",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx --env-file-if-exists=.env src/db/migrate.ts",
+    "keys:jwt": "tsx scripts/generate-jwt-key.ts",
+    "db:seed": "tsx --env-file-if-exists=.env src/db/seed.ts",
+    "moderate": "tsx --env-file-if-exists=.env scripts/moderate.ts",
+    "load": "tsx --env-file-if-exists=.env load/run.ts"
+  },
+  "dependencies": {
+    "@fastify/helmet": "^13.1.1",
+    "@lokky/shared": "*",
+    "@socket.io/redis-adapter": "^8.3.0",
+    "aws4fetch": "^1.0.20",
+    "bullmq": "^6.3.11",
+    "drizzle-orm": "^0.45.3",
+    "fastify": "^5.12.5",
+    "ioredis": "^6.0.0",
+    "jose": "^6.2.12",
+    "postgres": "^3.4.9",
+    "socket.io": "^4.8.4",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.1",
+    "drizzle-kit": "^0.31.11",
+    "eslint": "^9.39.5",
+    "socket.io-client": "^4.8.4",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^5.0.3"
+  }
+}

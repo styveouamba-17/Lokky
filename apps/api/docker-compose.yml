@@ -1,0 +1,33 @@
+# Services locaux du backend. Ports décalés pour ne pas gêner un PostgreSQL ou un Redis
+# déjà installés sur la machine (5432, 5433, 6379) : à changer dans .env si besoin.
+name: lokky
+services:
+  postgres:
+    image: postgis/postgis:17-3.5
+    environment:
+      POSTGRES_USER: lokky
+      POSTGRES_PASSWORD: lokky
+      POSTGRES_DB: lokky
+    ports:
+      - '${POSTGRES_PORT:-5434}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/10-test-db.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U lokky -d lokky']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '${REDIS_PORT:-6380}:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  postgres-data:

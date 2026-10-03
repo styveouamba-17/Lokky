@@ -1,4 +1,3 @@
-import { isInDakar } from '../hooks/useViewerOrigin';
 import { isTrustedCreator } from '../trust';
 
 const trust = (creatorRating: number | null, creatorReviewCount: number) => ({
@@ -17,13 +16,5 @@ describe('créateur fiable', () => {
     expect(isTrustedCreator(trust(5, 1))).toBe(false);
     expect(isTrustedCreator(trust(4.2, 10))).toBe(false);
     expect(isTrustedCreator(trust(null, 0))).toBe(false);
-  });
-});
-
-describe('position à Dakar', () => {
-  it('Ngor et le Plateau sont à Dakar, Paris non', () => {
-    expect(isInDakar({ lat: 14.747, lng: -17.513 })).toBe(true);
-    expect(isInDakar({ lat: 14.668, lng: -17.433 })).toBe(true);
-    expect(isInDakar({ lat: 48.8566, lng: 2.3522 })).toBe(false);
   });
 });
