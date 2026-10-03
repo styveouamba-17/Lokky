@@ -11,3 +11,4 @@ export * from './schemas/errors';
 export * from './api/request';
 export * from './api/routes';
 export * from './realtime';
+export * from './places';

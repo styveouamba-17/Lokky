@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
 import { View } from 'react-native';
-import { makeStyles } from '@/theme';
+import { makeStyles, useTheme } from '@/theme';
+import type { IconComponent } from './icons';
 import { Text, type TextColor } from './Text';
 
 export type BadgeTone = 'free' | 'split' | 'trust' | 'accent' | 'neutral';
@@ -13,11 +13,20 @@ const TEXT_COLOR: Record<BadgeTone, TextColor> = {
   neutral: 'text',
 };
 
-export function Badge({ label, tone, icon }: { label: string; tone: BadgeTone; icon?: ReactNode }) {
+export function Badge({
+  label,
+  tone,
+  icon: Icon,
+}: {
+  label: string;
+  tone: BadgeTone;
+  icon?: IconComponent;
+}) {
   const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <View style={[styles.base, styles[tone]]}>
-      {icon}
+      {Icon ? <Icon size={14} color={colors[TEXT_COLOR[tone]]} weight="fill" /> : null}
       <Text variant="caption" color={TEXT_COLOR[tone]}>
         {label}
       </Text>

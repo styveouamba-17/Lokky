@@ -1,1 +1,1 @@
-export { HomePlaceholderScreen as default } from '@/features/dev/screens/HomePlaceholderScreen';
+export { EntryScreen as default } from '@/features/auth/screens/EntryScreen';

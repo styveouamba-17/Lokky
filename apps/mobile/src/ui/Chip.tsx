@@ -1,17 +1,18 @@
-import type { ReactNode } from 'react';
 import { Pressable } from 'react-native';
-import { makeStyles } from '@/theme';
+import { makeStyles, useTheme } from '@/theme';
+import type { IconComponent } from './icons';
 import { Text } from './Text';
 
 export interface ChipProps {
   label: string;
   selected?: boolean;
   onPress: () => void;
-  icon?: ReactNode;
+  icon?: IconComponent;
 }
 
-export function Chip({ label, selected = false, onPress, icon }: ChipProps) {
+export function Chip({ label, selected = false, onPress, icon: Icon }: ChipProps) {
   const styles = useStyles();
+  const { colors } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
@@ -21,7 +22,13 @@ export function Chip({ label, selected = false, onPress, icon }: ChipProps) {
       hitSlop={6}
       style={({ pressed }) => [styles.chip, selected && styles.selected, pressed && styles.pressed]}
     >
-      {icon}
+      {Icon ? (
+        <Icon
+          size={16}
+          color={selected ? colors.onAction : colors.text}
+          weight={selected ? 'fill' : 'regular'}
+        />
+      ) : null}
       <Text variant="label" color={selected ? 'onAction' : 'text'}>
         {label}
       </Text>

@@ -31,7 +31,7 @@ const config: ExpoConfig = {
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
       monochromeImage: './assets/monochrome-icon.png',
-      backgroundColor: '#FAF9F6',
+      backgroundColor: '#FF6B3D',
     },
     // Les plugins ajoutent localisation, caméra et notifications. On bloque ce que la v1
     // n'utilise pas, au cas où une dépendance l'ajouterait.
@@ -63,11 +63,12 @@ const config: ExpoConfig = {
     [
       'expo-splash-screen',
       {
+        // Doit rester aligné sur src/ui/AnimatedSplash.tsx (SPLASH_MARK_SIZE, fond orange).
         image: './assets/splash-icon.png',
-        imageWidth: 160,
+        imageWidth: 200,
         resizeMode: 'contain',
-        backgroundColor: '#FAF9F6',
-        dark: { backgroundColor: '#141A23' },
+        backgroundColor: '#FF6B3D',
+        dark: { image: './assets/splash-icon.png', backgroundColor: '#FF6B3D' },
       },
     ],
     [

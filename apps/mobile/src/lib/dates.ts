@@ -44,3 +44,15 @@ export function formatActivityWhen(startsAt: string | Date, now: Date): string {
   if (dayDiff > 1 && dayDiff <= 6) return `${WEEKDAYS[date.getUTCDay()]} · ${hour}`;
   return `${formatShortDate(date, now)} · ${hour}`;
 }
+
+// « 12 oct. à 18h » (année ajoutée si ce n'est pas l'année en cours).
+export function formatDayAndHour(date: string | Date, now: Date): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return `${formatShortDate(d, now)} à ${formatHour(d)}`;
+}
+
+// Puce de jour à la création : « Ven. 9 ». Les raccourcis « Ce soir », « Demain », « Samedi »
+// sont à part : la date évite les doublons dans la liste des jours.
+export function formatDayChip(day: Date): string {
+  return `${WEEKDAYS[day.getUTCDay()]!.slice(0, 3)}. ${day.getUTCDate()}`;
+}

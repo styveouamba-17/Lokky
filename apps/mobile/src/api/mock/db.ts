@@ -22,12 +22,16 @@ export interface MockActivity {
 export interface MockDb {
   users: Map<string, MockUser>;
   activities: Map<string, MockActivity>;
+  // Le compte connecté est toujours le spectateur simulé (MOCK_VIEWER_ID). Tant que
+  // l'onboarding n'est pas fait, GET /me répond onboarding_required.
+  viewerOnboarded: boolean;
 }
 
-export function createMockDb(now: Date): MockDb {
+export function createMockDb(now: Date, { viewerOnboarded = false } = {}): MockDb {
   const { users, activities } = buildSeed(now);
   return {
     users: new Map(users.map((u) => [u.id, u])),
     activities: new Map(activities.map((a) => [a.id, a])),
+    viewerOnboarded,
   };
 }

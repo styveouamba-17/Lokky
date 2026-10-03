@@ -4,6 +4,7 @@ import {
   LIMITS,
   type Activity,
   type Coordinates,
+  type Me,
   type User,
   type UserPreview,
 } from '@lokky/shared';
@@ -21,6 +22,19 @@ export const toPublicUser = (u: MockUser): User => ({
   neighborhood: u.neighborhood,
   interests: u.interests,
   trust: u.trust,
+});
+
+// Préférences et modération ne sont pas stockées par le client simulé : valeurs par défaut.
+export const toMe = (u: MockUser): Me => ({
+  ...toPublicUser(u),
+  email: u.email,
+  birthDate: u.birthDate,
+  preferences: {
+    language: 'fr',
+    theme: 'system',
+    notifications: { messages: true, activityUpdates: true, reminders: true },
+  },
+  moderation: { status: 'active', suspendedUntil: null },
 });
 
 function getUser(db: MockDb, id: string): MockUser {

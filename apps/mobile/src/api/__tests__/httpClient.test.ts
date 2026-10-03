@@ -1,5 +1,5 @@
 import { ApiError } from '../errors';
-import { createHttpClient } from '../httpClient';
+import { createHttpClient, createSingleFlight } from '../httpClient';
 
 type FetchMock = jest.Mock<Promise<Response>, [string, RequestInit]>;
 
@@ -117,5 +117,75 @@ describe('createHttpClient', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+});
+
+describe('jeton expiré (401)', () => {
+  const unauthorized = () => response({ error: { code: 'unauthorized', message: 'expiré' } }, 401);
+
+  it('rafraîchit le jeton puis rejoue la requête une fois', async () => {
+    const refreshAccessToken = jest.fn(async () => 'neuf');
+    const fetchFn = jest.fn(async (_url: string, init: RequestInit) =>
+      (init.headers as Record<string, string>).Authorization === 'Bearer neuf'
+        ? response(user)
+        : unauthorized(),
+    );
+    const client = createHttpClient({
+      baseUrl: 'https://api.test',
+      getAccessToken: () => 'vieux',
+      refreshAccessToken,
+      fetchFn: fetchFn as unknown as typeof fetch,
+    });
+    await expect(client.request('users.get', { id: 'u1' })).resolves.toMatchObject({ id: 'u1' });
+    expect(refreshAccessToken).toHaveBeenCalledTimes(1);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+  });
+
+  it('session perdue : unauthorized, sans boucler', async () => {
+    const fetchFn = jest.fn(async () => unauthorized());
+    const client = createHttpClient({
+      baseUrl: 'https://api.test',
+      getAccessToken: () => 'vieux',
+      refreshAccessToken: async () => null,
+      fetchFn: fetchFn as unknown as typeof fetch,
+    });
+    await expect(client.request('users.get', { id: 'u1' })).rejects.toMatchObject({
+      code: 'unauthorized',
+    });
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
+  it('une route publique ne tente pas de rafraîchir', async () => {
+    const refreshAccessToken = jest.fn(async () => 'neuf');
+    const client = createHttpClient({
+      baseUrl: 'https://api.test',
+      getAccessToken: () => null,
+      refreshAccessToken,
+      fetchFn: (async () => unauthorized()) as unknown as typeof fetch,
+    });
+    await expect(
+      client.request('auth.emailStart', { email: 'awa@exemple.com' }),
+    ).rejects.toMatchObject({ code: 'unauthorized' });
+    expect(refreshAccessToken).not.toHaveBeenCalled();
+  });
+});
+
+describe('createSingleFlight', () => {
+  it('dix appels simultanés ne déclenchent qu’un seul rafraîchissement', async () => {
+    let release: (value: string) => void = () => undefined;
+    const task = jest.fn(() => new Promise<string>((resolve) => (release = resolve)));
+    const once = createSingleFlight(task);
+    const calls = Array.from({ length: 10 }, () => once());
+    release('jeton');
+    await expect(Promise.all(calls)).resolves.toEqual(Array(10).fill('jeton'));
+    expect(task).toHaveBeenCalledTimes(1);
+  });
+
+  it('repart de zéro une fois la tâche terminée', async () => {
+    const task = jest.fn(async () => 'ok');
+    const once = createSingleFlight(task);
+    await once();
+    await once();
+    expect(task).toHaveBeenCalledTimes(2);
   });
 });

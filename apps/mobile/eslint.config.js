@@ -14,12 +14,17 @@ const FEATURES = [
   'dev',
 ];
 const LAYERS =
-  'Sens des dépendances : app → features → ui | api | lib | theme | state (spec §4.3).';
+  'Sens des dépendances : app → features → ui | api | lib | theme | state | i18n (spec §4.3).';
 const zone = (target, from) => ({ target, from, message: LAYERS });
 
 module.exports = defineConfig([
   expoConfig,
   { ignores: ['dist/*', '.expo/*', 'coverage/*'] },
+  {
+    // Registre des illustrations : require() est la façon d'embarquer une image avec Metro.
+    files: ['src/assets/illustrations/index.ts'],
+    rules: { '@typescript-eslint/no-require-imports': 'off' },
+  },
   {
     settings: { 'import/resolver': { typescript: { project: './tsconfig.json' } } },
     rules: {
@@ -57,6 +62,15 @@ module.exports = defineConfig([
             ]),
             zone('./src/api', ['./src/features', './src/ui', './src/state', './app']),
             zone('./src/state', ['./src/features', './src/ui', './src/api', './app']),
+            zone('./src/i18n', [
+              './src/features',
+              './src/ui',
+              './src/api',
+              './src/state',
+              './src/theme',
+              './src/lib',
+              './app',
+            ]),
             zone('./src/features', './app'),
             ...FEATURES.map((feature) => ({
               target: `./src/features/${feature}`,

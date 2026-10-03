@@ -2,23 +2,31 @@ import type { ReactNode } from 'react';
 import { View } from 'react-native';
 import { makeStyles } from '@/theme';
 import { Button } from './Button';
+import { Illustration, type IllustrationName } from './Illustration';
 import { Text } from './Text';
 
 export function EmptyState({
   title,
   description,
   illustration,
+  artwork,
   action,
 }: {
   title: string;
   description?: string;
   illustration?: ReactNode;
+  // Illustration peinte (docs/illustrations.md) ; tant qu'elle manque, `illustration` s'affiche.
+  artwork?: IllustrationName;
   action?: { label: string; onPress: () => void };
 }) {
   const styles = useStyles();
   return (
     <View style={styles.container}>
-      {illustration}
+      {artwork ? (
+        <Illustration name={artwork} fallback={illustration} style={styles.artwork} />
+      ) : (
+        illustration
+      )}
       <Text variant="heading" align="center">
         {title}
       </Text>
@@ -39,4 +47,5 @@ const useStyles = makeStyles((t) => ({
     gap: t.spacing.md,
     padding: t.spacing.xxl,
   },
+  artwork: { maxWidth: 280, marginBottom: t.spacing.sm },
 }));

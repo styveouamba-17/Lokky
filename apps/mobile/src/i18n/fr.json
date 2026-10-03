@@ -1,0 +1,322 @@
+{
+  "common": {
+    "next": "Suivant",
+    "skip": "Passer",
+    "or": "ou",
+    "back": "Retour",
+    "continue": "Continuer",
+    "validate": "Valider",
+    "retry": "Réessayer",
+    "close": "Fermer"
+  },
+  "welcome": {
+    "slides": {
+      "tonight": {
+        "title": "Tu fais quoi ce soir ?",
+        "body": "Foot à la Corniche, ciné, thé entre potes… des sorties près de toi, créées par des gens comme toi."
+      },
+      "alone": {
+        "title": "Viens, même si tu ne connais personne",
+        "body": "Vois qui vient, brise la glace dans le groupe avant le jour J. Ici, tout le monde est là pour se faire des potes."
+      },
+      "trust": {
+        "title": "Gratuit, ou chacun paie sa part",
+        "body": "Pas de paiement dans l’app. Des créateurs notés, 18 ans minimum, et un signalement à portée de main."
+      }
+    },
+    "start": "Nanu dem !",
+    "slideLabel": "Écran {{current}} sur {{total}}",
+    "demo": {
+      "q1": "Quelqu’un vient seul·e ?",
+      "a1": "Moi ! Première fois",
+      "a2": "Pareil, on se retrouve devant le phare",
+      "title": "Foot à la Corniche",
+      "when": "Ce soir · 19h",
+      "where": "Corniche Ouest · 1,2 km",
+      "free": "Gratuit",
+      "spots": "6/10 places",
+      "trusted": "Créateur fiable",
+      "chips": {
+        "tonight": "Ce soir",
+        "sport": "Sport",
+        "cine": "Ciné",
+        "tea": "Thé"
+      }
+    }
+  },
+  "login": {
+    "title": "Connecte-toi",
+    "subtitle": "Pas de mot de passe : choisis ton compte, ou reçois un code par email.",
+    "apple": "Continuer avec Apple",
+    "google": "Continuer avec Google",
+    "emailLabel": "Ton email",
+    "emailPlaceholder": "prenom@exemple.com",
+    "emailSubmit": "Recevoir un code",
+    "legal": "En continuant, tu acceptes les conditions d’utilisation et la politique de confidentialité de Lokky. Tu dois avoir 18 ans ou plus.",
+    "signedIn": "Te voilà connecté·e !",
+    "errors": {
+      "email": "Cet email n’a pas l’air valide.",
+      "generic": "Oups, ça n’a pas marché. Réessaie dans un instant.",
+      "network": "Pas de connexion. Vérifie ton réseau et réessaie.",
+      "provider": "La connexion avec {{provider}} a échoué. Réessaie, ou utilise ton email."
+    }
+  },
+  "code": {
+    "title": "Vérifie tes emails",
+    "body": "On a envoyé un code à 6 chiffres à {{email}}.",
+    "label": "Code à 6 chiffres",
+    "demoHint": "Mode démo : le code est {{code}}",
+    "resend": "Renvoyer le code",
+    "resendIn": "Renvoyer le code dans {{seconds}} s",
+    "resent": "Nouveau code envoyé",
+    "changeEmail": "Changer d’email",
+    "errors": {
+      "invalid": "Code incorrect. Vérifie et réessaie."
+    }
+  },
+  "categories": {
+    "sport": "Sport",
+    "beach": "Plage",
+    "cinema": "Ciné",
+    "study": "Études",
+    "music": "Musique et sorties",
+    "games": "Jeux",
+    "food": "Food et thé",
+    "culture": "Culture",
+    "walk": "Balade"
+  },
+  "statuses": {
+    "student": "Étudiant·e",
+    "newcomer": "Nouvel·le arrivant·e",
+    "other": "Autre"
+  },
+  "errors": {
+    "age_min": "Lokky est réservé aux 18 ans et plus.",
+    "age_max": "Vérifie ta date de naissance.",
+    "duplicate_interests": "Un même centre d’intérêt est choisi deux fois.",
+    "code_format": "Le code fait 6 chiffres."
+  },
+  "onboarding": {
+    "stepLabel": "Étape {{current}} sur {{total}}",
+    "finish": "C’est parti !",
+    "saving": "On prépare ton profil…",
+    "you": {
+      "title": "Faisons connaissance",
+      "body": "Juste l’essentiel : ton prénom s’affiche sur ton profil, ta date de naissance reste privée.",
+      "firstName": "Ton prénom",
+      "firstNamePlaceholder": "Awa",
+      "firstNameError": "Ton prénom doit faire entre 2 et 30 caractères.",
+      "birthDate": "Ta date de naissance",
+      "birthDatePlaceholder": "Choisir une date",
+      "photo": "Ajouter une photo",
+      "changePhoto": "Changer la photo",
+      "photoHint": "Facultatif, mais ça rassure les autres."
+    },
+    "situation": {
+      "title": "Ta situation",
+      "body": "Pour te proposer des sorties qui te ressemblent.",
+      "statusLabel": "Tu es…",
+      "neighborhoodLabel": "Ton quartier",
+      "statusHints": {
+        "student": "À l’UCAD, l’ESP, ou ailleurs",
+        "newcomer": "Tu viens d’arriver à Dakar",
+        "other": "Tu bosses, tu chilles, tu explores"
+      }
+    },
+    "interests": {
+      "title": "Tes envies",
+      "body": "Choisis au moins 3 centres d’intérêt.",
+      "counter": "{{count}} sur 3 minimum"
+    },
+    "permissions": {
+      "title": "Dernière étape",
+      "body": "Deux autorisations pour profiter de Lokky. Tu peux les changer à tout moment.",
+      "location": "Ta position",
+      "locationBody": "Pour voir les sorties près de toi. Uniquement quand tu utilises l’app.",
+      "notifications": "Les notifications",
+      "notificationsBody": "Pour savoir quand quelqu’un rejoint ta sortie ou t’écrit.",
+      "allow": "Autoriser",
+      "granted": "Activée",
+      "denied": "Refusée"
+    },
+    "errors": {
+      "save": "Impossible d’enregistrer ton profil. Réessaie.",
+      "photo": "Impossible de charger cette photo."
+    }
+  },
+  "tabs": {
+    "discover": "Découvrir",
+    "mine": "Mes activités",
+    "create": "Créer une activité",
+    "messages": "Messages",
+    "profile": "Profil"
+  },
+  "discover": {
+    "greeting": "Salut {{name}}",
+    "title": "Tu fais quoi ce soir ?",
+    "filters": {
+      "tonight": "Ce soir",
+      "weekend": "Ce week-end",
+      "free": "Gratuit"
+    },
+    "empty": {
+      "title": "Aucune sortie pour ces filtres…",
+      "body": "Et si tu en créais une ? D’autres n’attendent que ça.",
+      "action": "Créer une activité"
+    },
+    "error": {
+      "title": "Impossible de charger les sorties",
+      "body": "Vérifie ta connexion et réessaie."
+    },
+    "nearby": "Autour de toi"
+  },
+  "activity": {
+    "spots": "{{count}}/{{capacity}} places",
+    "full": "Complet",
+    "free": "Gratuit",
+    "split": "Chacun paie sa part",
+    "splitEstimate": "Chacun paie sa part (~{{amount}})",
+    "trusted": "Créateur fiable",
+    "cancelled": "Annulée",
+    "ongoing": "En cours",
+    "past": "Terminée",
+    "when": "Quand ?",
+    "where": "Où ?",
+    "meetingPoint": "Point de RDV : {{place}}",
+    "openMaps": "Ouvrir dans Maps",
+    "cost": "Combien ?",
+    "whoComes": "Qui vient ?",
+    "firstTimers_one": "Première fois ? {{count}} personne découvre aussi Lokky.",
+    "firstTimers_other": "Première fois ? {{count}} personnes découvrent aussi Lokky.",
+    "about": "Le programme",
+    "creator": "Organisé par",
+    "creatorRating": "{{rating}} ({{count}} avis)",
+    "creatorNew": "Nouveau sur Lokky",
+    "creatorStats": "{{created}} sorties organisées · présence {{rate}}",
+    "creatorStatsNoRate": "{{created}} sorties organisées",
+    "join": "Je viens !",
+    "leave": "Je ne viens plus",
+    "going": "Tu y vas !",
+    "joined": "C’est noté, à tout à l’heure !",
+    "left": "Tu ne participes plus à cette sortie.",
+    "you": "Toi",
+    "errors": {
+      "activity_full": "Trop tard, la sortie est complète.",
+      "activity_started": "La sortie a déjà commencé.",
+      "generic": "Oups, ça n’a pas marché. Réessaie."
+    },
+    "notFound": "Cette sortie n’existe plus."
+  },
+  "mine": {
+    "title": "Mes activités",
+    "emptyTitle": "Rien de prévu pour l’instant",
+    "emptyBody": "Tes sorties à venir, passées et créées apparaîtront ici.",
+    "action": "Découvrir des sorties"
+  },
+  "messages": {
+    "title": "Messages",
+    "emptyTitle": "Pas encore de discussion",
+    "emptyBody": "Rejoins une sortie : le chat du groupe apparaîtra ici.",
+    "action": "Découvrir des sorties"
+  },
+  "create": {
+    "title": "Créer une activité",
+    "stepLabel": "Étape {{current}} sur {{total}}",
+    "publish": "Publier",
+    "published": "C’est en ligne ! Nanu dem !",
+    "edit": "Modifier",
+    "discardTitle": "Abandonner la création ?",
+    "discardBody": "Ce que tu as rempli sera perdu.",
+    "discard": "Abandonner",
+    "keep": "Continuer",
+    "errors": {
+      "generic": "Impossible de publier pour le moment. Réessaie.",
+      "startsAt": "Ce créneau est passé : choisis une autre heure."
+    },
+    "what": {
+      "title": "Quoi ?",
+      "body": "Choisis une catégorie et donne un nom qui donne envie.",
+      "category": "Catégorie",
+      "titleLabel": "Titre",
+      "titlePlaceholder": "Foot à la plage, ciné en plein air…",
+      "titleError": "Le titre doit faire entre 3 et 60 caractères.",
+      "description": "Le programme (facultatif)",
+      "descriptionPlaceholder": "Ce qu’on va faire, ce qu’il faut apporter…"
+    },
+    "when": {
+      "title": "Quand ?",
+      "body": "Une date concrète, c’est plus facile de dire oui.",
+      "shortcuts": "Raccourcis",
+      "tonight": "Ce soir",
+      "tomorrow": "Demain",
+      "saturday": "Samedi",
+      "day": "Quel jour ?",
+      "time": "À quelle heure ?",
+      "noSlots": "Plus de créneau aujourd’hui : choisis un autre jour."
+    },
+    "where": {
+      "title": "Où ?",
+      "body": "Le lieu et le point de rendez-vous, pour que personne ne se perde.",
+      "popular": "Lieux populaires",
+      "place": "Nom du lieu",
+      "placePlaceholder": "Plage de Ngor, café du Point E…",
+      "placeError": "Indique le lieu (2 caractères au moins).",
+      "neighborhood": "Quartier",
+      "meetingPoint": "Point de rendez-vous (facultatif)",
+      "meetingPointPlaceholder": "Devant l’entrée principale, au phare…"
+    },
+    "count": {
+      "title": "Combien ?",
+      "body": "Toi compris. Un petit groupe, c’est plus facile de venir seul·e.",
+      "people_one": "{{count}} personne",
+      "people_other": "{{count}} personnes",
+      "less": "Une place de moins",
+      "more": "Une place de plus"
+    },
+    "cost": {
+      "title": "Combien ça coûte ?",
+      "body": "Pas de paiement dans l’app : vous vous organisez dans le chat du groupe.",
+      "free": "Gratuit",
+      "freeBody": "Rien à payer, juste venir.",
+      "split": "Chacun paie sa part",
+      "splitBody": "Entrée, transport, consommation… chacun pour soi.",
+      "estimate": "Estimation par personne (facultatif)",
+      "estimatePlaceholder": "3000",
+      "estimateError": "Entre 1 et 100 000 FCFA."
+    },
+    "review": {
+      "title": "Récapitulatif",
+      "body": "Voici ta sortie telle qu’elle apparaîtra dans Découvrir.",
+      "when": "Quand",
+      "where": "Où",
+      "meetingPoint": "Point de RDV",
+      "count": "Places",
+      "cost": "Coût"
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "signOut": "Se déconnecter",
+    "designSystem": "Design system (dev)",
+    "newMember": "Nouveau",
+    "attended": "Sorties",
+    "attendance": "Présence",
+    "created": "Organisées",
+    "interests": "Ses envies"
+  },
+  "moderation": {
+    "suspended": {
+      "title": "Ton compte est suspendu",
+      "until": "Jusqu’au {{date}}.",
+      "indefinite": "Pour une durée indéterminée.",
+      "body": "Suite à des signalements, tu ne peux plus rejoindre ni créer de sorties pour le moment. Les règles de Lokky protègent tout le monde : merci de les respecter à ton retour.",
+      "check": "Vérifier à nouveau",
+      "stillSuspended": "Ton compte est toujours suspendu."
+    },
+    "banned": {
+      "title": "Ton compte a été fermé",
+      "body": "Suite à des manquements répétés aux règles de Lokky, ton compte ne peut plus être utilisé. Si tu penses qu’il s’agit d’une erreur, écris-nous depuis l’adresse email de ton compte."
+    },
+    "signOut": "Se déconnecter"
+  }
+}

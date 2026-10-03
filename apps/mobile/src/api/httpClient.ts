@@ -13,6 +13,9 @@ import type { ApiClient } from './types';
 export interface HttpClientOptions {
   baseUrl: string;
   getAccessToken: () => string | null | Promise<string | null>;
+  // Appelé sur un 401 d'une route authentifiée : renvoie un nouveau jeton, ou null si la
+  // session est perdue. Doit être mutualisé (voir createSingleFlight).
+  refreshAccessToken?: () => Promise<string | null>;
   fetchFn?: typeof fetch;
   timeoutMs?: number;
 }
@@ -20,9 +23,38 @@ export interface HttpClientOptions {
 export function createHttpClient({
   baseUrl,
   getAccessToken,
+  refreshAccessToken,
   fetchFn = fetch,
   timeoutMs = 15_000,
 }: HttpClientOptions): ApiClient {
+  async function send(
+    url: string,
+    method: string,
+    body: unknown,
+    token: string | null,
+  ): Promise<Response> {
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (body) headers['Content-Type'] = 'application/json';
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetchFn(url, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+    } catch {
+      throw controller.signal.aborted
+        ? new ApiError('timeout', 'La requête a pris trop de temps.')
+        : new ApiError('network', 'Connexion impossible.');
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   async function request<R extends RouteName>(
     name: R,
     input: RouteInput<R>,
@@ -33,29 +65,13 @@ export function createHttpClient({
     const req = buildRequest(def, parsed);
     const url = `${baseUrl}${req.path}${req.query ? `?${toQueryString(req.query)}` : ''}`;
 
-    const headers: Record<string, string> = { Accept: 'application/json' };
-    if (req.body) headers['Content-Type'] = 'application/json';
-    if (def.auth) {
-      const token = await getAccessToken();
-      if (token) headers.Authorization = `Bearer ${token}`;
-    }
+    let res = await send(url, req.method, req.body, def.auth ? await getAccessToken() : null);
 
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    let res: Response;
-    try {
-      res = await fetchFn(url, {
-        method: req.method,
-        headers,
-        body: req.body ? JSON.stringify(req.body) : undefined,
-        signal: controller.signal,
-      });
-    } catch {
-      throw controller.signal.aborted
-        ? new ApiError('timeout', 'La requête a pris trop de temps.')
-        : new ApiError('network', 'Connexion impossible.');
-    } finally {
-      clearTimeout(timer);
+    // Jeton expiré : un seul rafraîchissement, puis on rejoue la requête une fois (spec §7.2).
+    if (res.status === 401 && def.auth && refreshAccessToken) {
+      const fresh = await refreshAccessToken();
+      if (!fresh) throw new ApiError('unauthorized', 'Session expirée.', 401);
+      res = await send(url, req.method, req.body, fresh);
     }
 
     const json: unknown = await res.json().catch(() => null);
@@ -74,4 +90,15 @@ export function createHttpClient({
   }
 
   return { request };
+}
+
+// Une seule exécution à la fois : les appels concurrents partagent la même promesse.
+export function createSingleFlight<T>(task: () => Promise<T>): () => Promise<T> {
+  let pending: Promise<T> | null = null;
+  return () => {
+    pending ??= task().finally(() => {
+      pending = null;
+    });
+    return pending;
+  };
 }

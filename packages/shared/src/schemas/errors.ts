@@ -12,6 +12,7 @@ export const API_ERROR_CODES = [
   'rate_limited',
   'account_suspended',
   'account_banned',
+  'onboarding_required', // compte créé, profil pas encore rempli (GET /me)
   'internal',
 ] as const;
 
