@@ -41,22 +41,45 @@ export interface MockMessage {
   senderId: string | null; // null pour un message système
   type: 'text' | 'system';
   body: string;
+  replyToMessageId?: string | null;
+  editedAt?: string | null;
   createdAt: string;
 }
 
 // Diffusion des nouveaux messages : le MockSocket s'y abonne comme le ferait le serveur.
 export interface MockBus {
   publish: (message: MockMessage) => void;
+  publishUpdated: (message: MockMessage) => void;
   subscribe: (listener: (message: MockMessage) => void) => () => void;
+  subscribeUpdated: (listener: (message: MockMessage) => void) => () => void;
+  publishParticipantRemoved: (activityId: string, userId: string) => void;
+  subscribeParticipantRemoved: (
+    listener: (payload: { activityId: string; userId: string }) => void,
+  ) => () => void;
 }
 
 function createMockBus(): MockBus {
   const listeners = new Set<(message: MockMessage) => void>();
+  const updatedListeners = new Set<(message: MockMessage) => void>();
+  const participantRemovedListeners = new Set<
+    (payload: { activityId: string; userId: string }) => void
+  >();
   return {
     publish: (message) => listeners.forEach((listener) => listener(message)),
+    publishUpdated: (message) => updatedListeners.forEach((listener) => listener(message)),
     subscribe: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
+    },
+    subscribeUpdated: (listener) => {
+      updatedListeners.add(listener);
+      return () => updatedListeners.delete(listener);
+    },
+    publishParticipantRemoved: (activityId, userId) =>
+      participantRemovedListeners.forEach((listener) => listener({ activityId, userId })),
+    subscribeParticipantRemoved: (listener) => {
+      participantRemovedListeners.add(listener);
+      return () => participantRemovedListeners.delete(listener);
     },
   };
 }
@@ -64,6 +87,7 @@ function createMockBus(): MockBus {
 export interface MockDb {
   users: Map<string, MockUser>;
   activities: Map<string, MockActivity>;
+  removedActivityParticipants: Set<string>;
   // Messages par conversation, du plus ancien au plus récent.
   messages: Map<string, MockMessage[]>;
   // Dernière lecture du spectateur, par conversation.
@@ -89,6 +113,7 @@ export function createMockDb(now: Date, { viewerOnboarded = false } = {}): MockD
   return {
     users: new Map(users.map((u) => [u.id, u])),
     activities: new Map(activities.map((a) => [a.id, a])),
+    removedActivityParticipants: new Set(),
     messages,
     readAt,
     bus: createMockBus(),

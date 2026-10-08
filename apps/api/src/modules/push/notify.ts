@@ -6,7 +6,8 @@ import type { PushSender } from '../../services/push';
 import { DEFAULT_PREFERENCES } from '../users/users';
 
 // Familles de notifications, réglables par chacun (Réglages › Notifications de l'app).
-export type PushKind = 'messages' | 'activityUpdates' | 'reminders';
+// account : décisions sur le compte (modération), toujours envoyées, jamais désactivables.
+export type PushKind = 'messages' | 'activityUpdates' | 'reminders' | 'account';
 
 export interface Notification {
   userId: string;
@@ -31,7 +32,11 @@ export async function notify(
     .where(inArray(users.id, userIds));
   const allowed = new Set(
     people
-      .filter((p) => !p.deletedAt && (p.preferences ?? DEFAULT_PREFERENCES).notifications[kind])
+      .filter(
+        (p) =>
+          !p.deletedAt &&
+          (kind === 'account' || (p.preferences ?? DEFAULT_PREFERENCES).notifications[kind]),
+      )
       .map((p) => p.id),
   );
   if (allowed.size === 0) return 0;

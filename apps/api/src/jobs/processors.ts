@@ -1,4 +1,17 @@
-import { and, eq, gt, inArray, isNotNull, lt, ne, notInArray, or } from 'drizzle-orm';
+import {
+  and,
+  arrayOverlaps,
+  eq,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  ne,
+  notInArray,
+  or,
+} from 'drizzle-orm';
+import type { ModerationStatus } from '@lokky/shared';
 import type { Database } from '../db/client';
 import {
   activities,
@@ -33,11 +46,71 @@ export const PURGE_AFTER_DAYS = 30;
 const place = (a: { placeName: string; meetingPoint: string | null }) =>
   a.meetingPoint ? `${a.placeName} · ${a.meetingPoint}` : a.placeName;
 
+const dakarDate = new Intl.DateTimeFormat('fr-FR', {
+  timeZone: 'Africa/Dakar',
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+const MODERATION_TEXTS: Record<
+  ModerationStatus,
+  (suspendedUntil: string | null) => { title: string; body: string }
+> = {
+  warned: () => ({
+    title: 'Avertissement de l’équipe Lokky',
+    body: 'Ton comportement a été signalé. Merci de respecter les règles de Lokky.',
+  }),
+  suspended: (until) => ({
+    title: 'Ton compte est suspendu',
+    body: until
+      ? `Tu pourras de nouveau rejoindre et créer des sorties à partir du ${dakarDate.format(new Date(until))}.`
+      : 'Tu ne peux plus rejoindre ni créer de sorties pour le moment.',
+  }),
+  banned: () => ({
+    title: 'Ton compte a été fermé',
+    body: 'Suite à des manquements aux règles de Lokky, ton compte ne peut plus être utilisé.',
+  }),
+  active: () => ({
+    title: 'Ton compte est rétabli',
+    body: 'Tu peux de nouveau utiliser Lokky normalement. Bonnes sorties !',
+  }),
+};
+
 // Les textes des notifications sont rédigés ici, en français (spec backend §10).
 export function createProcessors({ db, push, now }: ProcessorDeps): Processors {
   const activityOrNull = (id: string) => findActivity(db, id).catch(() => null);
 
   return {
+    'activity-discovery': async ({ activityId }) => {
+      const activity = await activityOrNull(activityId);
+      if (!activity || statusOf(activity, now()) !== 'upcoming') return;
+      const recipients = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(
+          and(
+            arrayOverlaps(users.interests, [activity.category]),
+            isNotNull(users.onboardedAt),
+            isNull(users.deletedAt),
+            ne(users.id, activity.creatorId),
+          ),
+        );
+      await notify(
+        db,
+        push,
+        'activityUpdates',
+        recipients.map(({ id }) => ({
+          userId: id,
+          title: 'Une sortie pour toi',
+          body: `« ${activity.title} » vient d’être créée dans tes centres d’intérêt. Découvre-la !`,
+          data: { type: 'activity_discovery', activityId },
+        })),
+      );
+    },
+
     'activity-reminder': async ({ activityId }) => {
       const activity = await activityOrNull(activityId);
       if (!activity || statusOf(activity, now()) !== 'upcoming') return;
@@ -177,6 +250,13 @@ export function createProcessors({ db, push, now }: ProcessorDeps): Processors {
     },
 
     // Effacement définitif 30 jours après la suppression (spec backend §7, règle 9).
+    // Le motif n'est jamais dans la notification (visible sur l'écran verrouillé) : l'app
+    // affiche l'écran correspondant à l'ouverture.
+    'moderation-push': async ({ userId, status, suspendedUntil }) => {
+      const text = MODERATION_TEXTS[status](suspendedUntil);
+      await notify(db, push, 'account', [{ userId, ...text, data: { type: 'moderation' } }]);
+    },
+
     'purge-deleted-accounts': async () => {
       const limit = new Date(now().getTime() - PURGE_AFTER_DAYS * DAY_MS);
       const gone = await db

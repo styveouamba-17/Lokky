@@ -106,6 +106,17 @@ export function attachRealtime(server: HttpServer, deps: RealtimeDeps): Realtime
   );
 
   events.on(
+    'message.updated',
+    async ({ message, recipientIds }) => {
+      const senderId = message.sender?.id;
+      const cutOff = senderId ? await cutOffIds(db, senderId) : new Set<string>();
+      const recipients = recipientIds.filter((id) => !cutOff.has(id));
+      if (recipients.length) io.to(recipients.map(room)).emit('message:updated', message);
+    },
+    { background: true },
+  );
+
+  events.on(
     'conversation.read',
     async ({ conversationId, userId, readAt }) => {
       const members = await membersOf(db, conversationId);
@@ -142,6 +153,14 @@ export function attachRealtime(server: HttpServer, deps: RealtimeDeps): Realtime
     { background: true },
   );
 
+  events.on(
+    'activity.participantRemoved',
+    ({ activityId, userId }) => {
+      io.to(room(userId)).emit('activity:participantRemoved', { activityId });
+    },
+    { background: true },
+  );
+
   // Décisions de modération (script, admin) : la personne est prévenue tout de suite.
   if (deps.redis) {
     const subscriber = deps.redis.duplicate();
@@ -152,6 +171,7 @@ export function attachRealtime(server: HttpServer, deps: RealtimeDeps): Realtime
         io.to(room(notice.userId)).emit('moderation:update', {
           status: notice.status,
           suspendedUntil: notice.suspendedUntil,
+          warnedAt: notice.warnedAt,
         });
       } catch {
         // message illisible : ignoré

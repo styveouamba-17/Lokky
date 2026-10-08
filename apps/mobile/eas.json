@@ -6,21 +6,36 @@
     },
     "development": {
       "extends": "base",
+      "environment": "development",
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
-      "env": { "EXPO_PUBLIC_API_MODE": "mock" }
+      "env": {
+        "EXPO_PUBLIC_API_MODE": "http",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "false",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://4d3315dc9b3eaaf887fd0735c455e0c9@o4510900988542976.ingest.de.sentry.io/4512220969762896"
+      }
     },
     "preview": {
       "extends": "base",
+      "environment": "preview",
       "distribution": "internal",
       "channel": "preview",
-      "env": { "EXPO_PUBLIC_API_MODE": "mock" }
+      "env": {
+        "EXPO_PUBLIC_API_MODE": "mock",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "false",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://4d3315dc9b3eaaf887fd0735c455e0c9@o4510900988542976.ingest.de.sentry.io/4512220969762896"
+      }
     },
     "production": {
       "extends": "base",
+      "environment": "production",
       "autoIncrement": true,
-      "channel": "production"
+      "channel": "production",
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "false",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://4d3315dc9b3eaaf887fd0735c455e0c9@o4510900988542976.ingest.de.sentry.io/4512220969762896"
+      }
     }
   },
   "submit": { "production": {} }

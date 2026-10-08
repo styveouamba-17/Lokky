@@ -20,7 +20,7 @@ const NEW = { accessToken: 'neuf', refreshToken: 'r-neuf', expiresIn: 900 };
 const ME = {
   id: 'u_awa',
   firstName: 'Awa',
-  moderation: { status: 'suspended', suspendedUntil: '2099-01-01T00:00:00Z' },
+  moderation: { status: 'suspended', suspendedUntil: '2099-01-01T00:00:00Z', warnedAt: null },
 };
 
 describe('pont session ↔ API', () => {

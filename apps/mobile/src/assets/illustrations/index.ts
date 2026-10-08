@@ -36,7 +36,7 @@ export type IllustrationName = (typeof ILLUSTRATION_NAMES)[number];
 export const ILLUSTRATIONS: Partial<Record<IllustrationName, ImageSourcePropType>> = {
   'welcome-tonight': require('../../../assets/welcome-tonight.png'),
   'welcome-together': require('../../../assets/welcome-together.png'),
-  // 'onboarding-permissions': require('./onboarding-permissions.png'),
+  'onboarding-permissions': require('../../../assets/onboarding-permissions.png'),
   'empty-no-activity': require('../../../assets/empty-no-activity.png'),
   'empty-offline': require('../../../assets/empty-offline.png'),
   'empty-past': require('../../../assets/empty-past.png'),
@@ -45,14 +45,14 @@ export const ILLUSTRATIONS: Partial<Record<IllustrationName, ImageSourcePropType
   'empty-messages': require('../../../assets/empty-messages.png'),
   'chat-first-message': require('../../../assets/chat-first-message.png'),
   'dm-locked': require('../../../assets/dm-locked.png'),
-  // 'activity-gone': require('./activity-gone.png'),
+  'activity-gone': require('../../../assets/activity-gone.png'),
   'create-published': require('../../../assets/create-published.png'),
   'review-thanks': require('../../../assets/review-thanks.png'),
   'empty-blocked': require('../../../assets/empty-blocked.png'),
-  // 'moderation-suspended': require('./moderation-suspended.png'),
-  // 'moderation-banned': require('./moderation-banned.png'),
-  // 'error-generic': require('./error-generic.png'),
-  // 'account-deleted': require('./account-deleted.png'),
+  'moderation-suspended': require('../../../assets/moderation-suspended.png'),
+  'moderation-banned': require('../../../assets/moderation-banned.png'),
+  'error-generic': require('../../../assets/error-generic.png'),
+  // 'account-deleted': require('../../../assets/account-deleted.png'),
 };
 
 // Couvertures d'activité : une ou plusieurs variantes par catégorie (docs/illustrations.md).
@@ -61,31 +61,31 @@ export const ILLUSTRATIONS: Partial<Record<IllustrationName, ImageSourcePropType
 // (ou en ajouter une : category-sport-3.png…).
 export const CATEGORY_COVERS: Record<ActivityCategory, ImageSourcePropType[]> = {
   sport: [
-    // require('./category-sport.png'),
+    require('../../../assets/category-sport.png'),
     // require('./category-sport-2.png'),
   ],
   beach: [
-    // require('./category-beach.png'),
+    require('../../../assets/category-beach.png'),
     // require('./category-beach-2.png'),
   ],
   cinema: [
-    // require('./category-cinema.png'),
+    require('../../../assets/category-cinema.png'),
     // require('./category-cinema-2.png'),
   ],
   study: [
-    // require('./category-study.png'),
+    // require('../../../assets/category-study.png'),
     // require('./category-study-2.png'),
   ],
   music: [
-    // require('./category-music.png'),
+    require('../../../assets/category-music.png'),
     // require('./category-music-2.png'),
   ],
   games: [
-    // require('./category-games.png'),
+    // require('../../../assets/category-games.png'),
     // require('./category-games-2.png'),
   ],
   food: [
-    // require('./category-food.png'),
+    require('../../../assets/category-food.png'),
     // require('./category-food-2.png'),
   ],
   culture: [
@@ -93,7 +93,7 @@ export const CATEGORY_COVERS: Record<ActivityCategory, ImageSourcePropType[]> = 
     // require('./category-culture-2.png'),
   ],
   walk: [
-    // require('./category-walk.png'),
-    // require('./category-walk-2.png'),
+        require('../../../assets/category-walk.png'),
+    // require('../../../assets/category-walk-2.png'),
   ],
 };

@@ -15,7 +15,7 @@ const TOKENS = { accessToken: 'a1', refreshToken: 'r1', expiresIn: 900 };
 const ME = {
   id: 'u_awa',
   firstName: 'Awa',
-  moderation: { status: 'active', suspendedUntil: null },
+  moderation: { status: 'active', suspendedUntil: null, warnedAt: null },
 } as Me;
 const reset = () =>
   useSessionStore.setState({ status: 'unknown', tokens: null, me: null, firstNameHint: null });

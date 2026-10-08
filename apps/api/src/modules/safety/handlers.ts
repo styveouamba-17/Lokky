@@ -1,8 +1,10 @@
 import { and, desc, eq, gt, inArray, isNull, ne } from 'drizzle-orm';
+import type { Database } from '../../db/client';
 import {
   activities,
   authIdentities,
   blocks,
+  messages,
   participations,
   reports,
   sessions,
@@ -13,6 +15,33 @@ import { HttpError } from '../../http/errors';
 import { uuidv7 } from '../../lib/ids';
 import { removeGroupMember } from '../chat/groups';
 import { findUser, toUserPreview } from '../users/users';
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Compte concerné par un signalement (admin) : la personne, l'auteur du message, le créateur
+// de la sortie. null si la cible n'existe pas.
+async function subjectOf(
+  db: Database,
+  type: 'user' | 'activity' | 'message',
+  id: string,
+): Promise<string | null> {
+  if (!UUID.test(id)) return null;
+  if (type === 'user') return (await findUser(db, id))?.id ?? null;
+  if (type === 'message') {
+    const [row] = await db
+      .select({ userId: messages.senderId })
+      .from(messages)
+      .where(eq(messages.id, id))
+      .limit(1);
+    return row?.userId ?? null;
+  }
+  const [row] = await db
+    .select({ userId: activities.creatorId })
+    .from(activities)
+    .where(eq(activities.id, id))
+    .limit(1);
+  return row?.userId ?? null;
+}
 
 // Sécurité (spec app §2, principe 4) : signalement, blocage, suppression de compte.
 export const safetyHandlers: Handlers = {
@@ -25,8 +54,10 @@ export const safetyHandlers: Handlers = {
       targetId: input.targetId,
       reason: input.reason,
       details: input.details ?? null,
+      subjectUserId: await subjectOf(ctx.db, input.targetType, input.targetId),
       createdAt: ctx.now(),
     });
+    await ctx.events.emit('reports.changed', {});
     return { ok: true as const };
   },
 

@@ -41,6 +41,57 @@ describe('chat de groupe', () => {
     });
   });
 
+  it('annoncer le départ aux membres restants et retirer la discussion du membre parti', async () => {
+    const moussa = await createMember(t, 'Moussa');
+    const awa = await createMember(t, 'Awa');
+    const { id, conversationId } = await createActivity(t, moussa.id, { startsAt: at(8) });
+    await awa.call('POST', `/activities/${id}/join`);
+
+    later(1);
+    const left = await awa.call('POST', `/activities/${id}/leave`);
+    expect(left.statusCode).toBe(200);
+
+    const page = messagesPage.parse(
+      (await moussa.call('GET', `/conversations/${conversationId}/messages`)).json(),
+    );
+    expect(page.items[0]).toMatchObject({
+      type: 'system',
+      sender: null,
+      body: 'Awa ne vient plus à cette sortie',
+    });
+
+    const awaConversations = conversationsPage.parse(
+      (await awa.call('GET', '/conversations')).json(),
+    );
+    expect(awaConversations.items.some((c) => c.activityId === id)).toBe(false);
+    const moussaConversations = conversationsPage.parse(
+      (await moussa.call('GET', '/conversations')).json(),
+    );
+    expect(moussaConversations.items.find((c) => c.activityId === id)?.lastMessage?.body).toBe(
+      'Awa ne vient plus à cette sortie',
+    );
+  });
+
+  it('annoncer au groupe le retrait d’un participant par le créateur', async () => {
+    const awa = await createMember(t, 'Awa');
+    const fatou = await createMember(t, 'Fatou');
+    const { id, conversationId } = await createActivity(t, awa.id, {
+      startsAt: at(8),
+      participantIds: [fatou.id],
+    });
+
+    later(1);
+    await awa.call('POST', `/activities/${id}/participants/${fatou.id}/remove`);
+    const page = messagesPage.parse(
+      (await awa.call('GET', `/conversations/${conversationId}/messages`)).json(),
+    );
+    expect(page.items[0]).toMatchObject({
+      type: 'system',
+      sender: null,
+      body: 'L’organisateur a retiré Fatou de la sortie.',
+    });
+  });
+
   it('envoyer, lire, sans doublon pour un même clientId', async () => {
     const moussa = await createMember(t, 'Moussa');
     const awa = await createMember(t, 'Awa');
@@ -64,6 +115,73 @@ describe('chat de groupe', () => {
     });
     const again = await awa.call('POST', `/conversations/${other.conversationId}/messages`, input);
     expect(again.json().id).toBe(sent.json().id);
+  });
+
+  it('répondre à un message garde sa référence et le propriétaire peut le modifier', async () => {
+    const moussa = await createMember(t, 'Moussa');
+    const awa = await createMember(t, 'Awa');
+    const { id, conversationId } = await createActivity(t, moussa.id, { startsAt: at(8) });
+    await awa.call('POST', `/activities/${id}/join`);
+    const sent = await awa.call('POST', `/conversations/${conversationId}/messages`, {
+      clientId: 'client-original',
+      body: 'On se retrouve à 18h ?',
+    });
+    const messageId = sent.json().id as string;
+    const reply = await moussa.call('POST', `/conversations/${conversationId}/messages`, {
+      clientId: 'client-reply',
+      body: 'Oui, parfait !',
+      replyToMessageId: messageId,
+    });
+    expect(reply.json()).toMatchObject({
+      replyTo: {
+        id: messageId,
+        body: 'On se retrouve à 18h ?',
+        sender: { firstName: 'Awa' },
+      },
+      editedAt: null,
+    });
+
+    later(1);
+    const edited = await awa.call('PATCH', `/messages/${messageId}`, {
+      body: 'On se retrouve à 18h30 ?',
+    });
+    expect(edited.json()).toMatchObject({
+      id: messageId,
+      body: 'On se retrouve à 18h30 ?',
+      editedAt: expect.any(String),
+    });
+    const updatedMessages = messagesPage.parse(
+      (await moussa.call('GET', `/conversations/${conversationId}/messages`)).json(),
+    );
+    expect(
+      updatedMessages.items.find((message) => message.id === reply.json().id)?.replyTo,
+    ).toMatchObject({
+      id: messageId,
+      body: 'On se retrouve à 18h30 ?',
+    });
+    expect(
+      (await moussa.call('PATCH', `/messages/${messageId}`, { body: 'modifié' })).statusCode,
+    ).toBe(403);
+    expect(
+      (await awa.call('PATCH', `/messages/${reply.json().id}`, { body: 'modifié' })).statusCode,
+    ).toBe(403);
+  });
+
+  it('refuse une réponse qui cible un message d’une autre discussion', async () => {
+    const moussa = await createMember(t, 'Moussa');
+    const awa = await createMember(t, 'Awa');
+    const one = await createActivity(t, moussa.id, { startsAt: at(8) });
+    const two = await createActivity(t, awa.id, { startsAt: at(9) });
+    const target = await moussa.call('POST', `/conversations/${one.conversationId}/messages`, {
+      clientId: 'client-target',
+      body: 'Message dans le premier groupe',
+    });
+    const response = await awa.call('POST', `/conversations/${two.conversationId}/messages`, {
+      clientId: 'client-cross',
+      body: 'Réponse invalide',
+      replyToMessageId: target.json().id,
+    });
+    expect(response.statusCode).toBe(404);
   });
 
   it('non-lus : messages des autres après la dernière lecture', async () => {

@@ -49,12 +49,22 @@ export async function memberConversation(
 }
 
 export async function toMessages(db: Database, rows: readonly MessageRow[]): Promise<Message[]> {
+  if (rows.length === 0) return [];
+  const replyIds = [
+    ...new Set(rows.flatMap((m) => (m.replyToMessageId ? [m.replyToMessageId] : []))),
+  ];
+  const replies = replyIds.length
+    ? await db.select().from(messages).where(inArray(messages.id, replyIds))
+    : [];
+  const replyById = new Map(replies.map((m) => [m.id, m]));
   const people = await findUsers(
     db,
-    rows.flatMap((m) => (m.senderId ? [m.senderId] : [])),
+    [...rows, ...replies].flatMap((m) => (m.senderId ? [m.senderId] : [])),
   );
   return rows.map((m) => {
     const sender = m.senderId ? people.get(m.senderId) : undefined;
+    const reply = m.replyToMessageId ? replyById.get(m.replyToMessageId) : undefined;
+    const replySender = reply?.senderId ? people.get(reply.senderId) : undefined;
     return {
       id: m.id,
       clientId: m.clientId,
@@ -63,6 +73,15 @@ export async function toMessages(db: Database, rows: readonly MessageRow[]): Pro
       sender: m.type === 'text' && sender ? toUserPreview(sender) : null,
       type: m.type === 'text' && !sender ? 'system' : m.type,
       body: m.body,
+      replyTo:
+        reply?.type === 'text'
+          ? {
+              id: reply.id,
+              body: reply.body,
+              sender: replySender ? toUserPreview(replySender) : null,
+            }
+          : null,
+      editedAt: m.editedAt?.toISOString() ?? null,
       createdAt: m.createdAt.toISOString(),
     };
   });
@@ -72,6 +91,7 @@ export async function insertMessage(
   db: Database,
   values: Pick<MessageRow, 'conversationId' | 'senderId' | 'type' | 'body'> & {
     clientId?: string | null;
+    replyToMessageId?: string | null;
     createdAt: Date;
   },
 ): Promise<MessageRow> {
@@ -176,6 +196,7 @@ export async function toConversations(
         ...base,
         type: 'group',
         activityId: row.activityId,
+        activityCategory: activity.category,
         peer: null,
         title: activity.title,
         avatarUrl: null,
@@ -189,6 +210,7 @@ export async function toConversations(
         ...base,
         type: 'direct',
         activityId: null,
+        activityCategory: null,
         peer: preview,
         title: preview.firstName,
         avatarUrl: preview.avatarUrl,

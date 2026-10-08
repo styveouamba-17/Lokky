@@ -11,6 +11,20 @@ cd apps/mobile
 npx eas-cli@latest build --profile development --platform all
 ```
 
+### Tester l'authentification sociale contre l'API locale
+
+Le profil EAS `development` utilise le vrai backend (`EXPO_PUBLIC_API_MODE=http`). En lancement
+local, l'app utilise aussi le vrai backend par défaut et déduit l'adresse LAN depuis Metro
+(port API `3000`). Téléphone et ordinateur doivent être sur le même réseau ; l'API doit être
+démarrée avec `npm run dev -w @lokky/api` après configuration de sa base locale. Le serveur
+écoute sur `0.0.0.0`, donc il est joignable depuis le téléphone. Tester l'API sur
+`http://localhost:3000/health` depuis l'ordinateur ne vérifie pas l'accès depuis le téléphone.
+
+Apple/Google ne sont réellement vérifiés que lorsque l'app appelle l'API HTTP. En mode mock,
+le client simulé accepte n'importe quel jeton et ne teste pas la validation des fournisseurs.
+Apple Sign-In s'essaie sur iOS ; Google peut être testé sur Android ou iOS avec un build natif
+de développement. Une première connexion OAuth nécessite un email vérifié.
+
 ## 1. Liens vers une sortie (`lokky.akylian.com/activity/:id`)
 
 L'app est configurée (`app.config.ts` : `associatedDomains` iOS, `intentFilters` Android). Il reste à publier **deux fichiers** sur `https://lokky.akylian.com`, en HTTPS, avec le type `application/json` et sans redirection.
@@ -49,7 +63,9 @@ L'empreinte s'obtient avec `npx eas-cli@latest credentials -p android` (certific
 
 ### Page web de secours
 
-Sans l'app installée, le lien ouvre le site : prévois une page `/activity/:id` qui présente Lokky avec les liens App Store et Google Play.
+Le site public `apps/web` présente Lokky et est généré en statique par Astro (`npm run build --workspace @lokky/web` → `apps/web/dist`). Il peut être publié sur un hébergeur statique depuis le monorepo.
+
+La page d'accueil est en place, mais la page de secours propre à chaque lien (`/activity/:id`) reste à créer : elle devra présenter la sortie et les liens App Store et Google Play lorsque ceux-ci seront disponibles.
 
 ### Comportement dans l'app
 
@@ -78,20 +94,63 @@ Un message pour la conversation déjà ouverte n'affiche pas de bannière (l'app
 
 ## 3. Sentry (plantages)
 
-L'app n'envoie rien tant qu'aucun DSN n'est configuré, et jamais en développement.
+Le projet React Native Sentry est `nach-corp-5a/lokky`. Le DSN est configuré dans les profils
+EAS. Chaque profil utilise l'environnement EAS correspondant (`development`, `preview` ou
+`production`) ; ajouter `SENTRY_AUTH_TOKEN` comme variable sensible à chaque environnement
+nécessitant l'envoi de source maps. L'app ne transmet aucun événement en développement (`__DEV__`).
 
-1. Créer le projet React Native dans Sentry.
-2. Ajouter le DSN dans `eas.json` (profils `preview` et `production`) : `"EXPO_PUBLIC_SENTRY_DSN": "https://…@….ingest.sentry.io/…"`.
-3. Pour des piles d'appels lisibles (source maps) :
-   - renseigner l'organisation et le projet dans `app.config.ts` : `['@sentry/react-native/expo', { organization: '…', project: '…' }]` ;
-   - créer le secret EAS `SENTRY_AUTH_TOKEN` (visibilité « sensitive ») ;
-   - retirer `SENTRY_DISABLE_AUTO_UPLOAD` de `eas.json`.
+L'envoi automatique des source maps est activé dans les profils EAS. Le jeton ne doit jamais être
+ajouté au dépôt ni à une variable `EXPO_PUBLIC_…`. Après avoir enregistré le secret dans EAS,
+reconstruire le profil concerné pour envoyer les source maps.
 
 Chaque écran a son écran d'erreur illustré (« Réessayer ») : une erreur dans un écran n'arrête plus toute l'app, et elle est signalée à Sentry.
 
-## 4. Reste à faire hors code
+## 4. Admin de modération (`apps/admin`)
+
+L'admin est une application web statique (`npm run build -w @lokky/admin` → `apps/admin/dist`).
+Elle appelle l'API **sur sa propre origine**, sous `/api` : le cookie de session est `HttpOnly`,
+`SameSite=Strict` et `Secure` en production, et chaque requête porte l'en-tête `x-lokky-admin: 1`
+(protection CSRF). Pas de CORS à ouvrir.
+
+Caddy (domaine à adapter) :
+
+```
+admin.<domaine> {
+	handle_path /api/* {
+		reverse_proxy api:3000
+	}
+	handle {
+		root * /srv/admin
+		try_files {path} /index.html
+		file_server
+	}
+	header X-Robots-Tag "noindex, nofollow"
+}
+```
+
+Équipe (jamais depuis l'API ; le compte est créé s'il n'existe pas) :
+
+- `npm run staff -w @lokky/api -- <email> admin` : administration (bannir, lever un bannissement, modérer l'équipe) ;
+- `npm run staff -w @lokky/api -- <email> moderator` : signalements, avertir, suspendre, rétablir, annuler une sortie ;
+- `npm run staff -w @lokky/api -- <email> none` : retire l'accès et ferme ses sessions.
+
+Connexion par code email (le même que l'app), session de 12 heures. Chaque décision et chaque
+lecture d'une conversation (chat de groupe, contexte d'un message privé signalé) est inscrite dans
+la table `admin_audit`.
+
+En local : `npm run dev -w @lokky/api` puis `npm run dev -w @lokky/admin` → http://localhost:5180
+(Vite relaie `/api` vers l'API sur le port 3000).
+
+## 5. Site public (`apps/web`)
+
+Le site vit dans le monorepo, est construit avec Astro et ne nécessite pas de serveur backend :
+`npm run build --workspace @lokky/web` produit les fichiers statiques dans `apps/web/dist`.
+Publier ce dossier sur un hébergeur statique et associer le domaine public. Il partage le domaine
+prévu pour les liens `lokky.akylian.com`; les pages `/activity/:id` de secours ne sont pas encore
+implémentées.
+
+## 6. Reste à faire hors code
 
 - Publier les deux fichiers de liens et la page web de secours.
-- Brancher le vrai backend (contrat `@lokky/shared`) : `EXPO_PUBLIC_API_MODE=http` et `EXPO_PUBLIC_API_URL`.
 - Faire relire les textes légaux (`src/features/settings/legal/`) et confirmer l'adresse de contact.
 - Générer les illustrations (`docs/illustrations.md`).

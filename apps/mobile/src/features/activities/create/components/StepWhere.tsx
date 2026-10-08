@@ -12,9 +12,11 @@ import type { Draft } from '../draft';
 export function StepWhere({
   control,
   errors,
+  meetingPointOnly = false,
 }: {
   control: Control<Draft>;
   errors: FieldErrors<Draft>;
+  meetingPointOnly?: boolean;
 }) {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -26,52 +28,57 @@ export function StepWhere({
     <View style={styles.stack}>
       <StepIntro title={t('create.where.title')} body={t('create.where.body')} />
 
-      <View style={styles.group}>
-        <Text variant="label">{t('create.where.popular')}</Text>
-        <View style={styles.chips}>
-          {POPULAR_PLACES.map((place) => (
-            <Chip
-              key={place.id}
-              label={place.name}
-              icon={MapPin}
-              selected={placeId.field.value === place.id}
-              onPress={() => {
-                placeId.field.onChange(place.id);
-                placeName.field.onChange(place.name);
-                neighborhood.field.onChange(place.neighborhood);
-              }}
-            />
-          ))}
-        </View>
-      </View>
-
-      <Input
-        label={t('create.where.place')}
-        placeholder={t('create.where.placePlaceholder')}
-        value={placeName.field.value}
-        onChangeText={(text) => {
-          placeName.field.onChange(text);
-          placeId.field.onChange(null); // saisie libre : ce n'est plus le lieu populaire
-        }}
-        onBlur={placeName.field.onBlur}
-        error={errors.placeName ? t('create.where.placeError') : null}
-        maxLength={80}
-      />
-
-      {placeId.field.value ? null : (
+      {meetingPointOnly ? null : (
         <View style={styles.group}>
-          <Text variant="label">{t('create.where.neighborhood')}</Text>
+          <Text variant="label">{t('create.where.popular')}</Text>
           <View style={styles.chips}>
-            {NEIGHBORHOOD_IDS.map((id) => (
+            {POPULAR_PLACES.map((place) => (
               <Chip
-                key={id}
-                label={NEIGHBORHOODS[id].name}
-                selected={neighborhood.field.value === id}
-                onPress={() => neighborhood.field.onChange(id)}
+                key={place.id}
+                label={place.name}
+                icon={MapPin}
+                selected={placeId.field.value === place.id}
+                onPress={() => {
+                  placeId.field.onChange(place.id);
+                  placeName.field.onChange(place.name);
+                  neighborhood.field.onChange(place.neighborhood);
+                }}
               />
             ))}
           </View>
         </View>
+      )}
+
+      {meetingPointOnly ? null : (
+        <>
+          <Input
+            label={t('create.where.place')}
+            placeholder={t('create.where.placePlaceholder')}
+            value={placeName.field.value}
+            onChangeText={(text) => {
+              placeName.field.onChange(text);
+              placeId.field.onChange(null);
+            }}
+            onBlur={placeName.field.onBlur}
+            error={errors.placeName ? t('create.where.placeError') : null}
+            maxLength={80}
+          />
+          {placeId.field.value ? null : (
+            <View style={styles.group}>
+              <Text variant="label">{t('create.where.neighborhood')}</Text>
+              <View style={styles.chips}>
+                {NEIGHBORHOOD_IDS.map((id) => (
+                  <Chip
+                    key={id}
+                    label={NEIGHBORHOODS[id].name}
+                    selected={neighborhood.field.value === id}
+                    onPress={() => neighborhood.field.onChange(id)}
+                  />
+                ))}
+              </View>
+            </View>
+          )}
+        </>
       )}
 
       <Controller

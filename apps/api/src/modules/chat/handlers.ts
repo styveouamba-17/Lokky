@@ -52,6 +52,18 @@ async function publish(
   });
 }
 
+async function publishUpdate(
+  db: Database,
+  events: EventBus,
+  row: Awaited<ReturnType<typeof insertMessage>>,
+) {
+  const [message] = await toMessages(db, [row]);
+  await events.emit('message.updated', {
+    message: message!,
+    recipientIds: await membersOf(db, row.conversationId),
+  });
+}
+
 type MessageCursor = [string, string]; // [createdAt ISO, id]
 const isMessageCursor = (v: unknown): v is MessageCursor =>
   Array.isArray(v) && v.length === 2 && v.every((x) => typeof x === 'string');
@@ -178,7 +190,7 @@ export const chatHandlers: Handlers = {
   },
 
   // Idempotent sur clientId : un message rejoué après une coupure n'est pas dupliqué.
-  'messages.send': async ({ conversationId, clientId, body }, ctx) => {
+  'messages.send': async ({ conversationId, clientId, body, replyToMessageId }, ctx) => {
     const me = viewer(ctx);
     const row = await memberConversation(ctx.db, conversationId, me);
     const [existing] = await ctx.db
@@ -207,12 +219,23 @@ export const chatHandlers: Handlers = {
         throw new HttpError('forbidden', 'Cette discussion est fermée.');
       }
     }
+    if (replyToMessageId) {
+      const [replied] = await ctx.db
+        .select({ id: messages.id, type: messages.type })
+        .from(messages)
+        .where(and(eq(messages.id, replyToMessageId), eq(messages.conversationId, conversationId)))
+        .limit(1);
+      if (!replied || replied.type !== 'text') {
+        throw new HttpError('not_found', 'Le message auquel répondre est introuvable.');
+      }
+    }
     const created = await insertMessage(ctx.db, {
       conversationId,
       senderId: me,
       type: 'text',
       body,
       clientId,
+      replyToMessageId: replyToMessageId ?? null,
       createdAt: now,
     });
     await ctx.db
@@ -226,6 +249,37 @@ export const chatHandlers: Handlers = {
       );
     await publish(ctx.db, ctx.events, created);
     return (await toMessages(ctx.db, [created]))[0]!;
+  },
+
+  'messages.update': async ({ id, body }, ctx) => {
+    const me = viewer(ctx);
+    const [found] = await ctx.db.select().from(messages).where(eq(messages.id, id)).limit(1);
+    if (!found) throw new HttpError('not_found', 'Message introuvable.');
+    const row = await memberConversation(ctx.db, found.conversationId, me);
+    if (found.senderId !== me || found.type !== 'text') {
+      throw new HttpError('forbidden', 'Tu peux uniquement modifier tes propres messages.');
+    }
+    const now = ctx.now();
+    if (row.type === 'direct') {
+      const others = (await membersOf(ctx.db, found.conversationId)).filter((m) => m !== me);
+      if (others[0] && (await isBlockedEitherWay(ctx.db, me, others[0]))) {
+        throw new HttpError('forbidden', 'Cette discussion est fermée.');
+      }
+    }
+    if (row.type === 'group' && row.activityId) {
+      const activity = await findActivity(ctx.db, row.activityId);
+      if (isChatReadOnly(activity.startsAt, activity.cancelledAt, now)) {
+        throw new HttpError('forbidden', 'Cette discussion est fermée.');
+      }
+    }
+    const [updated] = await ctx.db
+      .update(messages)
+      .set({ body, editedAt: now })
+      .where(and(eq(messages.id, id), eq(messages.senderId, me), eq(messages.type, 'text')))
+      .returning();
+    if (!updated) throw new HttpError('not_found', 'Message introuvable.');
+    await publishUpdate(ctx.db, ctx.events, updated);
+    return (await toMessages(ctx.db, [updated]))[0]!;
   },
 };
 
@@ -251,6 +305,22 @@ export function registerChatListeners(events: EventBus, db: Database) {
     announce(activityId, userId, at, 'a rejoint le groupe'),
   );
   events.on('activity.left', ({ activityId, userId, at }) =>
-    announce(activityId, userId, at, 'a quitté le groupe'),
+    announce(activityId, userId, at, 'ne vient plus à cette sortie'),
   );
+  events.on('activity.participantRemoved', async ({ activityId, userId, removedBy, at }) => {
+    const [group] = await db
+      .select({ id: conversations.id })
+      .from(conversations)
+      .where(eq(conversations.activityId, activityId));
+    const [person, organizer] = await Promise.all([findUser(db, userId), findUser(db, removedBy)]);
+    if (!group || !person || !organizer) return;
+    const row = await insertMessage(db, {
+      conversationId: group.id,
+      senderId: null,
+      type: 'system',
+      body: `L’organisateur a retiré ${person.firstName ?? 'un participant'} de la sortie.`,
+      createdAt: at,
+    });
+    await publish(db, events, row);
+  });
 }

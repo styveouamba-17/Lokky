@@ -1,3 +1,4 @@
+import type { StaffRole } from '@lokky/shared/admin';
 import type {
   ActivityCategory,
   City,
@@ -8,6 +9,7 @@ import type {
 import { sql } from 'drizzle-orm';
 import {
   boolean,
+  type AnyPgColumn,
   check,
   customType,
   date,
@@ -59,6 +61,10 @@ export const users = pgTable('users', {
     .notNull()
     .default('active'),
   suspendedUntil: timestamp('suspended_until', { withTimezone: true }),
+  // Dernier avertissement (affiché une fois dans l'app).
+  warnedAt: timestamp('warned_at', { withTimezone: true }),
+  // Membre de l'équipe Lokky (accès à l'admin) : attribué par npm run staff, jamais par l'API.
+  staffRole: text('staff_role').$type<StaffRole>(),
   onboardedAt: timestamp('onboarded_at', { withTimezone: true }),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   ...timestamps,
@@ -168,6 +174,24 @@ export const participations = pgTable(
   ],
 );
 
+// Une personne retirée par le créateur ne peut pas rejoindre à nouveau cette sortie.
+export const activityParticipantRemovals = pgTable(
+  'activity_participant_removals',
+  {
+    activityId: uuid('activity_id')
+      .notNull()
+      .references(() => activities.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    removedBy: uuid('removed_by')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    removedAt: timestamp('removed_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.activityId, t.userId] })],
+);
+
 // ── B3 / B4 : conversations ──────────────────────────────────────────────────────────────
 // Le groupe d'une sortie est créé avec elle (B3) ; les messages arrivent en B4.
 
@@ -225,6 +249,10 @@ export const messages = pgTable(
     senderId: uuid('sender_id').references(() => users.id, { onDelete: 'set null' }),
     type: text('type').$type<'text' | 'system'>().notNull(),
     body: text('body').notNull(),
+    replyToMessageId: uuid('reply_to_message_id').references((): AnyPgColumn => messages.id, {
+      onDelete: 'set null',
+    }),
+    editedAt: timestamp('edited_at', { withTimezone: true }),
     // Identifiant choisi par l'app : un message renvoyé après une coupure n'est pas dupliqué.
     clientId: text('client_id'),
     ...timestamps,
@@ -287,22 +315,38 @@ export const reports = pgTable(
     reason: text('reason').notNull(),
     details: text('details'),
     status: text('status').$type<'open' | 'resolved' | 'dismissed'>().notNull().default('open'),
+    // Compte concerné : la personne signalée, l'auteur du message ou le créateur de la sortie.
+    subjectUserId: uuid('subject_user_id').references(() => users.id, { onDelete: 'set null' }),
+    // Traitement dans l'admin : qui, quand, avec quelle note.
+    handledAt: timestamp('handled_at', { withTimezone: true }),
+    handledBy: uuid('handled_by').references(() => users.id, { onDelete: 'set null' }),
+    note: text('note'),
     ...timestamps,
   },
-  (t) => [index('reports_status').on(t.status, t.createdAt)],
+  (t) => [
+    index('reports_status').on(t.status, t.createdAt),
+    index('reports_target').on(t.targetType, t.targetId),
+    index('reports_subject').on(t.subjectUserId, t.status),
+  ],
 );
 
 // Historique des décisions de modération (avertir, suspendre, bannir, rétablir).
-export const moderationEvents = pgTable('moderation_events', {
-  id: uuid('id').primaryKey(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  status: text('status').$type<'active' | 'warned' | 'suspended' | 'banned'>().notNull(),
-  until: timestamp('until', { withTimezone: true }),
-  reason: text('reason'),
-  ...timestamps,
-});
+export const moderationEvents = pgTable(
+  'moderation_events',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    status: text('status').$type<'active' | 'warned' | 'suspended' | 'banned'>().notNull(),
+    until: timestamp('until', { withTimezone: true }),
+    reason: text('reason'),
+    // Membre de l'équipe qui a décidé (null : ligne de commande).
+    actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }),
+    ...timestamps,
+  },
+  (t) => [index('moderation_events_user').on(t.userId, t.createdAt)],
+);
 
 // ── B6 : notifications push ─────────────────────────────────────────────────────────────
 
@@ -318,4 +362,40 @@ export const pushTokens = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('push_tokens_user').on(t.userId)],
+);
+
+// ── Admin de modération ─────────────────────────────────────────────────────────────────
+
+// Sessions de l'admin web : jeton opaque dans un cookie httpOnly, haché en base, 12 heures.
+export const adminSessions = pgTable(
+  'admin_sessions',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [index('admin_sessions_user').on(t.userId)],
+);
+
+// Journal de l'équipe : chaque décision et chaque lecture d'une conversation privée.
+export const adminAudit = pgTable(
+  'admin_audit',
+  {
+    id: uuid('id').primaryKey(),
+    actorId: uuid('actor_id').references(() => users.id, { onDelete: 'set null' }),
+    action: text('action').notNull(),
+    targetType: text('target_type').notNull(),
+    targetId: text('target_id').notNull(),
+    details: jsonb('details').$type<Record<string, unknown>>(),
+    ...timestamps,
+  },
+  (t) => [
+    index('admin_audit_target').on(t.targetType, t.targetId),
+    index('admin_audit_created').on(t.createdAt),
+  ],
 );

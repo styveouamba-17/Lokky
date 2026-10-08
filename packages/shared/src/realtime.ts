@@ -5,6 +5,7 @@ import type { ModerationStatus, UserPreview } from './schemas/user';
 // Les messages s'envoient par HTTP (messages.send) ; le socket ne sert qu'à recevoir.
 export interface ServerToClientEvents {
   'message:new': (message: Message) => void;
+  'message:updated': (message: Message) => void;
   typing: (payload: { conversationId: string; user: UserPreview; isTyping: boolean }) => void;
   'conversation:read': (payload: {
     conversationId: string;
@@ -14,9 +15,11 @@ export interface ServerToClientEvents {
   'unread:update': (payload: { total: number }) => void;
   'activity:updated': (activity: Activity) => void;
   'activity:cancelled': (payload: { activityId: string }) => void;
+  'activity:participantRemoved': (payload: { activityId: string }) => void;
   'moderation:update': (payload: {
     status: ModerationStatus;
     suspendedUntil: string | null;
+    warnedAt: string | null;
   }) => void;
 }
 

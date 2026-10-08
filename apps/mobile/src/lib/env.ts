@@ -17,7 +17,7 @@ const DEFAULT_API_PORT = '3000';
 // par Expo en développement. Sans EXPO_PUBLIC_API_URL, l'API locale est jointe sur la même
 // machine : pas d'adresse IP à écrire, et ça suit le réseau Wi-Fi du moment.
 export function parseEnv(raw: RawEnv, isDev: boolean, devHostUri?: string | null): AppEnv {
-  const mode = raw.apiMode ?? (isDev ? 'mock' : undefined);
+  const mode = raw.apiMode ?? (isDev ? 'http' : undefined);
   if (mode !== 'mock' && mode !== 'http' && mode !== 'hybrid') {
     throw new Error(
       `EXPO_PUBLIC_API_MODE invalide : « ${String(raw.apiMode)} » (attendu : mock, http ou hybrid).`,

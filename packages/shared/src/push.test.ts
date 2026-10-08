@@ -5,6 +5,11 @@ describe('données des notifications', () => {
   it('accepte un nouveau message avec sa conversation', () => {
     expect(pushDataSchema.safeParse({ type: 'message', conversationId: 'c1' }).success).toBe(true);
   });
+  it('accepte une découverte avec son activité', () => {
+    expect(pushDataSchema.safeParse({ type: 'activity_discovery', activityId: 'a1' }).success).toBe(
+      true,
+    );
+  });
   it('refuse un rappel sans activité', () => {
     expect(pushDataSchema.safeParse({ type: 'activity_reminder' }).success).toBe(false);
   });

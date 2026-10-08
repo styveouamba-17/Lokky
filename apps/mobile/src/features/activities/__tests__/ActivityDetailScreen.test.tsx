@@ -1,7 +1,15 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import { router } from 'expo-router';
 import { ApiError } from '@/api/errors';
-import { getActivity, getParticipants, joinActivity, leaveActivity } from '../api';
+import {
+  cancelActivity,
+  getActivity,
+  getParticipants,
+  joinActivity,
+  leaveActivity,
+  updateActivity,
+} from '../api';
 import { ActivityDetailScreen } from '../screens/ActivityDetailScreen';
 import { makeTestClient, renderWithQuery, signInAs } from '@/test/mockApi';
 
@@ -15,6 +23,8 @@ jest.mock('../api', () => ({
   getParticipants: jest.fn(),
   joinActivity: jest.fn(),
   leaveActivity: jest.fn(),
+  cancelActivity: jest.fn(),
+  updateActivity: jest.fn(),
 }));
 
 describe('ActivityDetailScreen', () => {
@@ -30,6 +40,12 @@ describe('ActivityDetailScreen', () => {
     jest
       .mocked(leaveActivity)
       .mockImplementation((id) => client.request('activities.leave', { id }));
+    jest
+      .mocked(cancelActivity)
+      .mockImplementation((id) => client.request('activities.cancel', { id }));
+    jest
+      .mocked(updateActivity)
+      .mockImplementation((input) => client.request('activities.update', input));
   });
 
   it('montre quand, où, le coût, qui vient et le créateur', async () => {
@@ -88,6 +104,23 @@ describe('ActivityDetailScreen', () => {
       await screen.findByRole('button', { name: 'Discuter avec le groupe' }),
     ).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Je viens !' })).toBeNull();
+  });
+
+  it('le créateur peut ouvrir la modification et confirmer l’annulation', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+      buttons?.find((button) => button.style === 'destructive')?.onPress?.();
+    });
+    await renderWithQuery(<ActivityDetailScreen id="a_thieb" />);
+    await fireEvent.press(await screen.findByRole('button', { name: 'Modifier la sortie' }));
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/activity/[id]/edit',
+      params: { id: 'a_thieb' },
+    });
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Annuler la sortie' }));
+    expect(await screen.findByText('Annulée')).toBeOnTheScreen();
+    expect(cancelActivity).toHaveBeenCalledWith('a_thieb');
+    alert.mockRestore();
   });
 
   it('refus du serveur : retour en arrière et message clair', async () => {

@@ -1,4 +1,4 @@
-import { startOfDakarDay, type Message, type UserPreview } from '@lokky/shared';
+import { startOfDakarDay, type Message, type MessageReply, type UserPreview } from '@lokky/shared';
 import { formatDayLabel } from '@/lib';
 import type { OutgoingMessage, OutgoingStatus } from './outbox';
 
@@ -12,6 +12,8 @@ export type TimelineItem =
       key: string;
       id: string | null; // null tant que le message n'est pas confirmé par le serveur
       body: string;
+      replyTo: MessageReply | null;
+      editedAt: string | null;
       createdAt: string;
       mine: boolean;
       sender: UserPreview | null;
@@ -75,6 +77,8 @@ export function buildTimeline({
         key: m.clientId ?? m.id,
         id: m.id,
         body: m.body,
+        replyTo: m.replyTo,
+        editedAt: m.editedAt,
         createdAt: m.createdAt,
         mine,
         sender: m.sender,
@@ -95,6 +99,8 @@ export function buildTimeline({
         key: o.clientId,
         id: null,
         body: o.body,
+        replyTo: o.replyTo ?? null,
+        editedAt: null,
         createdAt: o.createdAt,
         mine: true,
         sender: null,

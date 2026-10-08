@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react-native';
+import type { ComponentType } from 'react';
 
 // Suivi des plantages (spec §7.5). Actif seulement si un DSN est fourni
 // (EXPO_PUBLIC_SENTRY_DSN, dans eas.json ou .env) : rien n'est envoyé en développement.
@@ -23,4 +24,8 @@ export function reportError(error: unknown) {
   if (monitoringEnabled) Sentry.captureException(error);
 }
 
-export const wrapRoot = Sentry.wrap;
+export function wrapRoot<P extends Record<string, unknown>>(
+  component: ComponentType<P>,
+): ComponentType<P> {
+  return monitoringEnabled ? Sentry.wrap(component) : component;
+}

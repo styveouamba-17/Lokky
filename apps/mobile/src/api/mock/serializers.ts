@@ -41,7 +41,7 @@ export const toMe = (u: MockUser): Me => ({
   email: u.email,
   birthDate: u.birthDate,
   preferences: u.preferences ?? DEFAULT_PREFERENCES,
-  moderation: { status: 'active', suspendedUntil: null },
+  moderation: { status: 'active', suspendedUntil: null, warnedAt: null },
 });
 
 export const toUserProfile = (
@@ -117,6 +117,12 @@ export function toActivity(
 
 export const toMessage = (m: MockMessage, db: MockDb): Message => {
   const sender = m.senderId ? db.users.get(m.senderId) : undefined;
+  const replied = m.replyToMessageId
+    ? [...db.messages.values()]
+        .flat()
+        .find((candidate) => candidate.id === m.replyToMessageId && candidate.type === 'text')
+    : undefined;
+  const replySender = replied?.senderId ? db.users.get(replied.senderId) : undefined;
   return {
     id: m.id,
     clientId: m.clientId,
@@ -124,6 +130,14 @@ export const toMessage = (m: MockMessage, db: MockDb): Message => {
     sender: sender ? toUserPreview(sender) : null,
     type: m.type,
     body: m.body,
+    replyTo: replied
+      ? {
+          id: replied.id,
+          body: replied.body,
+          sender: replySender ? toUserPreview(replySender) : null,
+        }
+      : null,
+    editedAt: m.editedAt ?? null,
     createdAt: m.createdAt,
   };
 };
@@ -148,6 +162,7 @@ export function toGroupConversation(
     id,
     type: 'group',
     activityId: a.id,
+    activityCategory: a.category,
     peer: null,
     title: a.title,
     avatarUrl: null,
@@ -177,6 +192,7 @@ export function toDirectConversation(
     id: d.id,
     type: 'direct',
     activityId: null,
+    activityCategory: null,
     peer: toUserPreview(peer),
     title: peer.firstName,
     avatarUrl: peer.avatarUrl,

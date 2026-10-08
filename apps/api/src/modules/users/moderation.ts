@@ -13,6 +13,7 @@ export interface ModerationNotice {
   userId: string;
   status: ModerationStatus;
   suspendedUntil: string | null;
+  warnedAt: string | null;
 }
 
 // Routes encore permises à un compte suspendu ou banni : partir, supprimer son compte.
@@ -48,27 +49,43 @@ export async function applyModeration(
     status,
     until = null,
     reason = null,
+    actorId = null,
     now = new Date(),
   }: {
     userId: string;
     status: ModerationStatus;
     until?: Date | null;
     reason?: string | null;
+    actorId?: string | null;
     now?: Date;
   },
 ): Promise<ModerationNotice> {
-  await db.transaction(async (tx) => {
-    await tx
+  const warnedAt = await db.transaction(async (tx) => {
+    const [row] = await tx
       .update(users)
-      .set({ moderationStatus: status, suspendedUntil: status === 'suspended' ? until : null })
-      .where(eq(users.id, userId));
-    await tx
-      .insert(moderationEvents)
-      .values({ id: uuidv7(now.getTime()), userId, status, until, reason, createdAt: now });
+      .set({
+        moderationStatus: status,
+        suspendedUntil: status === 'suspended' ? until : null,
+        // Chaque avertissement a sa date : l'app affiche le nouveau, même après un premier.
+        ...(status === 'warned' ? { warnedAt: now } : {}),
+      })
+      .where(eq(users.id, userId))
+      .returning({ warnedAt: users.warnedAt });
+    await tx.insert(moderationEvents).values({
+      id: uuidv7(now.getTime()),
+      userId,
+      status,
+      until,
+      reason,
+      actorId,
+      createdAt: now,
+    });
+    return row?.warnedAt ?? null;
   });
   return {
     userId,
     status,
     suspendedUntil: status === 'suspended' && until ? until.toISOString() : null,
+    warnedAt: warnedAt?.toISOString() ?? null,
   };
 }

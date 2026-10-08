@@ -29,6 +29,10 @@ npm test                  # base lokky_test, migrations appliquées automatiquem
 ## Migrations
 
 Modifier `src/db/schema.ts`, puis `npm run db:generate`, relire le SQL généré dans `src/db/migrations/`, et `npm run db:migrate`.
+Avant de déployer une version de l'API qui dépend d'une nouvelle migration, exécuter
+`npm run db:migrate --workspace @lokky/api` dans l'environnement de déploiement, avec
+`DATABASE_URL` pointant vers la base cible. Ne pas basculer l'API sur le nouveau code avant la
+réussite de la migration.
 
 ## Connexion en local
 
@@ -45,4 +49,4 @@ La personne est prévenue tout de suite dans l'app (si l'API tourne).
 
 ## Notifications push
 
-Le worker envoie par le service Expo. Pour qu'elles arrivent, l'app doit tourner sur un vrai téléphone (build de développement), avec les identifiants push configurés dans EAS (FCM pour Android, APNs pour iOS).
+Le worker envoie par le service Expo. Les nouvelles sorties sont proposées aux personnes dont les centres d’intérêt comprennent la catégorie (sans filtre géographique), en respectant leur préférence « Sorties et découvertes ». Pour qu'elles arrivent, l'app doit tourner sur un vrai téléphone (build de développement), avec les identifiants push configurés dans EAS (FCM pour Android, APNs pour iOS).

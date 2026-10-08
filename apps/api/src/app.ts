@@ -10,9 +10,12 @@ import { errorBody, HttpError } from './http/errors';
 import { createRedisRateLimiter, type RateLimiter } from './http/rateLimit';
 import { registerRoutes } from './http/registerRoutes';
 import { registerChatListeners } from './modules/chat/handlers';
-import { assertCanWrite, isWriteGuarded } from './modules/users/moderation';
+import { assertCanWrite, isWriteGuarded, MODERATION_CHANNEL } from './modules/users/moderation';
 import { isActiveAccount } from './modules/users/users';
 import { handlers as defaultHandlers } from './modules/handlers';
+import { adminHandlers } from './admin/handlers';
+import { registerAdminLive } from './admin/live';
+import { registerAdminRoutes } from './admin/registerAdminRoutes';
 
 export interface AppDeps {
   db: Database;
@@ -28,6 +31,8 @@ export interface AppDeps {
   rateLimiter?: RateLimiter | null;
   // Derrière Caddy : l'adresse IP réelle vient de X-Forwarded-For.
   trustProxy?: boolean;
+  // Cookie de session de l'admin réservé à HTTPS (production).
+  adminSecureCookie?: boolean;
 }
 
 // Construit l'app sans l'écouter : main.ts la démarre, les tests l'appellent avec app.inject.
@@ -43,6 +48,7 @@ export async function buildApp({
   strictOutput = true,
   rateLimiter,
   trustProxy = false,
+  adminSecureCookie = false,
 }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     trustProxy,
@@ -102,6 +108,7 @@ export async function buildApp({
   registerChatListeners(bus, db);
   app.decorate('events', bus);
 
+  const limiter = rateLimiter === undefined ? createRedisRateLimiter(redis) : rateLimiter;
   registerRoutes(app, {
     db,
     services,
@@ -115,11 +122,27 @@ export async function buildApp({
         const userId = await services.tokens.verify(token, now());
         return userId && (await isActiveAccount(db, userId)) ? userId : null;
       }),
-    rateLimiter: rateLimiter === undefined ? createRedisRateLimiter(redis) : rateLimiter,
+    rateLimiter: limiter,
     strictOutput,
     guardWrite: async (route, method, viewerId) => {
       if (isWriteGuarded(route, method)) await assertCanWrite(db, viewerId, now());
     },
   });
+
+  // Admin de modération (apps/admin) : routes /admin/*, session par cookie.
+  registerAdminRoutes(app, {
+    db,
+    services,
+    events: bus,
+    handlers: adminHandlers,
+    now,
+    publishModeration: async (notice) => {
+      await redis.publish(MODERATION_CHANNEL, JSON.stringify(notice));
+    },
+    rateLimiter: limiter,
+    strictOutput,
+    secureCookie: adminSecureCookie,
+  });
+  registerAdminLive(app, { db, redis, events: bus, now });
   return app;
 }

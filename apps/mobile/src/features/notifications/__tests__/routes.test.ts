@@ -11,6 +11,7 @@ describe('ouvrir une notification', () => {
   it('tout ce qui concerne une sortie ouvre son détail', () => {
     for (const type of [
       'activity_joined',
+      'activity_discovery',
       'activity_updated',
       'activity_cancelled',
       'activity_reminder',
@@ -21,6 +22,10 @@ describe('ouvrir une notification', () => {
         params: { id: 'a_foot' },
       });
     }
+  });
+
+  it('une décision sur le compte ouvre juste l’app (la garde affiche le bon écran)', () => {
+    expect(hrefForPush({ type: 'moderation' })).toBeNull();
   });
 
   it('données inconnues : on ouvre juste l’app', () => {

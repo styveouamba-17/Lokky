@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { useCallback, useEffect, useState } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createQueryClient, setupFocusManager } from '@/api/queryClient';
@@ -55,6 +56,7 @@ function ThemedStack() {
         <Stack.Protected guard={status === 'signedIn'}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="activity/[id]" />
+          <Stack.Screen name="activity/[id]/edit" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="chat/[id]" />
           <Stack.Screen name="user/[id]" />
           <Stack.Screen name="settings" />
@@ -103,18 +105,20 @@ function RootLayout() {
 
   if (!ready) return null;
   return (
-    <SafeAreaProvider>
-      <KeyboardProvider>
-        <ThemeProvider preference={themePreference}>
-          <QueryClientProvider client={queryClient}>
-            <ToastProvider>
-              <ThemedStack />
-            </ToastProvider>
-            {splashDone ? null : <AnimatedSplash onFinish={finishSplash} />}
-          </QueryClientProvider>
-        </ThemeProvider>
-      </KeyboardProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <KeyboardProvider>
+          <ThemeProvider preference={themePreference}>
+            <QueryClientProvider client={queryClient}>
+              <ToastProvider>
+                <ThemedStack />
+              </ToastProvider>
+              {splashDone ? null : <AnimatedSplash onFinish={finishSplash} />}
+            </QueryClientProvider>
+          </ThemeProvider>
+        </KeyboardProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

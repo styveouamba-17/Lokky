@@ -19,7 +19,8 @@
     "keys:jwt": "tsx scripts/generate-jwt-key.ts",
     "db:seed": "tsx --env-file-if-exists=.env src/db/seed.ts",
     "moderate": "tsx --env-file-if-exists=.env scripts/moderate.ts",
-    "load": "tsx --env-file-if-exists=.env load/run.ts"
+    "load": "tsx --env-file-if-exists=.env load/run.ts",
+    "staff": "tsx --env-file-if-exists=.env scripts/staff.ts"
   },
   "dependencies": {
     "@fastify/helmet": "^13.1.1",

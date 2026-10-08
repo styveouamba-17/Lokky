@@ -11,10 +11,12 @@ export function StepReview({
   activity,
   now,
   onEdit,
+  editableSteps,
 }: {
   activity: Activity;
   now: Date;
   onEdit: (step: number) => void;
+  editableSteps?: readonly number[];
 }) {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -45,16 +47,18 @@ export function StepReview({
               </Text>
               <Text variant="bodyStrong">{row.value}</Text>
             </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`${t('create.edit')} : ${row.label}`}
-              hitSlop={12}
-              onPress={() => onEdit(row.step)}
-            >
-              <Text variant="label" color="action">
-                {t('create.edit')}
-              </Text>
-            </Pressable>
+            {(editableSteps?.includes(row.step) ?? true) ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${t('create.edit')} : ${row.label}`}
+                hitSlop={12}
+                onPress={() => onEdit(row.step)}
+              >
+                <Text variant="label" color="action">
+                  {t('create.edit')}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         ))}
       </View>

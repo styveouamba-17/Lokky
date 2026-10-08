@@ -93,9 +93,10 @@ const config: ExpoConfig = {
         defaultChannel: 'default',
       },
     ],
-    // Organisation et projet Sentry à renseigner au jalon 8. D'ici là, l'envoi des source
-    // maps est désactivé dans eas.json (SENTRY_DISABLE_AUTO_UPLOAD).
-    '@sentry/react-native/expo',
+    [
+      '@sentry/react-native/expo',
+      { organization: 'nach-corp-5a', project: 'lokky' },
+    ],
   ],
   experiments: { typedRoutes: true },
   extra: { eas: { projectId: '7c688313-8128-4e0f-b8be-9766c1a6d9a5' } },

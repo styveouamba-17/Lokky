@@ -4,6 +4,7 @@ import {
   activitySchema,
   createActivityInputSchema,
   myActivitiesQuerySchema,
+  removeActivityParticipantInputSchema,
   updateActivityInputSchema,
 } from '../schemas/activity';
 import {
@@ -22,6 +23,7 @@ import {
   messageListQuerySchema,
   messageSchema,
   sendMessageInputSchema,
+  updateMessageInputSchema,
 } from '../schemas/chat';
 import {
   emptyInputSchema,
@@ -189,6 +191,13 @@ export const routes = {
     input: byId,
     output: activitySchema,
   }),
+  'activities.removeParticipant': route({
+    method: 'POST',
+    path: '/activities/:id/participants/:userId/remove',
+    auth: true,
+    input: removeActivityParticipantInputSchema,
+    output: activitySchema,
+  }),
   'activities.join': route({
     method: 'POST',
     path: '/activities/:id/join',
@@ -277,6 +286,13 @@ export const routes = {
     path: '/conversations/:conversationId/messages',
     auth: true,
     input: sendMessageInputSchema,
+    output: messageSchema,
+  }),
+  'messages.update': route({
+    method: 'PATCH',
+    path: '/messages/:id',
+    auth: true,
+    input: updateMessageInputSchema,
     output: messageSchema,
   }),
 

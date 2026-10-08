@@ -118,7 +118,10 @@ export const chatHandlers: MockHandlers = {
   },
 
   // Idempotent sur clientId : un message rejoué après une coupure n'est pas dupliqué.
-  'messages.send': ({ conversationId, clientId, body }, { db, now, viewerId }) => {
+  'messages.send': (
+    { conversationId, clientId, body, replyToMessageId },
+    { db, now, viewerId },
+  ) => {
     const r = resolve(db, conversationId, viewerId);
     const existing = db.messages.get(conversationId)?.find((m) => m.clientId === clientId);
     if (existing) return toMessage(existing, db);
@@ -126,15 +129,41 @@ export const chatHandlers: MockHandlers = {
     if (present(r, db, viewerId, n).isReadOnly) {
       throw new ApiError('forbidden', 'Cette discussion est fermée.', 403);
     }
+    if (replyToMessageId) {
+      const replied = (db.messages.get(conversationId) ?? []).find(
+        (m) => m.id === replyToMessageId && m.type === 'text',
+      );
+      if (!replied) {
+        throw new ApiError('not_found', 'Le message auquel répondre est introuvable.', 404);
+      }
+    }
     const message = addMessage(db, {
       conversationId,
       clientId,
       senderId: viewerId,
       type: 'text',
       body,
+      replyToMessageId: replyToMessageId ?? null,
       createdAt: n.toISOString(),
     });
     db.readAt.set(conversationId, message.createdAt);
+    return toMessage(message, db);
+  },
+
+  'messages.update': ({ id, body }, { db, now, viewerId }) => {
+    const message = [...db.messages.values()].flat().find((m) => m.id === id);
+    if (!message) throw new ApiError('not_found', 'Message introuvable.', 404);
+    const r = resolve(db, message.conversationId, viewerId);
+    if (message.senderId !== viewerId || message.type !== 'text') {
+      throw new ApiError('forbidden', 'Tu peux uniquement modifier tes propres messages.', 403);
+    }
+    const n = now();
+    if (present(r, db, viewerId, n).isReadOnly) {
+      throw new ApiError('forbidden', 'Cette discussion est fermée.', 403);
+    }
+    message.body = body;
+    message.editedAt = n.toISOString();
+    db.bus.publishUpdated(message);
     return toMessage(message, db);
   },
 };

@@ -43,6 +43,34 @@
       "when": 1791054665176,
       "tag": "0005_push",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791120335508,
+      "tag": "0006_admin",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791128993176,
+      "tag": "0007_warned_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791295784871,
+      "tag": "0008_organic_mad_thinker",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791297500009,
+      "tag": "0009_normal_malcolm_colcord",
+      "breakpoints": true
     }
   ]
 }

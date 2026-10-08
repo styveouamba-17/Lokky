@@ -93,6 +93,60 @@ describe('sorties : rappel, après-sortie, événements', () => {
     const { id } = (await awa.call('POST', '/activities', NEW_ACTIVITY(at(26)))).json();
     expect(planned.get(`reminder-${id}`)?.runAt).toEqual(at(24));
     expect(planned.get(`after-${id}`)?.runAt).toEqual(at(29));
+    expect(planned.get(`discovery-${id}`)).toMatchObject({
+      name: 'activity-discovery',
+      data: { activityId: id },
+    });
+  });
+
+  it('découverte : seuls les membres intéressés reçoivent la notification, quel que soit leur quartier', async () => {
+    const creator = await withPhone(await createMember(t, 'Awa'), 'ExponentPushToken[awa]');
+    const matching = await withPhone(
+      await createMember(t, 'Fatou', { neighborhood: 'yoff' }),
+      'ExponentPushToken[fatou]',
+    );
+    const notMatching = await withPhone(
+      await createMember(t, 'Moussa'),
+      'ExponentPushToken[moussa]',
+    );
+    const optedOut = await withPhone(
+      await createMember(t, 'Aminata'),
+      'ExponentPushToken[aminata]',
+    );
+    await t.db
+      .update(users)
+      .set({ interests: ['sport'] })
+      .where(eq(users.id, matching.id));
+    await t.db
+      .update(users)
+      .set({ interests: ['cinema'] })
+      .where(eq(users.id, notMatching.id));
+    await t.db
+      .update(users)
+      .set({
+        interests: ['sport'],
+        preferences: {
+          language: 'fr',
+          theme: 'system',
+          notifications: { messages: true, activityUpdates: false, reminders: true },
+        },
+      })
+      .where(eq(users.id, optedOut.id));
+    sent.length = 0;
+
+    const { id } = (
+      await creator.call('POST', '/activities', { ...NEW_ACTIVITY(at(26)), category: 'sport' })
+    ).json();
+    await run(`discovery-${id}`);
+
+    expect(sent).toEqual([
+      expect.objectContaining({
+        to: 'ExponentPushToken[fatou]',
+        title: 'Une sortie pour toi',
+        body: '« Ciné en plein air » vient d’être créée dans tes centres d’intérêt. Découvre-la !',
+        data: { type: 'activity_discovery', activityId: id },
+      }),
+    ]);
   });
 
   it('le rappel part aux participants qui l’ont laissé activé', async () => {
@@ -262,5 +316,36 @@ describe('jetons et nettoyage', () => {
     });
     await processors.cleanup({});
     expect(await t.db.select().from(sessions)).toHaveLength(0);
+  });
+});
+
+describe('décisions de modération', () => {
+  it('la personne est prévenue par push, même si elle a coupé les autres notifications', async () => {
+    const awa = await withPhone(await createMember(t, 'Awa'), 'ExponentPushToken[awa]');
+    await t.db
+      .update(users)
+      .set({
+        preferences: {
+          language: 'fr',
+          theme: 'system',
+          notifications: { messages: false, activityUpdates: false, reminders: false },
+        },
+      })
+      .where(eq(users.id, awa.id));
+    await t.app.events.emit('user.moderated', {
+      userId: awa.id,
+      status: 'suspended',
+      suspendedUntil: new Date('2026-10-10T18:00:00Z'),
+    });
+    await t.app.events.settled();
+    await runAll('moderation-push');
+    expect(sent).toMatchObject([
+      {
+        to: 'ExponentPushToken[awa]',
+        title: 'Ton compte est suspendu',
+        data: { type: 'moderation' },
+      },
+    ]);
+    expect(sent[0]!.body).toContain('samedi 10 octobre à 18:00');
   });
 });

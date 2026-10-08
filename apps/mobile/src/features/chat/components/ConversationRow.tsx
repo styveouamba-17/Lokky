@@ -4,6 +4,7 @@ import { useTranslation } from '@/i18n';
 import { formatMessageTime } from '@/lib';
 import { makeStyles } from '@/theme';
 import { Avatar, Text } from '@/ui';
+import { ActivityGroupAvatar } from './ActivityGroupAvatar';
 
 export function ConversationRow({
   conversation: c,
@@ -40,7 +41,16 @@ export function ConversationRow({
       onPress={onPress}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <Avatar name={c.title} uri={c.avatarUrl} size="lg" />
+      {c.type === 'group' && c.activityId ? (
+        <ActivityGroupAvatar
+          activityId={c.activityId}
+          category={c.activityCategory}
+          name={c.title}
+          size="lg"
+        />
+      ) : (
+        <Avatar name={c.title} uri={c.avatarUrl} size="lg" />
+      )}
       <View style={styles.body}>
         <View style={styles.line}>
           <Text variant="bodyStrong" numberOfLines={1} style={styles.title}>

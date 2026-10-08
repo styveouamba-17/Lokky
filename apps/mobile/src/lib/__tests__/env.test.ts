@@ -1,8 +1,11 @@
 import { parseEnv } from '../env';
 
 describe('parseEnv', () => {
-  it('passe en mode simulé par défaut en développement', () => {
-    expect(parseEnv({}, true)).toEqual({ apiMode: 'mock', apiUrl: null });
+  it('utilise le vrai backend local par défaut en développement', () => {
+    expect(parseEnv({}, true, '192.168.1.48:8081')).toEqual({
+      apiMode: 'http',
+      apiUrl: 'http://192.168.1.48:3000',
+    });
   });
   it('échoue sans mode explicite hors développement', () => {
     expect(() => parseEnv({}, false)).toThrow(/EXPO_PUBLIC_API_MODE/);

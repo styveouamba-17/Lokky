@@ -191,7 +191,7 @@
     "trusted": "Créateur fiable",
     "cancelled": "Annulée",
     "ongoing": "En cours",
-    "past": "Terminée",
+    "past": "Passée",
     "when": "Quand ?",
     "where": "Où ?",
     "meetingPoint": "Point de RDV : {{place}}",
@@ -221,7 +221,16 @@
     "openChat": "Discuter avec le groupe",
     "report": "Signaler cette sortie",
     "share": "Partager la sortie",
-    "shareMessage": "{{title}} · {{when}} sur Lokky. Viens avec nous !"
+    "shareMessage": "{{title}} · {{when}} sur Lokky. Viens avec nous !",
+    "manage": {
+      "edit": "Modifier la sortie",
+      "cancel": "Annuler la sortie",
+      "cancelTitle": "Annuler cette sortie ?",
+      "cancelBody": "Les participants seront prévenus et la sortie ne sera plus visible dans Découvrir.",
+      "cancelConfirm": "Oui, annuler",
+      "cancelled": "La sortie a été annulée.",
+      "error": "Impossible d’annuler la sortie. Réessaie."
+    }
   },
   "mine": {
     "title": "Mes activités",
@@ -335,6 +344,22 @@
       "cost": "Coût"
     }
   },
+  "editActivity": {
+    "title": "Modifier la sortie",
+    "save": "Enregistrer",
+    "saved": "Les modifications sont enregistrées.",
+    "unavailable": "Cette sortie ne peut plus être modifiée.",
+    "limitedNotice": "Des personnes ont rejoint la sortie : tu peux encore modifier le jour, l’heure, le nombre de places, le programme et le point de rendez-vous jusqu’à une heure avant le départ.",
+    "scheduleLockedNotice": "À moins d’une heure du départ, tu peux encore modifier le programme et le point de rendez-vous.",
+    "discardTitle": "Abandonner les modifications ?",
+    "discardBody": "Tes changements ne seront pas enregistrés.",
+    "discard": "Abandonner",
+    "keep": "Continuer",
+    "errors": {
+      "generic": "Impossible d’enregistrer les modifications. Réessaie.",
+      "startsAt": "Le nouveau départ doit être dans au moins une heure."
+    }
+  },
   "profile": {
     "title": "Profil",
     "newMember": "Nouveau",
@@ -379,6 +404,12 @@
       "title": "Ton compte a été fermé",
       "body": "Suite à des manquements répétés aux règles de Lokky, ton compte ne peut plus être utilisé. Si tu penses qu’il s’agit d’une erreur, écris-nous depuis l’adresse email de ton compte."
     },
+    "warned": {
+      "title": "Avertissement de l’équipe Lokky",
+      "body": "D’autres membres ont signalé ton comportement. Les règles de Lokky protègent tout le monde : en cas de nouveau manquement, ton compte pourra être suspendu.",
+      "rules": "Relire les règles",
+      "ok": "J’ai compris"
+    },
     "signOut": "Se déconnecter"
   },
   "chat": {
@@ -386,6 +417,11 @@
     "pinnedHint": "Voir la sortie",
     "firstMessage": "Brise la glace : dis bonjour au groupe !",
     "firstMessageBody": "Présente-toi, demande qui vient seul·e ou propose de faire la route ensemble.",
+    "loadOlderMessages": "Charger les messages précédents",
+    "retryOlderMessages": "Réessayer de charger les anciens messages",
+    "openRepliedMessage": "Aller au message cité",
+    "replyLoadError": "Impossible de charger le message d’origine. Réessaie.",
+    "replyNotFound": "Le message d’origine n’est plus disponible.",
     "placeholder": "Écris au groupe…",
     "inputLabel": "Ton message",
     "send": "Envoyer",
@@ -401,7 +437,37 @@
     "readOnlyDirect": "Tu ne peux plus écrire à cette personne.",
     "reportMessage": "Signaler ce message",
     "openProfile": "Voir le profil",
-    "firstMessageDirect": "Dis bonjour à {{name}} !"
+    "firstMessageDirect": "Dis bonjour à {{name}} !",
+    "organizer": {
+      "open": "Organisation de la sortie",
+      "title": "Gérer la sortie",
+      "edit": "Modifier l’activité",
+      "cancel": "Annuler l’activité",
+      "cancelTitle": "Annuler cette activité ?",
+      "cancelBody": "Les participants seront prévenus. Le groupe restera accessible pendant 7 jours.",
+      "cancelConfirm": "Oui, annuler",
+      "cancelled": "L’activité a été annulée.",
+      "participants": "Participants",
+      "participantsError": "Impossible de charger les participants.",
+      "remove": "Retirer {{name}} de l’activité",
+      "removeTitle": "Retirer ce participant ?",
+      "removeBody": "{{name}} ne participera plus à l’activité et n’aura plus accès au groupe.",
+      "removeConfirm": "Retirer",
+      "removed": "Le participant a été retiré de l’activité.",
+      "error": "Impossible d’effectuer cette action. Réessaie."
+    },
+    "messageActions": "Actions du message",
+    "replySwipeHint": "Fais glisser vers la droite pour répondre",
+    "reply": "Répondre",
+    "replyingTo": "Réponse à {{name}}",
+    "replyUnknown": "Message",
+    "edit": "Modifier",
+    "editing": "Modification du message",
+    "editPlaceholder": "Modifie ton message…",
+    "saveEdit": "Enregistrer",
+    "edited": "modifié",
+    "editError": "Impossible de modifier ce message. Réessaie.",
+    "cancelMessageAction": "Annuler la réponse ou la modification"
   },
   "review": {
     "cta": "Laisser un avis",
@@ -489,8 +555,8 @@
       "body": "Choisis ce qui mérite de te faire vibrer le téléphone.",
       "messages": "Messages",
       "messagesBody": "Nouveaux messages dans tes groupes et en privé.",
-      "activityUpdates": "Mes sorties",
-      "activityUpdatesBody": "Quelqu’un rejoint ta sortie, une sortie est modifiée ou annulée.",
+      "activityUpdates": "Sorties et découvertes",
+      "activityUpdatesBody": "Découvertes dans tes centres d’intérêt, nouvelles participations, changements et annulations.",
       "reminders": "Rappels",
       "remindersBody": "Un rappel avant chaque sortie, et l’avis à laisser après.",
       "phoneOffTitle": "Notifications bloquées sur ce téléphone",

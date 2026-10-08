@@ -191,7 +191,7 @@
     "trusted": "Trusted organizer",
     "cancelled": "Cancelled",
     "ongoing": "Happening now",
-    "past": "Over",
+    "past": "Past",
     "when": "When?",
     "where": "Where?",
     "meetingPoint": "Meeting point: {{place}}",
@@ -221,7 +221,16 @@
     "openChat": "Chat with the group",
     "report": "Report this outing",
     "share": "Share the outing",
-    "shareMessage": "{{title}} · {{when}} on Lokky. Come along!"
+    "shareMessage": "{{title}} · {{when}} on Lokky. Come along!",
+    "manage": {
+      "edit": "Edit outing",
+      "cancel": "Cancel outing",
+      "cancelTitle": "Cancel this outing?",
+      "cancelBody": "Participants will be notified and the outing will no longer appear in Discover.",
+      "cancelConfirm": "Yes, cancel",
+      "cancelled": "The outing has been cancelled.",
+      "error": "Couldn't cancel the outing. Try again."
+    }
   },
   "mine": {
     "title": "My outings",
@@ -335,6 +344,22 @@
       "cost": "Cost"
     }
   },
+  "editActivity": {
+    "title": "Edit outing",
+    "save": "Save changes",
+    "saved": "Your changes have been saved.",
+    "unavailable": "This outing can no longer be edited.",
+    "limitedNotice": "People have joined: you can change the date, time, capacity, plan and meeting point until one hour before the outing.",
+    "scheduleLockedNotice": "Less than one hour before the outing, you can still edit the plan and meeting point.",
+    "discardTitle": "Discard your changes?",
+    "discardBody": "Your changes won't be saved.",
+    "discard": "Discard",
+    "keep": "Keep editing",
+    "errors": {
+      "generic": "Couldn't save your changes. Try again.",
+      "startsAt": "The new start time must be at least one hour from now."
+    }
+  },
   "profile": {
     "title": "Profile",
     "newMember": "New",
@@ -379,6 +404,12 @@
       "title": "Your account has been closed",
       "body": "Following repeated breaches of Lokky's rules, your account can no longer be used. If you think this is a mistake, write to us from your account's email address."
     },
+    "warned": {
+      "title": "A warning from the Lokky team",
+      "body": "Other members reported your behavior. Lokky’s rules protect everyone: if it happens again, your account may be suspended.",
+      "rules": "Read the rules again",
+      "ok": "Got it"
+    },
     "signOut": "Sign out"
   },
   "chat": {
@@ -386,6 +417,11 @@
     "pinnedHint": "See the outing",
     "firstMessage": "Break the ice: say hi to the group!",
     "firstMessageBody": "Introduce yourself, ask who's coming alone, or offer to travel together.",
+    "loadOlderMessages": "Load older messages",
+    "retryOlderMessages": "Retry loading older messages",
+    "openRepliedMessage": "Go to replied message",
+    "replyLoadError": "Couldn't load the original message. Try again.",
+    "replyNotFound": "The original message is no longer available.",
     "placeholder": "Write to the group…",
     "inputLabel": "Your message",
     "send": "Send",
@@ -401,7 +437,37 @@
     "readOnlyDirect": "You can no longer message this person.",
     "reportMessage": "Report this message",
     "openProfile": "See profile",
-    "firstMessageDirect": "Say hi to {{name}}!"
+    "firstMessageDirect": "Say hi to {{name}}!",
+    "organizer": {
+      "open": "Outing management",
+      "title": "Manage outing",
+      "edit": "Edit outing",
+      "cancel": "Cancel outing",
+      "cancelTitle": "Cancel this outing?",
+      "cancelBody": "Participants will be notified. The group will stay available for 7 days.",
+      "cancelConfirm": "Yes, cancel",
+      "cancelled": "The outing has been cancelled.",
+      "participants": "Participants",
+      "participantsError": "Couldn't load participants.",
+      "remove": "Remove {{name}} from the outing",
+      "removeTitle": "Remove this participant?",
+      "removeBody": "{{name}} will no longer participate or have access to the group.",
+      "removeConfirm": "Remove",
+      "removed": "The participant has been removed from the outing.",
+      "error": "Couldn't complete this action. Try again."
+    },
+    "messageActions": "Message actions",
+    "replySwipeHint": "Swipe right to reply",
+    "reply": "Reply",
+    "replyingTo": "Replying to {{name}}",
+    "replyUnknown": "Message",
+    "edit": "Edit",
+    "editing": "Editing message",
+    "editPlaceholder": "Edit your message…",
+    "saveEdit": "Save",
+    "edited": "edited",
+    "editError": "Couldn't edit this message. Try again.",
+    "cancelMessageAction": "Cancel reply or edit"
   },
   "review": {
     "cta": "Leave a review",
@@ -489,8 +555,8 @@
       "body": "Choose what deserves to buzz your phone.",
       "messages": "Messages",
       "messagesBody": "New messages in your groups and private chats.",
-      "activityUpdates": "My outings",
-      "activityUpdatesBody": "Someone joins your outing, an outing is changed or cancelled.",
+      "activityUpdates": "Outings and discoveries",
+      "activityUpdatesBody": "Discoveries matching your interests, new participants, changes and cancellations.",
       "reminders": "Reminders",
       "remindersBody": "A reminder before each outing, and the review to leave afterwards.",
       "phoneOffTitle": "Notifications are blocked on this phone",

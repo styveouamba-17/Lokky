@@ -4,7 +4,7 @@ import { realtime } from '@/api/client';
 import { useActiveConversation } from '@/state/activeConversation';
 import { useNetworkStore } from '@/state/network';
 import { useSessionStore } from '@/state/session';
-import { receiveMessage } from '../cache';
+import { receiveMessage, receiveUpdatedMessage } from '../cache';
 import { useChatStore } from '../chatStore';
 import { confirm } from '../outbox';
 import { chatKeys } from '../queryKeys';
@@ -30,6 +30,9 @@ export function useChatRealtime() {
         if (message.sender) {
           useChatStore.getState().setTyping(message.conversationId, message.sender, false);
         }
+      }),
+      realtime.on('message:updated', (message) => {
+        receiveUpdatedMessage(queryClient, message);
       }),
       realtime.on('typing', ({ conversationId, user, isTyping }) => {
         const key = `${conversationId}:${user.id}`;

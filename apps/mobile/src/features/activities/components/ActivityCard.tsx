@@ -12,6 +12,11 @@ import { ActivityCover, CategoryTag } from './ActivityCover';
 import { CostBadge } from './CostBadge';
 
 const COVER_HEIGHT = 128;
+const STATUS_LABEL = {
+  ongoing: 'activity.ongoing',
+  past: 'activity.past',
+  cancelled: 'activity.cancelled',
+} as const;
 
 export function placeLabel(activity: Activity) {
   const { neighborhood, name } = activity.location;
@@ -38,6 +43,7 @@ export function ActivityCard({
   const spots = full
     ? t('activity.full')
     : t('activity.spots', { count: activity.participantCount, capacity: activity.capacity });
+  const statusLabel = activity.status === 'upcoming' ? null : t(STATUS_LABEL[activity.status]);
 
   return (
     <Card
@@ -53,10 +59,12 @@ export function ActivityCard({
       <View style={styles.body}>
         <View style={styles.tags}>
           <CategoryTag category={activity.category} />
+          {statusLabel ? <Badge label={statusLabel} tone="neutral" /> : null}
           {isTonight(activity.startsAt, now) ? (
             <Badge label={t('discover.filters.tonight')} tone="accent" icon={SunHorizon} />
           ) : null}
-          {activity.viewerState.isParticipant ? (
+          {activity.viewerState.isParticipant &&
+          (activity.status === 'upcoming' || activity.status === 'ongoing') ? (
             <Badge label={t('activity.going')} tone="trust" icon={CheckCircle} />
           ) : null}
         </View>

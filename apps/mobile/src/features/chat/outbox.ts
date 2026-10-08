@@ -1,4 +1,4 @@
-import type { Message } from '@lokky/shared';
+import type { Message, MessageReply } from '@lokky/shared';
 import { create } from 'zustand';
 import { isRetryable } from '@/api/errors';
 
@@ -11,6 +11,7 @@ export interface OutgoingMessage {
   clientId: string;
   conversationId: string;
   body: string;
+  replyTo?: MessageReply | null;
   createdAt: string;
   status: OutgoingStatus;
 }
@@ -35,12 +36,20 @@ export function newClientId(now: Date = new Date()): string {
   return `c${now.getTime().toString(36)}${counter.toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export function enqueue(conversationId: string, body: string, now: Date = new Date()) {
+export function enqueue(
+  conversationId: string,
+  body: string,
+  replyToOrNow: MessageReply | Date | null = null,
+  now: Date = new Date(),
+) {
+  const replyTo = replyToOrNow instanceof Date ? null : replyToOrNow;
+  const createdAt = replyToOrNow instanceof Date ? replyToOrNow : now;
   const item: OutgoingMessage = {
     clientId: newClientId(now),
     conversationId,
     body: body.trim(),
-    createdAt: now.toISOString(),
+    replyTo,
+    createdAt: createdAt.toISOString(),
     status: 'waiting',
   };
   useOutbox.setState((s) => ({ items: [...s.items, item] }));

@@ -13,12 +13,20 @@ const slotLabel = (slot: string) =>
   `${Number(slot.slice(0, 2))}h${slot.endsWith(':00') ? '' : '30'}`;
 
 // « Quand ? » (spec §2, principe 2) : raccourcis concrets, puis jour et créneau.
-export function StepWhen({ control, now }: { control: Control<Draft>; now: Date }) {
+export function StepWhen({
+  control,
+  now,
+  dayCount,
+}: {
+  control: Control<Draft>;
+  now: Date;
+  dayCount?: number;
+}) {
   const styles = useStyles();
   const { t } = useTranslation();
   const day = useController({ control, name: 'day' });
   const time = useController({ control, name: 'time' });
-  const days = useMemo(() => dayOptions(now), [now]);
+  const days = useMemo(() => dayOptions(now, dayCount), [dayCount, now]);
   const slots = day.field.value ? timeSlots(day.field.value, now) : [];
 
   // Change de jour en gardant l'heure si elle reste possible, sinon la soirée par défaut.

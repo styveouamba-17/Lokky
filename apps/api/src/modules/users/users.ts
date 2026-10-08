@@ -99,6 +99,7 @@ export function toMe(row: UserRow, trust: TrustStats): Me {
     moderation: {
       status: row.moderationStatus,
       suspendedUntil: row.suspendedUntil?.toISOString() ?? null,
+      warnedAt: row.warnedAt?.toISOString() ?? null,
     },
   };
 }

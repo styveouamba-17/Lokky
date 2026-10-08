@@ -221,10 +221,21 @@ describe('modifier et annuler', () => {
     const created = (await awa.call('POST', '/activities', NEW_ACTIVITY)).json();
     const renamed = await awa.call('PATCH', `/activities/${created.id}`, { title: 'Ciné et thé' });
     expect(renamed.json().title).toBe('Ciné et thé');
+    const recategorized = await awa.call('PATCH', `/activities/${created.id}`, {
+      category: 'food',
+    });
+    expect(recategorized.json().category).toBe('food');
 
     await fatou.call('POST', `/activities/${created.id}/join`);
     expect(
       (await awa.call('PATCH', `/activities/${created.id}`, { title: 'Autre' })).statusCode,
+    ).toBe(403);
+    expect(
+      (
+        await awa.call('PATCH', `/activities/${created.id}`, {
+          category: 'music',
+        })
+      ).statusCode,
     ).toBe(403);
     const point = await awa.call('PATCH', `/activities/${created.id}`, {
       description: 'Apportez un plaid',
@@ -239,6 +250,45 @@ describe('modifier et annuler', () => {
     ).toBe(403);
   });
 
+  it('jour, heure et capacité restent modifiables jusqu’à une heure avant le départ', async () => {
+    const awa = await createMember(t, 'Awa');
+    const fatou = await createMember(t, 'Fatou');
+    const { id: later } = await createActivity(t, awa.id, {
+      startsAt: at(2),
+      participantIds: [fatou.id],
+    });
+    const changed = await awa.call('PATCH', `/activities/${later}`, {
+      startsAt: at(3).toISOString(),
+      capacity: 8,
+    });
+    expect(changed.statusCode).toBe(200);
+    expect(changed.json()).toMatchObject({
+      startsAt: at(3).toISOString(),
+      capacity: 8,
+    });
+
+    const { id: exactlyOneHour } = await createActivity(t, awa.id, {
+      startsAt: at(1),
+      participantIds: [fatou.id],
+    });
+    expect(
+      (await awa.call('PATCH', `/activities/${exactlyOneHour}`, { capacity: 12 })).statusCode,
+    ).toBe(200);
+
+    const { id: soon } = await createActivity(t, awa.id, {
+      startsAt: new Date(NOW.getTime() + 30 * 60_000),
+      participantIds: [fatou.id],
+    });
+    expect((await awa.call('PATCH', `/activities/${soon}`, { capacity: 8 })).statusCode).toBe(403);
+    expect(
+      (
+        await awa.call('PATCH', `/activities/${soon}`, {
+          startsAt: at(2).toISOString(),
+        })
+      ).statusCode,
+    ).toBe(403);
+  });
+
   it('annuler : réservé au créateur, puis la sortie sort du fil', async () => {
     const awa = await createMember(t, 'Awa');
     const fatou = await createMember(t, 'Fatou');
@@ -247,6 +297,46 @@ describe('modifier et annuler', () => {
     const cancelled = await awa.call('POST', `/activities/${created.id}/cancel`);
     expect(cancelled.json().status).toBe('cancelled');
     expect(titles((await fatou.call('GET', '/activities')).json())).toEqual([]);
+  });
+
+  it('le créateur peut retirer un participant; la personne ne peut pas rejoindre à nouveau', async () => {
+    const awa = await createMember(t, 'Awa');
+    const fatou = await createMember(t, 'Fatou');
+    const { id } = await createActivity(t, awa.id, {
+      startsAt: at(8),
+      participantIds: [fatou.id],
+    });
+
+    expect(
+      (await awa.call('POST', `/activities/${id}/participants/${awa.id}/remove`)).json().error.code,
+    ).toBe('forbidden');
+    expect(
+      (await fatou.call('POST', `/activities/${id}/participants/${awa.id}/remove`)).statusCode,
+    ).toBe(403);
+    const removed = await awa.call('POST', `/activities/${id}/participants/${fatou.id}/remove`);
+    expect(removed.statusCode).toBe(200);
+    expect(removed.json()).toMatchObject({
+      participantCount: 1,
+      viewerState: { isCreator: true, isParticipant: true },
+    });
+    expect((await awa.call('GET', `/activities/${id}/participants`)).json()).toHaveLength(1);
+    expect((await fatou.call('GET', '/conversations')).json().items).toEqual([]);
+    expect((await fatou.call('POST', `/activities/${id}/join`)).json().error.code).toBe(
+      'forbidden',
+    );
+    expect(
+      (await awa.call('POST', `/activities/${id}/participants/${fatou.id}/remove`)).json().error
+        .code,
+    ).toBe('not_participant');
+
+    const started = await createActivity(t, awa.id, {
+      startsAt: at(-1),
+      participantIds: [fatou.id],
+    });
+    expect(
+      (await awa.call('POST', `/activities/${started.id}/participants/${fatou.id}/remove`)).json()
+        .error.code,
+    ).toBe('activity_started');
   });
 });
 

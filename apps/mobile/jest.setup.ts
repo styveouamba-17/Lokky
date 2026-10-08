@@ -1,7 +1,41 @@
 import { setUpTests } from 'react-native-reanimated';
 import '@/i18n';
 
+process.env.EXPO_PUBLIC_API_MODE = 'mock';
+
 setUpTests();
+
+jest.mock('react-native-gesture-handler', () => {
+  const React = jest.requireActual<typeof import('react')>('react');
+  const { View } = jest.requireActual<typeof import('react-native')>('react-native');
+  const gesture = {
+    enabled() {
+      return this;
+    },
+    activeOffsetX() {
+      return this;
+    },
+    failOffsetY() {
+      return this;
+    },
+    onUpdate() {
+      return this;
+    },
+    onEnd() {
+      return this;
+    },
+    onFinalize() {
+      return this;
+    },
+  };
+  return {
+    Gesture: { Pan: () => gesture },
+    GestureDetector: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(View, null, children),
+    GestureHandlerRootView: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(View, null, children),
+  };
+});
 
 jest.mock(
   'react-native-safe-area-context',

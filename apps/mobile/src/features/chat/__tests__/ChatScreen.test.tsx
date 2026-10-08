@@ -1,24 +1,33 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
+import { Alert } from 'react-native';
 import { useNetworkStore } from '@/state/network';
 import { makeTestClient, renderWithQuery, signInAs, TEST_NOW } from '@/test/mockApi';
 import {
+  cancelGroupActivity,
   getConversation,
   getGroupActivity,
+  getGroupParticipants,
   listMessages,
   markConversationRead,
+  removeGroupParticipant,
   sendMessage,
+  updateMessage,
 } from '../api';
 import { useOutbox } from '../outbox';
 import { ChatScreen } from '../screens/ChatScreen';
 
 jest.mock('expo-router', () => ({ router: { back: jest.fn(), push: jest.fn() } }));
 jest.mock('../api', () => ({
+  cancelGroupActivity: jest.fn(),
   getConversation: jest.fn(),
   getGroupActivity: jest.fn(),
+  getGroupParticipants: jest.fn(),
   listMessages: jest.fn(),
   markConversationRead: jest.fn(),
+  removeGroupParticipant: jest.fn(),
   sendMessage: jest.fn(),
+  updateMessage: jest.fn(),
 }));
 
 let client: ReturnType<typeof makeTestClient>['client'];
@@ -46,6 +55,20 @@ describe('ChatScreen', () => {
       .mocked(markConversationRead)
       .mockImplementation((id) => client.request('conversations.markRead', { id }));
     jest.mocked(sendMessage).mockImplementation((input) => client.request('messages.send', input));
+    jest
+      .mocked(updateMessage)
+      .mockImplementation((input) => client.request('messages.update', input));
+    jest
+      .mocked(getGroupParticipants)
+      .mockImplementation((id) => client.request('activities.participants', { id }));
+    jest
+      .mocked(removeGroupParticipant)
+      .mockImplementation((id, userId) =>
+        client.request('activities.removeParticipant', { id, userId }),
+      );
+    jest
+      .mocked(cancelGroupActivity)
+      .mockImplementation((id) => client.request('activities.cancel', { id }));
   });
 
   it('affiche la sortie, le RDV épinglé, les messages et les messages système', async () => {
@@ -54,6 +77,7 @@ describe('ChatScreen', () => {
       await screen.findByRole('header', { name: 'Coucher de soleil aux Mamelles' }),
     ).toBeOnTheScreen();
     expect(await screen.findByText('Phare des Mamelles · Parking du phare')).toBeOnTheScreen();
+    expect(screen.getByTestId('activity-group-avatar')).toBeOnTheScreen();
     expect(
       await screen.findByText('Moi je pars de Yoff, je vous retrouve au parking'),
     ).toBeOnTheScreen();
@@ -70,6 +94,82 @@ describe('ChatScreen', () => {
     });
   });
 
+  it('affiche le statut annulé de l’activité dans la discussion', async () => {
+    const activity = await client.request('activities.get', { id: 'a_mamelles' });
+    jest.mocked(getGroupActivity).mockResolvedValue({ ...activity, status: 'cancelled' });
+
+    await renderWithQuery(<ChatScreen id="c_a_mamelles" />);
+
+    expect(await screen.findByText('Annulée')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: /Annulée/ })).toBeOnTheScreen();
+  });
+
+  it('charge les anciens messages seulement à la demande, une page à la fois', async () => {
+    const firstPage = await client.request('messages.list', { conversationId: 'c_a_bu' });
+    jest
+      .mocked(listMessages)
+      .mockImplementation(async (_conversationId, cursor) =>
+        cursor ? { items: [], nextCursor: null } : { ...firstPage, nextCursor: 'older-page' },
+      );
+
+    await renderWithQuery(<ChatScreen id="c_a_bu" />);
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Charger les messages précédents' }),
+    );
+
+    await waitFor(() => expect(listMessages).toHaveBeenCalledWith('c_a_bu', 'older-page'));
+    expect(screen.queryByRole('button', { name: 'Charger les messages précédents' })).toBeNull();
+  });
+
+  it('charge l’ancien message cité puis y saute', async () => {
+    const firstPage = await client.request('messages.list', { conversationId: 'c_a_bu' });
+    const [newer, older] = firstPage.items;
+    if (!newer || !older) throw new Error('Expected at least two seeded messages');
+    jest.mocked(listMessages).mockImplementation(async (_conversationId, cursor) =>
+      cursor
+        ? { items: [older], nextCursor: null }
+        : {
+            items: [
+              {
+                ...newer,
+                replyTo: { id: older.id, body: older.body, sender: older.sender },
+              },
+            ],
+            nextCursor: 'older-page',
+          },
+    );
+
+    await renderWithQuery(<ChatScreen id="c_a_bu" />);
+    await fireEvent.press(await screen.findByRole('button', { name: 'Aller au message cité' }));
+
+    await waitFor(() => expect(listMessages).toHaveBeenCalledWith('c_a_bu', 'older-page'));
+    expect((await screen.findAllByText(older.body)).length).toBeGreaterThan(1);
+  });
+
+  it('le créateur peut ouvrir l’édition et retirer un participant', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+      buttons?.find((button) => button.style === 'destructive')?.onPress?.();
+    });
+    await renderWithQuery(<ChatScreen id="c_a_thieb" />);
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Organisation de la sortie' }));
+    const edit = await screen.findByRole('button', { name: 'Modifier l’activité' });
+    expect(screen.getByRole('button', { name: 'Annuler l’activité' })).toBeOnTheScreen();
+    await fireEvent.press(edit);
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/activity/[id]/edit',
+      params: { id: 'a_thieb' },
+    });
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Organisation de la sortie' }));
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Retirer Fatou de l’activité' }),
+    );
+    await waitFor(() => expect(removeGroupParticipant).toHaveBeenCalledWith('a_thieb', 'u_fatou'));
+    expect(await screen.findByText('Le participant a été retiré de l’activité.')).toBeOnTheScreen();
+    alert.mockRestore();
+  });
+
   it('envoie un message : il s’affiche tout de suite, puis est confirmé', async () => {
     await renderWithQuery(<ChatScreen id="c_a_bu" />);
     await fireEvent.changeText(
@@ -83,6 +183,53 @@ describe('ChatScreen', () => {
       expect.objectContaining({ conversationId: 'c_a_bu', body: 'On se retrouve à 9h50 ?' }),
     );
     expect(screen.getByLabelText('Ton message')).toHaveDisplayValue('');
+  });
+
+  it('répond à un message précis avec le geste de réponse accessible', async () => {
+    await renderWithQuery(<ChatScreen id="c_a_bu" />);
+    await fireEvent(
+      await screen.findByText('Hello Awa ! Tu révises quelle matière ?'),
+      'accessibilityAction',
+      { nativeEvent: { actionName: 'reply' } },
+    );
+    await fireEvent.changeText(
+      await screen.findByLabelText('Ton message'),
+      'On se retrouve demain ?',
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Envoyer' }));
+    await waitFor(() =>
+      expect(sendMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          conversationId: 'c_a_bu',
+          body: 'On se retrouve demain ?',
+          replyToMessageId: expect.any(String),
+        }),
+      ),
+    );
+    expect(
+      (await screen.findAllByText('Hello Awa ! Tu révises quelle matière ?')).length,
+    ).toBeGreaterThan(1);
+  });
+
+  it('modifie son propre message déjà envoyé et affiche le statut modifié', async () => {
+    let action = 'Modifier';
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+      buttons?.find((button) => button.text === action)?.onPress?.();
+    });
+    await renderWithQuery(<ChatScreen id="c_a_bu" />);
+    await fireEvent(await screen.findByText('Droit constitutionnel, et toi ?'), 'longPress');
+    const input = await screen.findByLabelText('Ton message');
+    expect(input).toHaveDisplayValue('Droit constitutionnel, et toi ?');
+    await fireEvent.changeText(input, 'Droit constitutionnel, rendez-vous demain.');
+    await fireEvent.press(screen.getByRole('button', { name: 'Enregistrer' }));
+    await waitFor(() =>
+      expect(updateMessage).toHaveBeenCalledWith({
+        id: expect.any(String),
+        body: 'Droit constitutionnel, rendez-vous demain.',
+      }),
+    );
+    expect(await screen.findByText('Droit constitutionnel, rendez-vous demain.')).toBeOnTheScreen();
+    alert.mockRestore();
   });
 
   it('hors ligne : le message attend le réseau, puis part à la reconnexion', async () => {
@@ -136,6 +283,9 @@ describe('ChatScreen', () => {
   });
 
   it('appui long sur le message de quelqu’un : le signaler', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+      buttons?.find((button) => button.text === 'Signaler ce message')?.onPress?.();
+    });
     await renderWithQuery(<ChatScreen id="d_u_awa__u_moussa" />);
     const message = await screen.findByText('Oui, samedi matin ! Je crée la sortie ce soir');
     await fireEvent(message, 'longPress');
@@ -143,6 +293,7 @@ describe('ChatScreen', () => {
       pathname: '/report',
       params: { targetType: 'message', targetId: expect.any(String) },
     });
+    alert.mockRestore();
   });
 
   it('personne bloquée : la discussion est fermée', async () => {

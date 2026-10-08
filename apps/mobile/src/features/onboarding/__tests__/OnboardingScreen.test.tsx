@@ -85,7 +85,7 @@ describe('OnboardingScreen', () => {
     jest.mocked(completeOnboarding).mockResolvedValue({
       id: 'u_awa',
       firstName: 'Awa',
-      moderation: { status: 'active', suspendedUntil: null },
+      moderation: { status: 'active', suspendedUntil: null, warnedAt: null },
     } as Me);
     await renderOnboarding();
     await fillYou('2003-04-10');

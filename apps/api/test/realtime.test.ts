@@ -78,6 +78,26 @@ describe('temps réel', () => {
     });
   });
 
+  it('un message modifié est mis à jour en temps réel chez les membres', async () => {
+    const moussa = await createMember(t, 'Moussa');
+    const awa = await createMember(t, 'Awa');
+    const { id, conversationId } = await createActivity(t, moussa.id, { startsAt: at(8) });
+    await awa.call('POST', `/activities/${id}/join`);
+    const created = await awa.call('POST', `/conversations/${conversationId}/messages`, {
+      clientId: 'client-edit-realtime',
+      body: 'Je serai là à 18h.',
+    });
+
+    const socket = await open(moussa.token);
+    const received = next(socket, 'message:updated');
+    await awa.call('PATCH', `/messages/${created.json().id}`, { body: 'Je serai là à 18h30.' });
+    expect(await received).toMatchObject({
+      id: created.json().id,
+      body: 'Je serai là à 18h30.',
+      editedAt: expect.any(String),
+    });
+  });
+
   it('« Je viens ! » : le créateur voit le message système en direct', async () => {
     const moussa = await createMember(t, 'Moussa');
     const awa = await createMember(t, 'Awa');

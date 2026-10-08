@@ -3,14 +3,16 @@ import type { Activity } from '@lokky/shared';
 import { router } from 'expo-router';
 import { ArrowLeft } from 'phosphor-react-native/src/icons/ArrowLeft';
 import { Flag } from 'phosphor-react-native/src/icons/Flag';
+import { PencilSimple } from 'phosphor-react-native/src/icons/PencilSimple';
 import { ShareNetwork } from 'phosphor-react-native/src/icons/ShareNetwork';
-import { Platform, ScrollView, Share, View } from 'react-native';
+import { XCircle } from 'phosphor-react-native/src/icons/XCircle';
+import { Alert, Platform, ScrollView, Share, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { i18n, useTranslation } from '@/i18n';
 import { activityUrl, formatActivityWhen } from '@/lib';
 import { useSessionStore } from '@/state/session';
 import { makeStyles, useTheme } from '@/theme';
-import { Badge, EmptyState, IconButton, IconDisc, Skeleton, Text } from '@/ui';
+import { Badge, EmptyState, IconButton, IconDisc, Skeleton, Text, useToast } from '@/ui';
 import { placeLabel } from '../components/ActivityCard';
 import { ActivityCover, CategoryTag, hasActivityCover } from '../components/ActivityCover';
 import { CostBadge } from '../components/CostBadge';
@@ -19,6 +21,7 @@ import { JoinBar } from '../components/JoinBar';
 import { MeetupCard } from '../components/MeetupCard';
 import { Participants } from '../components/Participants';
 import { useActivity, useParticipants } from '../hooks/useActivity';
+import { useCancelActivity } from '../hooks/useManageActivity';
 
 // Place du bouton retour flottant quand il n'y a pas de couverture.
 const BACK_SPACE = 56;
@@ -37,6 +40,8 @@ export function ActivityDetailScreen({ id }: { id: string }) {
   const me = useSessionStore((s) => s.me);
   const activity = useActivity(id);
   const participants = useParticipants(id);
+  const cancel = useCancelActivity();
+  const toast = useToast();
 
   const back = (
     <View style={[styles.back, { top: insets.top + 8 }]}>
@@ -75,6 +80,7 @@ export function ActivityDetailScreen({ id }: { id: string }) {
 
   const a: Activity = activity.data;
   const statusKey = a.status === 'upcoming' ? null : STATUS_BADGE[a.status];
+  const canManage = a.viewerState.isCreator && a.status === 'upcoming';
   // Sans illustration de catégorie, pas de bandeau : le contenu commence sous le bouton retour.
   const withCover = hasActivityCover(a);
 
@@ -130,7 +136,36 @@ export function ActivityDetailScreen({ id }: { id: string }) {
           onPress={() => void shareActivity(a)}
           icon={<ShareNetwork size={20} color={colors.text} weight="bold" />}
         />
-        {a.viewerState.isCreator ? null : (
+        {canManage ? (
+          <>
+            <IconButton
+              variant="filled"
+              accessibilityLabel={t('activity.manage.edit')}
+              onPress={() => router.push({ pathname: '/activity/[id]/edit', params: { id: a.id } })}
+              icon={<PencilSimple size={20} color={colors.text} weight="bold" />}
+            />
+            <IconButton
+              variant="filled"
+              accessibilityLabel={t('activity.manage.cancel')}
+              disabled={cancel.isPending}
+              onPress={() =>
+                Alert.alert(t('activity.manage.cancelTitle'), t('activity.manage.cancelBody'), [
+                  { text: t('common.cancel'), style: 'cancel' },
+                  {
+                    text: t('activity.manage.cancelConfirm'),
+                    style: 'destructive',
+                    onPress: () =>
+                      cancel.mutate(a.id, {
+                        onSuccess: () => toast.show(t('activity.manage.cancelled'), 'success'),
+                        onError: () => toast.show(t('activity.manage.error'), 'error'),
+                      }),
+                  },
+                ])
+              }
+              icon={<XCircle size={20} color={colors.text} weight="bold" />}
+            />
+          </>
+        ) : a.viewerState.isCreator ? null : (
           <IconButton
             variant="filled"
             accessibilityLabel={t('activity.report')}

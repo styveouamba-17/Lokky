@@ -113,11 +113,17 @@ export const createActivityInputSchema = makeCreateActivityInputSchema();
 export const updateActivityInputSchema = z.object({
   id: idSchema,
   title: titleSchema.optional(),
+  category: categorySchema.optional(),
   description: descriptionSchema.optional(),
   startsAt: isoDateTimeSchema.optional(),
   location: activityLocationSchema.optional(),
   capacity: capacitySchema.optional(),
   cost: activityCostSchema.optional(),
+});
+
+export const removeActivityParticipantInputSchema = z.object({
+  id: idSchema,
+  userId: idSchema,
 });
 
 export type ActivityCost = z.infer<typeof activityCostSchema>;
@@ -126,5 +132,6 @@ export type ActivityViewerState = z.infer<typeof activityViewerStateSchema>;
 export type Activity = z.infer<typeof activitySchema>;
 export type ActivityListQuery = z.input<typeof activityListQuerySchema>;
 export type CreateActivityInput = z.input<typeof createActivityInputSchema>;
+export type UpdateActivityInput = z.input<typeof updateActivityInputSchema>;
 export type MyActivitiesQuery = z.input<typeof myActivitiesQuerySchema>;
 export type MyActivitiesScope = MyActivitiesQuery['scope'];

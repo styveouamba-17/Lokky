@@ -27,6 +27,7 @@ describe('MessagesScreen', () => {
     expect(
       screen.getByText('Moussa : Moi je pars de Yoff, je vous retrouve au parking'),
     ).toBeOnTheScreen();
+    expect(screen.getAllByTestId('activity-group-avatar').length).toBeGreaterThan(0);
     // Dernier message envoyé par Awa elle-même
     expect(screen.getByText('Toi : Grave, j’ai adoré')).toBeOnTheScreen();
   });

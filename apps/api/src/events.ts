@@ -1,17 +1,28 @@
 // Événements de domaine (spec backend §4) : un module annonce ce qui s'est passé ; le chat
 // (messages système), le temps réel et les notifications s'y abonnent. Les modules restent
 // simples à tester et ne s'appellent pas en cascade.
-import type { Message } from '@lokky/shared';
+import type { Message, ModerationStatus } from '@lokky/shared';
 
 export interface DomainEvents {
   'activity.created': { activityId: string; at: Date };
   'activity.joined': { activityId: string; userId: string; at: Date };
   'activity.left': { activityId: string; userId: string; at: Date };
+  'activity.participantRemoved': {
+    activityId: string;
+    userId: string;
+    removedBy: string;
+    at: Date;
+  };
   'activity.updated': { activityId: string; at: Date };
   'activity.cancelled': { activityId: string; at: Date };
   // Message créé (texte ou système) : destinataires = membres de la conversation.
   'message.created': { message: Message; recipientIds: string[] };
+  'message.updated': { message: Message; recipientIds: string[] };
   'conversation.read': { conversationId: string; userId: string; readAt: Date };
+  // Décision de l'équipe sur un compte (admin) : la personne est prévenue par push.
+  'user.moderated': { userId: string; status: ModerationStatus; suspendedUntil: Date | null };
+  // Signalements créés ou clos : le compteur de l'admin se met à jour en direct.
+  'reports.changed': Record<string, never>;
 }
 
 type Listener<E extends keyof DomainEvents> = (payload: DomainEvents[E]) => Promise<void> | void;

@@ -10,6 +10,9 @@ export function hrefForPush(data: unknown): Href | null {
   if (push.type === 'message') {
     return { pathname: '/chat/[id]', params: { id: push.conversationId } };
   }
+  // Décision sur le compte : l'app s'ouvre, et la garde de navigation affiche l'écran
+  // correspondant (suspendu, banni) d'après le profil rechargé.
+  if (push.type === 'moderation') return null;
   // Rejoint, modifiée, annulée, rappel, après la sortie : tout se passe sur le détail
   // (les boutons « Laisser un avis » et « Qui est venu ? » y sont).
   return { pathname: '/activity/[id]', params: { id: push.activityId } };

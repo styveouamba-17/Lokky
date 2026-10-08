@@ -96,4 +96,5 @@ export const LIMITS = {
 } as const;
 
 export const ACTIVITY_ONGOING_HOURS = 3;
+export const ACTIVITY_EDIT_LOCK_MINUTES = 60;
 export const CHAT_READONLY_AFTER_DAYS = 7;

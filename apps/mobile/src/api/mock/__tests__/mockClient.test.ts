@@ -99,10 +99,18 @@ describe('client simulé : comportement général', () => {
     }
   });
 
-  it('signale clairement une route non simulée', async () => {
-    await expect(makeClient().request('activities.cancel', { id: 'a_foot' })).rejects.toThrow(
-      /Route non simulée : activities.cancel/,
-    );
+  it('simule la modification et l’annulation réservées au créateur', async () => {
+    const client = makeClient();
+    const updated = await client.request('activities.update', {
+      id: 'a_thieb',
+      description: 'Thieb et jus',
+    });
+    expect(updated.description).toBe('Thieb et jus');
+    const cancelled = await client.request('activities.cancel', { id: 'a_thieb' });
+    expect(cancelled.status).toBe('cancelled');
+    await expect(client.request('activities.cancel', { id: 'a_foot' })).rejects.toMatchObject({
+      code: 'forbidden',
+    });
   });
 
   it('simule une panne réseau selon failureRate', async () => {

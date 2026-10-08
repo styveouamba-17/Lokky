@@ -2,11 +2,29 @@ import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
+import { pushDataSchema } from '@lokky/shared';
+import { apiClient } from '@/api/client';
+import { useSessionStore } from '@/state/session';
 import { registerForPushNotifications } from '../push';
 import { hrefForPush } from '../routes';
 
+// Décision de l'équipe sur le compte : l'app revenait peut-être de l'arrière-plan sans
+// avoir reçu moderation:update. On relit le profil : la garde affiche le bon écran.
+async function reloadAccount() {
+  try {
+    await useSessionStore.getState().setMe(await apiClient.request('me.get', {}));
+  } catch {
+    // le profil sera relu à la prochaine requête
+  }
+}
+
 const open = (response: Notifications.NotificationResponse | null) => {
-  const href = response ? hrefForPush(response.notification.request.content.data) : null;
+  const data = response?.notification.request.content.data;
+  if (pushDataSchema.safeParse(data).data?.type === 'moderation') {
+    void reloadAccount();
+    return;
+  }
+  const href = data ? hrefForPush(data) : null;
   if (href) router.push(href);
 };
 

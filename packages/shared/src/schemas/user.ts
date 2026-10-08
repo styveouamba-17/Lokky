@@ -55,6 +55,8 @@ export const meSchema = userSchema.extend({
   moderation: z.object({
     status: moderationStatusSchema,
     suspendedUntil: isoDateTimeSchema.nullable(),
+    // Dernier avertissement de l'équipe : l'app l'affiche une fois, puis s'en souvient.
+    warnedAt: isoDateTimeSchema.nullable(),
   }),
 });
 

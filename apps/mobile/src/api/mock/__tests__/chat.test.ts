@@ -65,10 +65,38 @@ describe('client simulé : chat de groupe', () => {
   it('quitter retire du groupe et l’annonce', async () => {
     const { client, db } = setup();
     await client.request('activities.leave', { id: 'a_mamelles' });
-    expect(db.messages.get('c_a_mamelles')?.at(-1)?.body).toBe('Awa a quitté le groupe');
+    expect(db.messages.get('c_a_mamelles')?.at(-1)?.body).toBe('Awa ne vient plus à cette sortie');
+    const conversations = await client.request('conversations.list', {});
+    expect(conversations.items.some((c) => c.activityId === 'a_mamelles')).toBe(false);
     await expect(
       client.request('conversations.get', { id: 'c_a_mamelles' }),
     ).rejects.toBeInstanceOf(ApiError);
+  });
+
+  it('le créateur retire un participant du groupe et empêche son retour', async () => {
+    const { client, db } = setup();
+    const removed = await client.request('activities.removeParticipant', {
+      id: 'a_thieb',
+      userId: 'u_fatou',
+    });
+    expect(removed.participantCount).toBe(1);
+    expect(db.messages.get('c_a_thieb')?.at(-1)?.body).toBe(
+      'L’organisateur a retiré Fatou de la sortie.',
+    );
+
+    const formerParticipant = createMockClient({
+      handlers: mockHandlers,
+      db,
+      viewerId: 'u_fatou',
+      now: () => NOW,
+      sleep: () => Promise.resolve(),
+    });
+    await expect(
+      formerParticipant.request('activities.join', { id: 'a_thieb' }),
+    ).rejects.toMatchObject({ code: 'forbidden' });
+    expect((await formerParticipant.request('conversations.list', {})).items).not.toContainEqual(
+      expect.objectContaining({ activityId: 'a_thieb' }),
+    );
   });
 
   it('les messages arrivent du plus récent au plus ancien, paginés', async () => {
@@ -97,6 +125,44 @@ describe('client simulé : chat de groupe', () => {
     const again = await client.request('messages.send', input);
     expect(again.id).toBe(sent.id);
     expect(db.messages.get('c_a_bu')?.filter((m) => m.clientId === 'client-0001')).toHaveLength(1);
+  });
+
+  it('répond à un message, édite son propre message et notifie les autres membres', async () => {
+    const { client, db } = setup();
+    const original = db.messages
+      .get('c_a_thieb')
+      ?.find((message) => message.senderId === 'u_fatou' && message.type === 'text');
+    expect(original).toBeDefined();
+    const socket = createMockSocket({ db, now: () => NOW });
+    const updated: Message[] = [];
+    socket.on('message:updated', (message) => updated.push(message));
+    socket.connect();
+
+    const sent = await client.request('messages.send', {
+      conversationId: 'c_a_thieb',
+      clientId: 'client-reply-1',
+      body: 'On se retrouve là-bas !',
+      replyToMessageId: original!.id,
+    });
+    expect(sent.replyTo).toMatchObject({
+      id: original!.id,
+      body: original!.body,
+      sender: { firstName: 'Fatou' },
+    });
+    const edited = await client.request('messages.update', {
+      id: sent.id,
+      body: 'On se retrouve à 13h !',
+    });
+    expect(edited).toMatchObject({
+      body: 'On se retrouve à 13h !',
+      editedAt: NOW.toISOString(),
+    });
+    expect(updated).toHaveLength(1);
+    expect(updated[0]?.id).toBe(sent.id);
+    await expect(
+      client.request('messages.update', { id: original!.id, body: 'Mon message' }),
+    ).rejects.toMatchObject({ code: 'forbidden' });
+    socket.disconnect();
   });
 
   it('marquer comme lu remet le compteur à zéro', async () => {

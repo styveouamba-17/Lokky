@@ -11,6 +11,8 @@ const asMessage = (o: OutgoingMessage): Message => ({
   sender: { id: 'u_awa', firstName: 'Awa', avatarUrl: null },
   type: 'text',
   body: o.body,
+  replyTo: o.replyTo ?? null,
+  editedAt: null,
   createdAt: o.createdAt,
 });
 

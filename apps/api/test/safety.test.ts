@@ -224,6 +224,20 @@ describe('modération', () => {
     expect(me.json().moderation).toEqual({
       status: 'suspended',
       suspendedUntil: at(48).toISOString(),
+      warnedAt: null,
+    });
+  });
+
+  it('avertissement : la date est gardée, même après une autre décision', async () => {
+    const awa = await createMember(t, 'Awa');
+    const notice = await applyModeration(t.db, { userId: awa.id, status: 'warned', now: NOW });
+    expect(notice.warnedAt).toBe(NOW.toISOString());
+    await applyModeration(t.db, { userId: awa.id, status: 'active', now: at(1) });
+    const me = await awa.call('GET', '/me');
+    expect(me.json().moderation).toEqual({
+      status: 'active',
+      suspendedUntil: null,
+      warnedAt: NOW.toISOString(),
     });
   });
 

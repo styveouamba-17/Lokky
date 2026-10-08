@@ -1,5 +1,6 @@
 import {
   ACTIVITY_ONGOING_HOURS,
+  ACTIVITY_EDIT_LOCK_MINUTES,
   getWhenRange,
   LIMITS,
   type ActivityListQuery,
@@ -25,7 +26,7 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import type { Database } from '../../db/client';
-import { activities, participations } from '../../db/schema';
+import { activities, activityParticipantRemovals, participations } from '../../db/schema';
 import { viewer, type HandlerContext, type Handlers } from '../../http/context';
 import { HttpError } from '../../http/errors';
 import { decodeCursor, encodeCursor, isOffset } from '../../lib/cursor';
@@ -285,6 +286,8 @@ export const activitiesHandlers: Handlers = {
       .where(eq(participations.activityId, id));
 
     const loc = changes.location;
+    const scheduleLocked =
+      row.startsAt.getTime() - ctx.now().getTime() < ACTIVITY_EDIT_LOCK_MINUTES * MINUTE_MS;
     const locationMoved =
       loc !== undefined &&
       (loc.name !== row.placeName ||
@@ -293,17 +296,31 @@ export const activitiesHandlers: Handlers = {
         loc.neighborhood !== row.neighborhood);
     const restricted =
       changes.title !== undefined ||
-      changes.startsAt !== undefined ||
-      changes.capacity !== undefined ||
+      changes.category !== undefined ||
       changes.cost !== undefined ||
       locationMoved;
-    if (joined > 1 && restricted) {
+    if (
+      joined > 1 &&
+      (restricted ||
+        (scheduleLocked && (changes.startsAt !== undefined || changes.capacity !== undefined)))
+    ) {
       throw new HttpError(
         'forbidden',
-        'Des participants ont rejoint : seuls la description et le point de RDV changent.',
+        scheduleLocked
+          ? 'À moins d’une heure du départ, seuls la description et le point de RDV changent.'
+          : 'Des participants ont rejoint : le programme, le jour, l’heure, la capacité et le point de RDV restent modifiables.',
       );
     }
-    if (changes.startsAt !== undefined) assertSlot(new Date(changes.startsAt), ctx.now());
+    if (changes.startsAt !== undefined) {
+      const starts = new Date(changes.startsAt);
+      assertSlot(starts, ctx.now());
+      if (
+        joined > 1 &&
+        starts.getTime() - ctx.now().getTime() < ACTIVITY_EDIT_LOCK_MINUTES * MINUTE_MS
+      ) {
+        throw new HttpError('validation', 'startsAt : une heure minimum est requise.');
+      }
+    }
     if (changes.capacity !== undefined && changes.capacity < joined) {
       throw new HttpError('validation', 'capacity : moins de places que de participants.');
     }
@@ -312,6 +329,7 @@ export const activitiesHandlers: Handlers = {
       .update(activities)
       .set({
         ...(changes.title !== undefined && { title: changes.title }),
+        ...(changes.category !== undefined && { category: changes.category }),
         ...(changes.description !== undefined && { description: changes.description }),
         ...(changes.startsAt !== undefined && { startsAt: new Date(changes.startsAt) }),
         ...(changes.capacity !== undefined && { capacity: changes.capacity }),
@@ -360,6 +378,16 @@ export const activitiesHandlers: Handlers = {
         .from(participations)
         .where(and(eq(participations.activityId, id), eq(participations.userId, me.id)));
       if (already) return false; // déjà inscrit : réponse identique, sans effet
+      const [removed] = await tx
+        .select({ userId: activityParticipantRemovals.userId })
+        .from(activityParticipantRemovals)
+        .where(
+          and(
+            eq(activityParticipantRemovals.activityId, id),
+            eq(activityParticipantRemovals.userId, me.id),
+          ),
+        );
+      if (removed) throw new HttpError('forbidden', 'Tu as été retiré de cette sortie.');
       if (statusOf(row, now) !== 'upcoming') throw new HttpError('activity_started', 'Trop tard.');
       const [{ n } = { n: 0 }] = await tx
         .select({ n: count() })
@@ -372,6 +400,48 @@ export const activitiesHandlers: Handlers = {
     });
     if (joined)
       await ctx.events.emit('activity.joined', { activityId: id, userId: me.id, at: now });
+    return view(ctx, id);
+  },
+
+  'activities.removeParticipant': async ({ id, userId }, ctx) => {
+    const me = await member(ctx);
+    const now = ctx.now();
+    await ctx.db.transaction(async (tx) => {
+      const [row] = await tx.select().from(activities).where(eq(activities.id, id)).for('update');
+      if (!row) throw new HttpError('not_found', 'Activité introuvable.');
+      if (row.creatorId !== me.id) {
+        throw new HttpError('forbidden', 'Seul le créateur peut retirer un participant.');
+      }
+      if (statusOf(row, now) !== 'upcoming') {
+        throw new HttpError('activity_started', 'La sortie a déjà commencé.');
+      }
+      if (userId === row.creatorId) {
+        throw new HttpError('forbidden', 'Le créateur ne peut pas être retiré.');
+      }
+      const [participation] = await tx
+        .select({ userId: participations.userId })
+        .from(participations)
+        .where(and(eq(participations.activityId, id), eq(participations.userId, userId)));
+      if (!participation)
+        throw new HttpError('not_participant', 'Cette personne ne participe pas.');
+      await tx.insert(activityParticipantRemovals).values({
+        activityId: id,
+        userId,
+        removedBy: me.id,
+        removedAt: now,
+      });
+      await tx
+        .delete(participations)
+        .where(and(eq(participations.activityId, id), eq(participations.userId, userId)));
+      await removeGroupMember(tx, id, userId);
+    });
+    await ctx.events.emit('activity.participantRemoved', {
+      activityId: id,
+      userId,
+      removedBy: me.id,
+      at: now,
+    });
+    await ctx.events.emit('activity.updated', { activityId: id, at: now });
     return view(ctx, id);
   },
 

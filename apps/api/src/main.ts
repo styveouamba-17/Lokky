@@ -20,6 +20,7 @@ const app = await buildApp({
   logLevel: config.LOG_LEVEL,
   strictOutput: config.NODE_ENV !== 'production',
   trustProxy: config.TRUST_PROXY,
+  adminSecureCookie: config.NODE_ENV === 'production',
 });
 
 // Socket.IO partage le serveur HTTP de Fastify (même port).

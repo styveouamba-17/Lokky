@@ -88,6 +88,23 @@ describe('MyActivitiesScreen', () => {
     });
   });
 
+  it('affiche clairement les sorties passées et annulées dans les activités créées', async () => {
+    const page = await client.request('activities.mine', { scope: 'created' });
+    const past = page.items.find((activity) => activity.id === 'a_the');
+    if (!past) throw new Error('Sortie passée simulée introuvable');
+    jest.mocked(listMyActivities).mockResolvedValue({
+      items: [past, { ...past, id: 'a_cancelled', title: 'Sortie annulée', status: 'cancelled' }],
+      nextCursor: null,
+    });
+
+    await renderWithQuery(<MyActivitiesScreen />);
+    await fireEvent.press(await screen.findByRole('tab', { name: 'Créées par moi' }));
+
+    expect(await screen.findByText('Passée')).toBeOnTheScreen();
+    expect(screen.getByText('Annulée')).toBeOnTheScreen();
+    expect(screen.getByText('Sortie annulée')).toBeOnTheScreen();
+  });
+
   it('onglet vide : invite à créer une sortie', async () => {
     jest.mocked(listMyActivities).mockResolvedValue({ items: [], nextCursor: null });
     await renderWithQuery(<MyActivitiesScreen />);

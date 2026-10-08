@@ -45,7 +45,29 @@ export function registerJobListeners(
 
   // Toujours en arrière-plan : planifier ne doit jamais ralentir la requête.
   const bg = { background: true };
-  events.on('activity.created', ({ activityId }) => planActivity(activityId), bg);
+
+  events.on(
+    'user.moderated',
+    ({ userId, status, suspendedUntil }) =>
+      scheduler.schedule('moderation-push', {
+        userId,
+        status,
+        suspendedUntil: suspendedUntil?.toISOString() ?? null,
+      }),
+    bg,
+  );
+  events.on(
+    'activity.created',
+    async ({ activityId }) => {
+      await planActivity(activityId);
+      await scheduler.schedule(
+        'activity-discovery',
+        { activityId },
+        { jobId: jobIds.discovery(activityId) },
+      );
+    },
+    bg,
+  );
 
   events.on(
     'activity.updated',

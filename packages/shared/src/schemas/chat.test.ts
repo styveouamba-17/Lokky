@@ -22,6 +22,7 @@ describe('conversation', () => {
     id: 'c1',
     type: 'group',
     activityId: 'a1',
+    activityCategory: 'sport',
     peer: null,
     title: 'Foot à la plage',
     avatarUrl: null,
@@ -39,15 +40,29 @@ describe('conversation', () => {
   it('accepte une conversation privée avec l’autre personne', () => {
     const peer = { id: 'u2', firstName: 'Moussa', avatarUrl: null };
     expect(
-      conversationSchema.safeParse({ ...conv, type: 'direct', activityId: null, peer }).success,
+      conversationSchema.safeParse({
+        ...conv,
+        type: 'direct',
+        activityId: null,
+        activityCategory: null,
+        peer,
+      }).success,
     ).toBe(true);
   });
   it('refuse une conversation privée sans l’autre personne', () => {
     expect(
-      conversationSchema.safeParse({ ...conv, type: 'direct', activityId: null }).success,
+      conversationSchema.safeParse({
+        ...conv,
+        type: 'direct',
+        activityId: null,
+        activityCategory: null,
+      }).success,
     ).toBe(false);
   });
   it('refuse une conversation privée liée à une activité', () => {
     expect(conversationSchema.safeParse({ ...conv, type: 'direct' }).success).toBe(false);
+  });
+  it('refuse un groupe sans catégorie d’activité', () => {
+    expect(conversationSchema.safeParse({ ...conv, activityCategory: null }).success).toBe(false);
   });
 });

@@ -38,6 +38,9 @@ export function useParticipation(id: string, me: UserPreview) {
       if (context?.previous) queryClient.setQueryData(key, context.previous);
     },
     onSuccess: (activity) => queryClient.setQueryData(key, activity),
-    onSettled: () => queryClient.invalidateQueries({ queryKey: activityKeys.all }),
+    onSettled: (_activity, _error, joining) => {
+      void queryClient.invalidateQueries({ queryKey: activityKeys.all });
+      if (!joining) void queryClient.invalidateQueries();
+    },
   });
 }

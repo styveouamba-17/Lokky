@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <title>Lokky Admin</title>
+    <!-- Écran de démarrage : visible dès le HTML, avant le JavaScript. Mêmes classes que
+         src/ui/BootScreen.tsx (vérification de session). -->
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #faf9f6;
+      }
+      @media (prefers-color-scheme: dark) {
+        html,
+        body {
+          background: #141a23;
+        }
+      }
+      .boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+      }
+      .boot img {
+        width: 64px;
+        height: 64px;
+        animation: boot-breathe 1.8s ease-in-out infinite;
+      }
+      .boot-bar {
+        position: relative;
+        width: 96px;
+        height: 3px;
+        border-radius: 3px;
+        overflow: hidden;
+        background: rgb(0 180 166 / 0.18);
+      }
+      .boot-bar::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        width: 40%;
+        border-radius: 3px;
+        background: #00b4a6;
+        animation: boot-slide 1.1s ease-in-out infinite;
+      }
+      @keyframes boot-breathe {
+        50% {
+          transform: scale(0.94);
+        }
+      }
+      @keyframes boot-slide {
+        from {
+          transform: translateX(-100%);
+        }
+        to {
+          transform: translateX(250%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot img,
+        .boot-bar::after {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="boot" role="status" aria-label="Chargement de Lokky Admin">
+        <img src="/logo.svg" alt="" />
+        <span class="boot-bar"></span>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

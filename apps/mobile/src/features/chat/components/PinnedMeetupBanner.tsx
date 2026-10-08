@@ -5,7 +5,7 @@ import { Pressable, View } from 'react-native';
 import { useTranslation } from '@/i18n';
 import { formatActivityWhen } from '@/lib';
 import { makeStyles, useTheme } from '@/theme';
-import { Text } from '@/ui';
+import { Badge, Text } from '@/ui';
 
 // Bannière épinglée en haut du chat (spec §6.2) : où et quand se retrouver, toujours visible.
 export function PinnedMeetupBanner({
@@ -25,11 +25,14 @@ export function PinnedMeetupBanner({
     ? `${location.name} · ${location.meetingPoint}`
     : location.name;
   const when = formatActivityWhen(activity.startsAt, now);
+  const cancelled = activity.status === 'cancelled';
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${t('chat.pinned')} : ${when}, ${place}`}
+      accessibilityLabel={`${t('chat.pinned')} : ${when}, ${place}${
+        cancelled ? `, ${t('activity.cancelled')}` : ''
+      }`}
       accessibilityHint={t('chat.pinnedHint')}
       onPress={onPress}
       style={({ pressed }) => [styles.banner, pressed && styles.pressed]}
@@ -38,9 +41,12 @@ export function PinnedMeetupBanner({
         <MapPin size={20} color={colors.onSecondary} weight="fill" />
       </View>
       <View style={styles.body}>
-        <Text variant="label" numberOfLines={1}>
-          {when}
-        </Text>
+        <View style={styles.whenRow}>
+          <Text variant="label" numberOfLines={1} style={styles.when}>
+            {when}
+          </Text>
+          {cancelled ? <Badge label={t('activity.cancelled')} tone="neutral" /> : null}
+        </View>
         <Text variant="caption" color="textMuted" numberOfLines={1}>
           {place}
         </Text>
@@ -73,4 +79,6 @@ const useStyles = makeStyles((t) => ({
     justifyContent: 'center',
   },
   body: { flex: 1, gap: 2 },
+  whenRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  when: { flexShrink: 1 },
 }));

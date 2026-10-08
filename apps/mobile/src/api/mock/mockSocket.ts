@@ -45,6 +45,8 @@ export function createMockSocket({
   const connection = createListeners<(connected: boolean) => void>();
   const timers = new Set<ReturnType<typeof setTimeout>>();
   let unsubscribe: (() => void) | null = null;
+  let unsubscribeUpdated: (() => void) | null = null;
+  let unsubscribeParticipantRemoved: (() => void) | null = null;
   let replyIndex = 0;
 
   function dispatch<E extends ServerEvent>(event: E, ...args: Parameters<ServerToClientEvents[E]>) {
@@ -99,12 +101,26 @@ export function createMockSocket({
     connect() {
       if (unsubscribe) return;
       unsubscribe = db.bus.subscribe(onMessage);
+      unsubscribeUpdated = db.bus.subscribeUpdated((message) => {
+        if (!conversationMembers(db, message.conversationId)?.includes(viewerId)) return;
+        if (message.senderId && isBlockedEitherWay(db, message.senderId, viewerId)) return;
+        dispatch('message:updated', toMessage(message, db));
+      });
+      unsubscribeParticipantRemoved = db.bus.subscribeParticipantRemoved(
+        ({ activityId, userId }) => {
+          if (userId === viewerId) dispatch('activity:participantRemoved', { activityId });
+        },
+      );
       connection.emit(true);
     },
     disconnect() {
       if (!unsubscribe) return;
       unsubscribe();
       unsubscribe = null;
+      unsubscribeUpdated?.();
+      unsubscribeUpdated = null;
+      unsubscribeParticipantRemoved?.();
+      unsubscribeParticipantRemoved = null;
       timers.forEach(cancel);
       timers.clear();
       connection.emit(false);
