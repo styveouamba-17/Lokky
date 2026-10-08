@@ -13,9 +13,10 @@ npm run keys:jwt          # une seule fois : coller la ligne affichée dans .env
 npm run db:up             # PostgreSQL (PostGIS) sur 5434, Redis sur 6380
 npm run db:migrate
 npm run db:seed           # facultatif : personnes et sorties de démo (relançable)
-npm run dev               # http://localhost:3000/health (API + Socket.IO)
-npm run worker            # autre terminal : rappels, après-sortie, push, purges
+npm run dev               # http://localhost:3000/health (API + Socket.IO + worker BullMQ)
 ```
+
+Le worker BullMQ démarre avec l'API. `npm run worker` reste disponible pour le lancer séparément.
 
 Les ports sont décalés pour ne pas gêner un PostgreSQL ou un Redis déjà installés (5432, 5433, 6379). Pour en changer : `POSTGRES_PORT` / `REDIS_PORT` et les URL dans `.env`.
 

@@ -4,19 +4,15 @@ import { useTranslation } from '@/i18n';
 import { makeStyles } from '@/theme';
 import { Input, StepIntro } from '@/ui';
 import type { OnboardingControl, OnboardingErrors } from '../form';
-import { AvatarPicker } from './AvatarPicker';
+import { AvatarPlaceholder } from './AvatarPlaceholder';
 import { BirthDateField } from './BirthDateField';
 
 export function StepYou({
   control,
   errors,
-  avatarUri,
-  onAvatarChange,
 }: {
   control: OnboardingControl;
   errors: OnboardingErrors;
-  avatarUri: string | null;
-  onAvatarChange: (uri: string) => void;
 }) {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -26,7 +22,7 @@ export function StepYou({
   return (
     <View style={styles.stack}>
       <StepIntro title={t('onboarding.you.title')} body={t('onboarding.you.body')} />
-      <AvatarPicker uri={avatarUri} onChange={onAvatarChange} />
+      <AvatarPlaceholder />
       <Controller
         control={control}
         name="firstName"

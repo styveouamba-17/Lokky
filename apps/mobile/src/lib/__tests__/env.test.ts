@@ -1,6 +1,14 @@
 import { parseEnv } from '../env';
+import { API_URL } from '../configurl';
 
 describe('parseEnv', () => {
+  it('priorise l’URL Render configurée à celle de Metro', () => {
+    expect(parseEnv({ apiMode: 'http', apiUrl: API_URL }, true, '192.168.1.48:8081')).toEqual({
+      apiMode: 'http',
+      apiUrl: 'https://lokky.onrender.com',
+    });
+  });
+
   it('utilise le vrai backend local par défaut en développement', () => {
     expect(parseEnv({}, true, '192.168.1.48:8081')).toEqual({
       apiMode: 'http',

@@ -24,7 +24,6 @@ export function OnboardingScreen() {
   const signOut = useSessionStore((s) => s.signOut);
   const complete = useCompleteOnboarding();
   const [step, setStep] = useState(0);
-  const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const { control, trigger, handleSubmit, formState } = useForm({
     resolver: zodResolver(onboardingSchema),
     defaultValues: { firstName: firstNameHint ?? '', birthDate: '', interests: [] },
@@ -42,7 +41,7 @@ export function OnboardingScreen() {
 
   const submit = handleSubmit((profile) =>
     complete.mutate(
-      { profile, avatarUri },
+      { profile },
       { onError: () => toast.show(t('onboarding.errors.save'), 'error') },
     ),
   );
@@ -63,12 +62,7 @@ export function OnboardingScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior="padding">
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           {step === 0 ? (
-            <StepYou
-              control={control}
-              errors={formState.errors}
-              avatarUri={avatarUri}
-              onAvatarChange={setAvatarUri}
-            />
+            <StepYou control={control} errors={formState.errors} />
           ) : null}
           {step === 1 ? <StepSituation control={control} /> : null}
           {step === 2 ? <StepInterests control={control} /> : null}

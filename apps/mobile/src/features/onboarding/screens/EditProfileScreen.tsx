@@ -2,7 +2,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { LIMITS } from '@lokky/shared';
 import { useMutation } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { ScrollView, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
@@ -11,8 +10,8 @@ import { useTranslation } from '@/i18n';
 import { useSessionStore } from '@/state/session';
 import { makeStyles } from '@/theme';
 import { Button, Input, ScreenHeader, useToast } from '@/ui';
-import { setAvatarUrl, updateProfile, uploadAvatar } from '../api';
-import { AvatarPicker } from '../components/AvatarPicker';
+import { updateProfile } from '../api';
+import { AvatarPlaceholder } from '../components/AvatarPlaceholder';
 import { StepInterests } from '../components/StepInterests';
 import { StepSituation } from '../components/StepSituation';
 import { onboardingSchema, type OnboardingFormValues } from '../form';
@@ -25,7 +24,6 @@ export function EditProfileScreen() {
   const toast = useToast();
   const me = useSessionStore((s) => s.me);
   const setMe = useSessionStore((s) => s.setMe);
-  const [avatarUri, setAvatarUri] = useState<string | null>(me?.avatarUrl ?? null);
   const { control, handleSubmit, formState } = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
@@ -45,19 +43,17 @@ export function EditProfileScreen() {
       neighborhood: NonNullable<typeof me>['neighborhood'];
       interests: NonNullable<typeof me>['interests'];
     }) => {
-      let updated = await updateProfile(values);
-      // Nouvelle photo choisie (URI locale) : envoi, puis mise à jour du profil.
-      if (avatarUri && avatarUri !== me?.avatarUrl) {
-        updated = await setAvatarUrl(await uploadAvatar(avatarUri));
-      }
-      return updated;
+      return updateProfile(values);
     },
     onSuccess: async (updated) => {
       await setMe(updated);
       toast.show(t('settings.saved'), 'success');
       router.back();
     },
-    onError: () => toast.show(t('settings.error'), 'error'),
+    onError: (error) => {
+      if (__DEV__) console.error('[Avatar] Profile save failed.', error);
+      toast.show(t('settings.error'), 'error');
+    },
   });
 
   const submit = handleSubmit(({ firstName, status, neighborhood, interests: list }) =>
@@ -70,7 +66,7 @@ export function EditProfileScreen() {
       <ScreenHeader title={t('settings.editProfile.title')} onBack={() => router.back()} />
       <KeyboardAvoidingView behavior="padding" style={styles.flex}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <AvatarPicker uri={avatarUri} onChange={setAvatarUri} />
+          <AvatarPlaceholder />
           <Controller
             control={control}
             name="firstName"

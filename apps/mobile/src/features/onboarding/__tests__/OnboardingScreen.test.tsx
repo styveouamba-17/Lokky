@@ -66,9 +66,11 @@ describe('OnboardingScreen', () => {
     });
   });
 
-  it('préremplit le prénom reçu d’Apple ou Google', async () => {
+  it('préremplit le prénom reçu d’Apple ou Google et affiche un avatar non modifiable', async () => {
     await renderOnboarding();
     expect(screen.getByLabelText('Ton prénom').props.value).toBe('Awa');
+    expect(screen.getByLabelText('Photo de profil indisponible pour le moment')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Ajouter une photo' })).toBeNull();
     expect(continueButton()).toBeDisabled(); // date de naissance manquante
   });
 

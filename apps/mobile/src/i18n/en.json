@@ -122,7 +122,8 @@
       "birthDatePlaceholder": "Pick a date",
       "photo": "Add a photo",
       "changePhoto": "Change photo",
-      "photoHint": "Optional, but it reassures others."
+      "photoHint": "Optional, but it reassures others.",
+      "photoUnavailable": "Profile photo unavailable for now"
     },
     "situation": {
       "title": "About you",

@@ -61,7 +61,7 @@ export const ILLUSTRATIONS: Partial<Record<IllustrationName, ImageSourcePropType
 // (ou en ajouter une : category-sport-3.png…).
 export const CATEGORY_COVERS: Record<ActivityCategory, ImageSourcePropType[]> = {
   sport: [
-    require('../../../assets/category-sport.png'),
+    // require('../../../assets/category-sport.png'),
     // require('./category-sport-2.png'),
   ],
   beach: [

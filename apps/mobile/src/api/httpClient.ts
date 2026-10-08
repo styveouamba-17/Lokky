@@ -33,6 +33,10 @@ export function createHttpClient({
     body: unknown,
     token: string | null,
   ): Promise<Response> {
+    if (__DEV__ && process.env.NODE_ENV !== 'test') {
+      const target = new URL(url);
+      console.info(`[Lokky API] ${method} ${target.origin}${target.pathname}`);
+    }
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (body) headers['Content-Type'] = 'application/json';
     if (token) headers.Authorization = `Bearer ${token}`;

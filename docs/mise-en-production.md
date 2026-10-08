@@ -151,6 +151,13 @@ implémentées.
 
 ## 6. Reste à faire hors code
 
+- Surveillance Render : l'API expose `GET https://lokky.onrender.com/health` sans authentification.
+  La route vérifie PostgreSQL et Redis et renvoie `200` avec `{ "ok": true, ... }` s'ils répondent,
+  sinon `503`. Le worker BullMQ démarre désormais dans le même processus que l'API : aucun service
+  Background Worker Render séparé n'est requis. Sur l'offre gratuite, le Web Service peut toutefois
+  s'endormir après une période sans trafic ; le traitement des tâches et l'envoi des push peuvent
+  donc être retardés jusqu'à son réveil. Un moniteur UptimeRobot sur cette URL peut générer du
+  trafic régulier, sans garantir une disponibilité continue.
 - Publier les deux fichiers de liens et la page web de secours.
 - Faire relire les textes légaux (`src/features/settings/legal/`) et confirmer l'adresse de contact.
 - Générer les illustrations (`docs/illustrations.md`).

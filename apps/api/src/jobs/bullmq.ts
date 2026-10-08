@@ -3,8 +3,8 @@ import { Redis } from 'ioredis';
 import type { Processors } from './processors';
 import type { JobName, JobScheduler } from './types';
 
-// File de tâches sur Redis (spec backend §10). Le serveur API planifie ; le worker
-// (processus séparé, src/worker.ts) exécute.
+// File de tâches sur Redis (spec backend §10). Le serveur API planifie et exécute les tâches ;
+// src/worker.ts reste disponible pour les déploiements avec un processus séparé.
 export const QUEUE_NAME = 'lokky';
 
 // BullMQ exige des connexions Redis sans limite de tentatives.

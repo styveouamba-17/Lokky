@@ -2,10 +2,12 @@ import { Redis } from 'ioredis';
 import { buildApp } from './app';
 import { loadConfig } from './config';
 import { createDatabase } from './db/client';
-import { createBullScheduler } from './jobs/bullmq';
+import { createBullScheduler, startWorker } from './jobs/bullmq';
 import { registerJobListeners } from './jobs/listeners';
+import { createProcessors } from './jobs/processors';
 import { attachRealtime } from './realtime';
 import { createServices } from './services';
+import { createExpoPushSender } from './services/push';
 
 const config = loadConfig();
 const database = createDatabase(config.DATABASE_URL, { max: config.DB_POOL_SIZE });
@@ -31,11 +33,24 @@ const io = attachRealtime(app.server, {
   now: () => new Date(),
   redis,
 });
-// Tâches planifiées : l'API les crée, le worker (npm run worker) les exécute.
+// Tâches planifiées et worker dans le même processus, pour les déploiements sans service worker séparé.
 const scheduler = createBullScheduler(config.REDIS_URL);
 registerJobListeners(app.events, scheduler, database.db, () => new Date());
+const { worker, close: closeWorker } = await startWorker(
+  config.REDIS_URL,
+  createProcessors({
+    db: database.db,
+    push: createExpoPushSender({ accessToken: config.EXPO_ACCESS_TOKEN }),
+    now: () => new Date(),
+  }),
+);
+worker.on('failed', (job, error) => {
+  app.log.error({ job: job?.name, err: error }, "Echec du traitement d'une tache");
+});
+app.log.info('Worker des tâches démarré dans le processus API.');
 
 app.addHook('onClose', async () => {
+  await closeWorker();
   await io.close();
   await scheduler.close();
 });

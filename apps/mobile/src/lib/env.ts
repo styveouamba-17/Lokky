@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { API_URL } from './configurl';
 
 // hybrid (développement uniquement) : vrai backend pour les routes qu'il connaît déjà,
 // simulation pour le reste (src/api/hybridClient.ts).
@@ -42,7 +43,7 @@ export function parseEnv(raw: RawEnv, isDev: boolean, devHostUri?: string | null
 export const env = parseEnv(
   {
     apiMode: process.env.EXPO_PUBLIC_API_MODE,
-    apiUrl: process.env.EXPO_PUBLIC_API_URL,
+    apiUrl: API_URL,
     apiPort: process.env.EXPO_PUBLIC_API_PORT,
   },
   __DEV__,
