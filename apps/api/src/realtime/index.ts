@@ -60,7 +60,9 @@ export function attachRealtime(server: HttpServer, deps: RealtimeDeps): Realtime
 
   io.on('connection', (socket) => {
     const userId = socket.data.userId;
-    void socket.join(room(userId));
+    void Promise.resolve(socket.join(room(userId)))
+      .then(() => sendUnread([userId]))
+      .catch((error: unknown) => console.error('Impossible de synchroniser les messages non lus.', error));
     let lastTyping = 0;
 
     // Salles de conversation inutiles ici (diffusion par personne) : acceptées sans effet.
@@ -92,8 +94,7 @@ export function attachRealtime(server: HttpServer, deps: RealtimeDeps): Realtime
   };
 
   // Rien n'est livré entre deux personnes qui se sont bloquées (spec app §6.3, règle 6).
-  // Pas de total de non-lus ici : l'app le déduit du message reçu (une requête de moins par
-  // destinataire et par message).
+  // Le total exact permet notamment de maintenir le badge de l'icône synchronisé.
   events.on(
     'message.created',
     async ({ message, recipientIds }) => {

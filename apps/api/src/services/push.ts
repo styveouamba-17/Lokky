@@ -8,6 +8,7 @@ export interface PushMessage {
   title: string;
   body: string;
   data: PushData;
+  badge?: number;
 }
 
 export interface PushSender {

@@ -244,6 +244,7 @@ describe('messages', () => {
         title: 'Foot à la plage',
         body: '3 nouveaux messages',
         data: { type: 'message', conversationId },
+        badge: 3,
       }),
     ]);
   });

@@ -14,6 +14,7 @@ export interface Notification {
   title: string;
   body: string;
   data: PushData;
+  badge?: number;
 }
 
 // Envoie à chaque personne sur tous ses téléphones, si elle a laissé ce type de
@@ -50,7 +51,13 @@ export async function notify(
     .flatMap((n) =>
       tokens
         .filter((t) => t.userId === n.userId)
-        .map((t) => ({ to: t.token, title: n.title, body: n.body, data: n.data })),
+        .map((t) => ({
+          to: t.token,
+          title: n.title,
+          body: n.body,
+          data: n.data,
+          ...(n.badge === undefined ? {} : { badge: n.badge }),
+        })),
     );
   if (messages.length === 0) return 0;
 

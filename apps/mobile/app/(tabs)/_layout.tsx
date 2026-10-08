@@ -11,6 +11,7 @@ import { useChatRealtime } from '@/features/chat/hooks/useChatRealtime';
 import { useUnreadTotal } from '@/features/chat/hooks/useConversations';
 import { WarningSheet } from '@/features/moderation/components/WarningSheet';
 import { useModerationRealtime } from '@/features/moderation/hooks/useModerationRealtime';
+import { useAppBadgeCount } from '@/features/notifications/hooks/useAppBadgeCount';
 import { usePushNotifications } from '@/features/notifications/hooks/usePushNotifications';
 import { useTranslation } from '@/i18n';
 import { fontFamilies, useTheme } from '@/theme';
@@ -34,6 +35,7 @@ export default function TabsLayout() {
   usePushNotifications();
   useOpenPendingLink();
   const unread = useUnreadTotal();
+  useAppBadgeCount(unread);
   return (
     <>
       <Tabs

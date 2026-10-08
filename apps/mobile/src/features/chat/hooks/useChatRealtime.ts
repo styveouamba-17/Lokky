@@ -20,13 +20,25 @@ export function useChatRealtime() {
 
   useEffect(() => {
     const typingTimers = new Map<string, ReturnType<typeof setTimeout>>();
+    useChatStore.getState().setUnreadTotal(null);
     const offs = [
       realtime.on('message:new', (message) => {
         confirm(message.clientId);
+        const viewerId = useSessionStore.getState().me?.id ?? null;
+        const activeConversationId = useActiveConversation.getState().id;
+        const unreadTotal = useChatStore.getState().unreadTotal;
         receiveMessage(queryClient, message, {
-          viewerId: useSessionStore.getState().me?.id ?? null,
-          activeConversationId: useActiveConversation.getState().id,
+          viewerId,
+          activeConversationId,
         });
+        if (
+          unreadTotal !== null &&
+          message.type === 'text' &&
+          message.sender?.id !== viewerId &&
+          message.conversationId !== activeConversationId
+        ) {
+          useChatStore.getState().setUnreadTotal(unreadTotal + 1);
+        }
         if (message.sender) {
           useChatStore.getState().setTyping(message.conversationId, message.sender, false);
         }
@@ -48,7 +60,8 @@ export function useChatRealtime() {
           );
         }
       }),
-      realtime.on('unread:update', () => {
+      realtime.on('unread:update', ({ total }) => {
+        useChatStore.getState().setUnreadTotal(total);
         void queryClient.invalidateQueries({ queryKey: chatKeys.conversations });
       }),
       realtime.onConnectionChange((connected) => {
@@ -66,6 +79,7 @@ export function useChatRealtime() {
       offs.forEach((off) => off());
       typingTimers.forEach(clearTimeout);
       realtime.disconnect();
+      useChatStore.getState().setUnreadTotal(null);
     };
   }, [queryClient]);
 }

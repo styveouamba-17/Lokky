@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useChatStore } from '../chatStore';
 import { getConversation, getGroupActivity, listConversations } from '../api';
 import { chatKeys } from '../queryKeys';
 
@@ -12,10 +13,12 @@ export function useConversations() {
   return { ...result, conversations: result.data?.pages.flatMap((p) => p.items) ?? [] };
 }
 
-// Badge de l'onglet Messages : total des non-lus des conversations chargées.
+// Le total serveur couvre toutes les conversations ; avant la première synchro, on utilise
+// les conversations déjà chargées pour garder le badge réactif.
 export function useUnreadTotal(): number {
+  const serverTotal = useChatStore((state) => state.unreadTotal);
   const { conversations } = useConversations();
-  return conversations.reduce((sum, c) => sum + c.unreadCount, 0);
+  return serverTotal ?? conversations.reduce((sum, c) => sum + c.unreadCount, 0);
 }
 
 export const useConversation = (id: string) =>

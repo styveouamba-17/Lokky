@@ -27,6 +27,7 @@ import { findActivity, participantIdsOf } from '../modules/activities/handlers';
 import { statusOf } from '../modules/activities/views';
 import { notify, type Notification } from '../modules/push/notify';
 import { cutOffIds } from '../modules/safety/blocks';
+import { unreadTotal } from '../modules/chat/conversations';
 import { reviewedBy } from '../modules/trust/stats';
 import { findUser, findUsers } from '../modules/users/users';
 import type { PushSender } from '../services/push';
@@ -244,8 +245,9 @@ export function createProcessors({ db, push, now }: ProcessorDeps): Processors {
           : group
             ? `${lastSender} : ${last.body}`
             : last.body;
+      const badge = await unreadTotal(db, userId);
       await notify(db, push, 'messages', [
-        { userId, title, body, data: { type: 'message', conversationId } },
+        { userId, title, body, data: { type: 'message', conversationId }, badge },
       ]);
     },
 

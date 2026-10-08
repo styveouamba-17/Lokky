@@ -21,7 +21,7 @@ export function configureForegroundNotifications() {
         shouldShowBanner: show,
         shouldShowList: show,
         shouldPlaySound: show,
-        shouldSetBadge: false,
+        shouldSetBadge: true,
       };
     },
   });
@@ -44,7 +44,9 @@ export async function registerForPushNotifications({
   }
   let { status } = await Notifications.getPermissionsAsync();
   if (status === 'undetermined' && askIfNeverAsked) {
-    ({ status } = await Notifications.requestPermissionsAsync());
+    ({ status } = await Notifications.requestPermissionsAsync({
+      ios: { allowAlert: true, allowBadge: true, allowSound: true },
+    }));
   }
   if (status !== 'granted') return false;
   const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined;

@@ -91,6 +91,9 @@ L'app enregistre son jeton Expo (`POST /me/push-token`) une fois connectée, si 
 Le titre et le texte sont rédigés par le serveur. Respecter les préférences du compte (`preferences.notifications.messages`, `activityUpdates`, `reminders`). Sur Android, le canal par défaut s'appelle `default`.
 
 Un message pour la conversation déjà ouverte n'affiche pas de bannière (l'app filtre).
+Le badge de l'icône affiche le nombre de messages non lus : il est synchronisé quand l'app est
+ouverte et porté par les push de message quand elle est en arrière-plan. Sur iOS, l'autorisation
+des badges doit être accordée ; sur Android, l'affichage dépend du launcher utilisé.
 
 ## 3. Sentry (plantages)
 

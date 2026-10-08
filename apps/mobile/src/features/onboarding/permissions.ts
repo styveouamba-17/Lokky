@@ -20,6 +20,8 @@ export async function requestPermission(kind: PermissionKind): Promise<Permissio
   const { status } =
     kind === 'location'
       ? await Location.requestForegroundPermissionsAsync()
-      : await Notifications.requestPermissionsAsync();
+      : await Notifications.requestPermissionsAsync({
+          ios: { allowAlert: true, allowBadge: true, allowSound: true },
+        });
   return normalize(status);
 }
