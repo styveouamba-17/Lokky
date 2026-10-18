@@ -1,6 +1,6 @@
 import { activitySchema, paginatedSchema } from '@lokky/shared';
 import { and, eq } from 'drizzle-orm';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { conversationMembers, participations } from '../src/db/schema';
 import { createActivity, createMember } from './factories';
 import { createTestApp, resetDatabase } from './helpers';
@@ -11,10 +11,15 @@ const H = 3_600_000;
 const at = (hours: number) => new Date(NOW.getTime() + hours * H);
 
 let t: Awaited<ReturnType<typeof createTestApp>>;
+// Le contrat partagé valide les dates avec l'horloge réelle : on la fige sur NOW.
 beforeAll(async () => {
+  vi.useFakeTimers({ toFake: ['Date'], now: NOW });
   t = await createTestApp({ now: () => NOW });
 });
-afterAll(() => t.close());
+afterAll(async () => {
+  await t.close();
+  vi.useRealTimers();
+});
 beforeEach(() => resetDatabase(t.db));
 
 const feedPage = paginatedSchema(activitySchema);

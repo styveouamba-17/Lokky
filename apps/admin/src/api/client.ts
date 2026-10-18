@@ -6,9 +6,10 @@ import {
   type AdminRouteOutput,
 } from '@lokky/shared/admin';
 
-// Client de l'API admin : même origine (/api), session par cookie httpOnly, en-tête
-// anti-CSRF exigé par le serveur. Les réponses sont validées par le contrat partagé.
-export const API_BASE = '/api';
+// En production, VITE_API_URL peut pointer directement vers le backend ; en local ou
+// derrière Caddy, /api reste relatif et le proxy conserve une origine unique.
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, '');
+export const API_BASE = configuredApiUrl || '/api';
 
 export class ApiError extends Error {
   constructor(
@@ -33,7 +34,7 @@ export async function api<R extends AdminRouteName>(
   try {
     res = await fetcher(`${API_BASE}${req.path}${query}`, {
       method: req.method,
-      credentials: 'same-origin',
+      credentials: 'include',
       headers: {
         'x-lokky-admin': '1',
         ...(req.body ? { 'content-type': 'application/json' } : {}),

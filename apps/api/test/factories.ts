@@ -1,6 +1,7 @@
 import type { ActivityCategory, NeighborhoodId } from '@lokky/shared';
 import { activities, participations, users } from '../src/db/schema';
 import { uuidv7 } from '../src/lib/ids';
+import { openSession } from '../src/modules/auth/sessions';
 import { createGroup } from '../src/modules/chat/groups';
 import type { createTestApp } from './helpers';
 
@@ -29,7 +30,9 @@ export async function createMember(
     onboardedAt: now,
     createdAt: now,
   });
-  const token = await t.services.tokens.sign(id, uuidv7(), now);
+  // Une vraie connexion (session en base) : le temps réel vérifie qu'elle reste valable.
+  const session = await openSession(t.db, t.services.tokens, id, now);
+  const token = session.accessToken;
   // Attend aussi les tâches d'arrière-plan (temps réel, planification) : les tests voient
   // l'état final, comme l'app quelques millisecondes plus tard.
   const call = async (
@@ -46,7 +49,7 @@ export async function createMember(
     await t.app.events.settled();
     return res;
   };
-  return { id, firstName, token, call };
+  return { id, firstName, token, refreshToken: session.refreshToken, call };
 }
 
 export async function createActivity(

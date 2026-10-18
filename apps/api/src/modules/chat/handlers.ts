@@ -12,6 +12,7 @@ import { cutOffIds, isBlockedEitherWay } from '../safety/blocks';
 import { findUser, isOnboarded } from '../users/users';
 import {
   directKey,
+  insertClientMessage,
   insertMessage,
   memberConversation,
   membersOf,
@@ -193,18 +194,22 @@ export const chatHandlers: Handlers = {
   'messages.send': async ({ conversationId, clientId, body, replyToMessageId }, ctx) => {
     const me = viewer(ctx);
     const row = await memberConversation(ctx.db, conversationId, me);
-    const [existing] = await ctx.db
-      .select()
-      .from(messages)
-      .where(
-        and(
-          eq(messages.conversationId, conversationId),
-          eq(messages.senderId, me),
-          eq(messages.clientId, clientId),
-        ),
-      )
-      .limit(1);
-    if (existing) return (await toMessages(ctx.db, [existing]))[0]!;
+    const alreadySent = async () => {
+      const [existing] = await ctx.db
+        .select()
+        .from(messages)
+        .where(
+          and(
+            eq(messages.conversationId, conversationId),
+            eq(messages.senderId, me),
+            eq(messages.clientId, clientId),
+          ),
+        )
+        .limit(1);
+      return existing ? (await toMessages(ctx.db, [existing]))[0]! : null;
+    };
+    const existing = await alreadySent();
+    if (existing) return existing;
 
     const now = ctx.now();
     if (row.type === 'direct') {
@@ -229,15 +234,16 @@ export const chatHandlers: Handlers = {
         throw new HttpError('not_found', 'Le message auquel répondre est introuvable.');
       }
     }
-    const created = await insertMessage(ctx.db, {
+    const created = await insertClientMessage(ctx.db, {
       conversationId,
       senderId: me,
-      type: 'text',
       body,
       clientId,
       replyToMessageId: replyToMessageId ?? null,
       createdAt: now,
     });
+    // L'autre tentative vient de l'enregistrer : même réponse, sans le publier deux fois.
+    if (!created) return (await alreadySent())!;
     await ctx.db
       .update(conversationMembers)
       .set({ lastReadAt: now })

@@ -1,4 +1,4 @@
-import { LEGAL_CONTACT_EMAIL } from '@/lib/links';
+import { LEGAL_CONTACT_EMAIL } from './contact';
 import type { LegalDocument } from './types';
 
 // English version of the draft terms of use (terms.fr.ts is the reference).

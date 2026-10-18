@@ -1,0 +1,12 @@
+---
+import { TERMS_FR } from '@lokky/shared';
+import LegalArticle from '../components/LegalArticle.astro';
+import PageShell from '../components/PageShell.astro';
+---
+
+<PageShell
+  title="Conditions d’utilisation — Lokky"
+  description="Les règles de Lokky, pour des sorties sûres et agréables."
+>
+  <LegalArticle document={TERMS_FR} />
+</PageShell>

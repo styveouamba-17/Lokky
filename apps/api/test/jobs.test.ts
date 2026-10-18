@@ -1,7 +1,8 @@
 import { eq } from 'drizzle-orm';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { pushTokens, sessions, users } from '../src/db/schema';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { blocks, pushTokens, sessions, users } from '../src/db/schema';
 import { registerJobListeners } from '../src/jobs/listeners';
+import { openSession } from '../src/modules/auth/sessions';
 import { createProcessors, type Processors } from '../src/jobs/processors';
 import type { JobName, JobPayloads, JobScheduler } from '../src/jobs/types';
 import type { PushMessage, PushSender } from '../src/services/push';
@@ -44,12 +45,17 @@ let t: Awaited<ReturnType<typeof createTestApp>>;
 let clock = NOW;
 let processors: Processors;
 
+// Le contrat partagé valide les dates avec l'horloge réelle : on la fige sur NOW.
 beforeAll(async () => {
+  vi.useFakeTimers({ toFake: ['Date'], now: NOW });
   t = await createTestApp({ now: () => clock });
   registerJobListeners(t.app.events, scheduler, t.db, () => clock);
   processors = createProcessors({ db: t.db, push, now: () => clock });
 });
-afterAll(() => t.close());
+afterAll(async () => {
+  await t.close();
+  vi.useRealTimers();
+});
 beforeEach(async () => {
   clock = NOW;
   planned.clear();
@@ -99,7 +105,7 @@ describe('sorties : rappel, après-sortie, événements', () => {
     });
   });
 
-  it('découverte : seuls les membres intéressés reçoivent la notification, quel que soit leur quartier', async () => {
+  it('découverte : seuls les membres intéressés reçoivent la notification', async () => {
     const creator = await withPhone(await createMember(t, 'Awa'), 'ExponentPushToken[awa]');
     const matching = await withPhone(
       await createMember(t, 'Fatou', { neighborhood: 'yoff' }),
@@ -147,6 +153,77 @@ describe('sorties : rappel, après-sortie, événements', () => {
         data: { type: 'activity_discovery', activityId: id },
       }),
     ]);
+  });
+
+  it('découverte : ni compte banni ou suspendu, ni lien coupé avec l’organisateur, ni quartier trop loin', async () => {
+    const creator = await createMember(t, 'Awa');
+    const phone = async (name: string, neighborhood: 'yoff' | 'fann' | 'guediawaye' = 'fann') =>
+      withPhone(
+        await createMember(t, name, { neighborhood }),
+        `ExponentPushToken[${name.toLowerCase()}]`,
+      );
+    const near = await phone('Fatou', 'yoff');
+    const far = await phone('Ibou', 'guediawaye');
+    const banned = await phone('Moussa');
+    const suspended = await phone('Aminata');
+    const blockedByCreator = await phone('Khady');
+    const blockingCreator = await phone('Omar');
+    for (const member of [near, far, banned, suspended, blockedByCreator, blockingCreator]) {
+      await t.db
+        .update(users)
+        .set({ interests: ['sport'] })
+        .where(eq(users.id, member.id));
+    }
+    await t.db.update(users).set({ moderationStatus: 'banned' }).where(eq(users.id, banned.id));
+    await t.db
+      .update(users)
+      .set({ moderationStatus: 'suspended', suspendedUntil: at(48) })
+      .where(eq(users.id, suspended.id));
+    await t.db.insert(blocks).values([
+      { blockerId: creator.id, blockedId: blockedByCreator.id, createdAt: NOW },
+      { blockerId: blockingCreator.id, blockedId: creator.id, createdAt: NOW },
+    ]);
+    sent.length = 0;
+
+    const { id } = (
+      await creator.call('POST', '/activities', { ...NEW_ACTIVITY(at(26)), category: 'sport' })
+    ).json();
+    await run(`discovery-${id}`);
+
+    expect(sent.map((m) => m.to)).toEqual(['ExponentPushToken[fatou]']);
+  });
+
+  it('compte supprimé : les participants sont prévenus et son téléphone ne reçoit plus rien', async () => {
+    const awa = await withPhone(await createMember(t, 'Awa'), 'ExponentPushToken[awa]');
+    const fatou = await withPhone(await createMember(t, 'Fatou'), 'ExponentPushToken[fatou]');
+    const { id } = (await awa.call('POST', '/activities', NEW_ACTIVITY(at(26)))).json();
+    await fatou.call('POST', `/activities/${id}/join`);
+    expect((await awa.call('DELETE', '/me')).statusCode).toBe(200);
+
+    expect(planned.has(`reminder-${id}`)).toBe(false);
+    expect(await t.db.select().from(pushTokens).where(eq(pushTokens.userId, awa.id))).toEqual([]);
+    sent.length = 0;
+    await runAll('activity-event');
+    expect(sent.map((m) => m.title)).toContain('Sortie annulée');
+    expect(sent.every((m) => m.to === 'ExponentPushToken[fatou]')).toBe(true);
+  });
+
+  it('se déconnecter retire le téléphone de cette connexion seulement', async () => {
+    const awa = await withPhone(await createMember(t, 'Awa'), 'ExponentPushToken[awa-phone]');
+    // Même compte, deuxième téléphone : une autre connexion.
+    const second = await openSession(t.db, t.services.tokens, awa.id, NOW);
+    const register = await t.app.inject({
+      method: 'POST',
+      url: '/me/push-token',
+      headers: { authorization: `Bearer ${second.accessToken}` },
+      payload: { token: 'ExponentPushToken[awa-tablet]', platform: 'ios' },
+    });
+    expect(register.statusCode).toBe(200);
+
+    const logout = await awa.call('POST', '/auth/logout', { refreshToken: awa.refreshToken });
+    expect(logout.statusCode).toBe(200);
+    const left = await t.db.select().from(pushTokens).where(eq(pushTokens.userId, awa.id));
+    expect(left.map((p) => p.token)).toEqual(['ExponentPushToken[awa-tablet]']);
   });
 
   it('le rappel part aux participants qui l’ont laissé activé', async () => {
@@ -316,7 +393,10 @@ describe('jetons et nettoyage', () => {
       expiresAt: at(-1),
     });
     await processors.cleanup({});
-    expect(await t.db.select().from(sessions)).toHaveLength(0);
+    // Seule reste la connexion encore valable d'Awa.
+    const left = await t.db.select().from(sessions);
+    expect(left.map((s) => s.familyId)).not.toContain('01a10000-0000-7000-8000-0000000000bb');
+    expect(left).toHaveLength(1);
   });
 });
 

@@ -1,0 +1,12 @@
+---
+import { PRIVACY_FR } from '@lokky/shared';
+import LegalArticle from '../components/LegalArticle.astro';
+import PageShell from '../components/PageShell.astro';
+---
+
+<PageShell
+  title="Politique de confidentialité — Lokky"
+  description="Les données que Lokky utilise, pourquoi, qui peut les voir et comment tu gardes la main dessus."
+>
+  <LegalArticle document={PRIVACY_FR} />
+</PageShell>

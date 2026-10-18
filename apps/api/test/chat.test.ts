@@ -117,6 +117,27 @@ describe('chat de groupe', () => {
     expect(again.json().id).toBe(sent.json().id);
   });
 
+  it('deux envois simultanés du même message n’en créent qu’un', async () => {
+    const moussa = await createMember(t, 'Moussa');
+    const awa = await createMember(t, 'Awa');
+    const { id, conversationId } = await createActivity(t, moussa.id, { startsAt: at(8) });
+    await awa.call('POST', `/activities/${id}/join`);
+    const input = { clientId: 'client-race', body: 'J’arrive !' };
+    const url = `/conversations/${conversationId}/messages`;
+
+    const [first, second] = await Promise.all([
+      awa.call('POST', url, input),
+      awa.call('POST', url, input),
+    ]);
+    expect([first.statusCode, second.statusCode]).toEqual([200, 200]);
+    expect(first.json().id).toBe(second.json().id);
+    const list = await awa.call('GET', url);
+    const copies = list
+      .json()
+      .items.filter((m: { clientId?: string }) => m.clientId === 'client-race');
+    expect(copies).toHaveLength(1);
+  });
+
   it('répondre à un message garde sa référence et le propriétaire peut le modifier', async () => {
     const moussa = await createMember(t, 'Moussa');
     const awa = await createMember(t, 'Awa');

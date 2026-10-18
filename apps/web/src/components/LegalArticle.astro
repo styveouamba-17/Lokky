@@ -1,0 +1,93 @@
+---
+import type { LegalDocument } from '@lokky/shared';
+
+// Même texte que l'écran légal de l'app (packages/shared/src/legal).
+interface Props {
+  document: LegalDocument;
+}
+
+const { document } = Astro.props;
+---
+
+<article class="legal">
+  <p class="legal-eyebrow">Lokky · Informations légales</p>
+  <h1>{document.title}</h1>
+  <p class="legal-updated">{document.updatedAt}</p>
+  <p class="legal-intro">{document.intro}</p>
+  {
+    document.sections.map((section) => (
+      <section>
+        <h2>{section.title}</h2>
+        {section.blocks.map((block) =>
+          typeof block === 'string' ? (
+            <p>{block}</p>
+          ) : (
+            <ul>
+              {block.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+          ),
+        )}
+      </section>
+    ))
+  }
+  <slot />
+</article>
+
+<style>
+  .legal {
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  .legal-eyebrow {
+    margin: 0 0 12px;
+    color: #b45131;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0 0 8px;
+    font: 600 clamp(32px, 7vw, 44px) / 1.1 'Fredoka', sans-serif;
+    letter-spacing: -0.03em;
+  }
+
+  .legal-updated {
+    margin: 0 0 28px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .legal-intro {
+    margin: 0 0 32px;
+    padding: 18px 20px;
+    border-radius: 18px;
+    background: #fff1e6;
+  }
+
+  h2 {
+    margin: 36px 0 10px;
+    font: 600 21px/1.3 'Fredoka', sans-serif;
+  }
+
+  p {
+    margin: 0 0 12px;
+  }
+
+  ul {
+    margin: 0 0 12px;
+    padding-left: 22px;
+  }
+
+  li + li {
+    margin-top: 6px;
+  }
+
+  .legal :global(a) {
+    color: #b45131;
+  }
+</style>

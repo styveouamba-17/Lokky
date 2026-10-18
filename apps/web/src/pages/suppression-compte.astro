@@ -1,0 +1,50 @@
+---
+import { LEGAL_CONTACT_EMAIL, type LegalDocument } from '@lokky/shared';
+import LegalArticle from '../components/LegalArticle.astro';
+import PageShell from '../components/PageShell.astro';
+
+// Page exigée par Google Play (URL de suppression du compte), cohérente avec me.delete :
+// anonymisation immédiate, effacement définitif à 30 jours.
+const DELETION: LegalDocument = {
+  title: 'Supprimer ton compte Lokky',
+  updatedAt: 'Dernière mise à jour : 18 octobre 2026',
+  intro:
+    'Tu peux supprimer ton compte à tout moment, directement depuis l’application. La suppression est définitive.',
+  sections: [
+    {
+      title: 'Depuis l’application',
+      blocks: [
+        [
+          'Ouvre Lokky et va dans ton profil.',
+          'Touche Réglages, puis Supprimer mon compte.',
+          'Confirme : tu es déconnecté·e tout de suite.',
+        ],
+      ],
+    },
+    {
+      title: 'Sans l’application',
+      blocks: [
+        `Écris-nous à ${LEGAL_CONTACT_EMAIL} depuis l’adresse email de ton compte (ou en indiquant l’adresse liée à ta connexion Apple ou Google). Nous supprimons le compte et te le confirmons.`,
+      ],
+    },
+    {
+      title: 'Ce qui est supprimé',
+      blocks: [
+        [
+          'Tout de suite : ton prénom, ta photo, ta date de naissance, tes centres d’intérêt, tes réglages et tes moyens de connexion. Ton profil n’apparaît plus.',
+          'Tes sorties à venir sont annulées (les participants sont prévenus) et tu quittes celles des autres.',
+          'Sous 30 jours : ton compte, tes messages et tes sorties sont effacés définitivement.',
+        ],
+        'Certaines informations peuvent être gardées plus longtemps si la loi l’exige ou pour traiter un signalement grave.',
+      ],
+    },
+  ],
+};
+---
+
+<PageShell
+  title="Supprimer mon compte — Lokky"
+  description="Comment supprimer ton compte Lokky et ce qui est effacé."
+>
+  <LegalArticle document={DELETION} />
+</PageShell>

@@ -2,16 +2,18 @@ import { pushTokens } from '../../db/schema';
 import { viewer, type Handlers } from '../../http/context';
 
 // Le téléphone s'enregistre une fois connecté (app : features/notifications/push.ts).
-// Un jeton déjà connu passe au compte qui vient de se connecter sur ce téléphone.
+// Un jeton déjà connu passe au compte qui vient de se connecter sur ce téléphone. Il est
+// rattaché à la connexion : se déconnecter arrête les notifications sur ce téléphone.
 export const pushHandlers: Handlers = {
   'me.registerPushToken': async ({ token, platform }, ctx) => {
     const now = ctx.now();
+    const sessionFamilyId = ctx.sessionId;
     await ctx.db
       .insert(pushTokens)
-      .values({ token, userId: viewer(ctx), platform, updatedAt: now })
+      .values({ token, userId: viewer(ctx), platform, sessionFamilyId, updatedAt: now })
       .onConflictDoUpdate({
         target: pushTokens.token,
-        set: { userId: viewer(ctx), platform, updatedAt: now },
+        set: { userId: viewer(ctx), platform, sessionFamilyId, updatedAt: now },
       });
     return { ok: true as const };
   },

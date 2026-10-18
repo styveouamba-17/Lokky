@@ -1,4 +1,4 @@
-import { LEGAL_CONTACT_EMAIL } from '@/lib/links';
+import { LEGAL_CONTACT_EMAIL } from './contact';
 import type { LegalDocument } from './types';
 
 // Projet de conditions d'utilisation, rédigé d'après le fonctionnement réel de l'app.

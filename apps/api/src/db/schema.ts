@@ -359,9 +359,14 @@ export const pushTokens = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     platform: text('platform').$type<'ios' | 'android'>().notNull(),
+    // Connexion (famille de sessions) qui a enregistré le téléphone : la déconnexion le retire.
+    sessionFamilyId: uuid('session_family_id'),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index('push_tokens_user').on(t.userId)],
+  (t) => [
+    index('push_tokens_user').on(t.userId),
+    index('push_tokens_session_family').on(t.sessionFamilyId),
+  ],
 );
 
 // ── Admin de modération ─────────────────────────────────────────────────────────────────

@@ -21,7 +21,8 @@ export async function uploadAvatar(localUri: string): Promise<string> {
       body: file,
     });
   } catch (error) {
-    if (__DEV__) console.error('[Avatar] R2 upload request failed before receiving a response.', error);
+    if (__DEV__)
+      console.error('[Avatar] R2 upload request failed before receiving a response.', error);
     throw error;
   }
   if (__DEV__) console.info(`[Avatar] R2 upload responded with HTTP ${res.status}`);

@@ -1,0 +1,93 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+
+// Pages secondaires (légal, lien de sortie) : en-tête simple, contenu centré, pied de page.
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<SiteLayout title={title} description={description}>
+  <header class="shell-header">
+    <a class="shell-brand" href="/" aria-label="Lokky, accueil">
+      <img src="/icon.webp" alt="" width="34" height="34" />
+      <span>Lokky</span>
+    </a>
+  </header>
+  <main class="shell-main">
+    <slot />
+  </main>
+  <footer class="shell-footer">
+    <nav aria-label="Informations légales">
+      <a href="/confidentialite">Confidentialité</a>
+      <a href="/conditions">Conditions d’utilisation</a>
+      <a href="/suppression-compte">Supprimer mon compte</a>
+    </nav>
+    <span>© {new Date().getFullYear()} Lokky</span>
+  </footer>
+</SiteLayout>
+
+<style>
+  .shell-header,
+  .shell-main,
+  .shell-footer {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    padding-inline: 16px;
+  }
+
+  .shell-header {
+    padding-block: 22px;
+  }
+
+  .shell-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink);
+    text-decoration: none;
+    font: 700 22px/1 'Fredoka', sans-serif;
+    letter-spacing: -0.04em;
+  }
+
+  .shell-brand img {
+    display: block;
+    border-radius: 10px;
+  }
+
+  .shell-main {
+    padding-block: 24px 64px;
+  }
+
+  .shell-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+    padding-block: 24px;
+    border-top: 1px solid #eee4d9;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .shell-footer nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+  }
+
+  .shell-footer a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .shell-footer a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+</style>

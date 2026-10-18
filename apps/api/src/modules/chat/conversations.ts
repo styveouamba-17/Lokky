@@ -102,6 +102,25 @@ export async function insertMessage(
   return row!;
 }
 
+// Message d'une personne, idempotent sur clientId : si le même envoi est déjà arrivé (deux
+// tentatives simultanées après une coupure), rien n'est inséré et null est renvoyé.
+export async function insertClientMessage(
+  db: Database,
+  values: Pick<MessageRow, 'conversationId' | 'body'> & {
+    senderId: string;
+    clientId: string;
+    replyToMessageId: string | null;
+    createdAt: Date;
+  },
+): Promise<MessageRow | null> {
+  const [row] = await db
+    .insert(messages)
+    .values({ id: uuidv7(values.createdAt.getTime()), type: 'text', ...values })
+    .onConflictDoNothing()
+    .returning();
+  return row ?? null;
+}
+
 // Non-lus : messages des autres (hors système) après la dernière lecture.
 export async function unreadCounts(
   db: Database,

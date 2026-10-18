@@ -122,8 +122,7 @@
       "birthDatePlaceholder": "Pick a date",
       "photo": "Add a photo",
       "changePhoto": "Change photo",
-      "photoHint": "Optional, but it reassures others.",
-      "photoUnavailable": "Profile photo unavailable for now"
+      "photoHint": "Optional, but it reassures others."
     },
     "situation": {
       "title": "About you",
@@ -154,7 +153,8 @@
     },
     "errors": {
       "save": "Couldn't save your profile. Try again.",
-      "photo": "Couldn't load this photo."
+      "photo": "Couldn't load this photo.",
+      "photoUpload": "Your profile is ready, but the photo couldn't be uploaded. Add it from your profile."
     }
   },
   "tabs": {

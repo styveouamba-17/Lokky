@@ -337,6 +337,11 @@ const highlights = [
       </svg>
       à Dakar.
     </p>
+    <nav class="footer-links" aria-label="Informations légales">
+      <a href="/confidentialite">Confidentialité</a>
+      <a href="/conditions">Conditions</a>
+      <a href="/suppression-compte">Supprimer mon compte</a>
+    </nav>
     <span class="copyright">© {new Date().getFullYear()} Lokky</span>
   </footer>
 
@@ -1697,6 +1702,23 @@ const highlights = [
     margin-bottom: 0;
     color: var(--muted);
     font-size: 12px;
+  }
+
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    font-size: 12px;
+  }
+
+  .footer-links a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .footer-links a:hover {
+    color: var(--ink);
+    text-decoration: underline;
   }
 
   .footer-heart {

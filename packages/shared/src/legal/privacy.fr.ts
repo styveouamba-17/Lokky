@@ -1,4 +1,4 @@
-import { LEGAL_CONTACT_EMAIL } from '@/lib/links';
+import { LEGAL_CONTACT_EMAIL } from './contact';
 import type { LegalDocument } from './types';
 
 // Projet de politique de confidentialité, rédigé d'après les données réellement utilisées par

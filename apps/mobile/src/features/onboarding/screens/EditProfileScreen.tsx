@@ -3,6 +3,7 @@ import { LIMITS } from '@lokky/shared';
 import { useMutation } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { Controller, useForm, useWatch } from 'react-hook-form';
+import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,8 +11,8 @@ import { useTranslation } from '@/i18n';
 import { useSessionStore } from '@/state/session';
 import { makeStyles } from '@/theme';
 import { Button, Input, ScreenHeader, useToast } from '@/ui';
-import { updateProfile } from '../api';
-import { AvatarPlaceholder } from '../components/AvatarPlaceholder';
+import { updateProfile, uploadAvatar } from '../api';
+import { AvatarPicker } from '../components/AvatarPicker';
 import { StepInterests } from '../components/StepInterests';
 import { StepSituation } from '../components/StepSituation';
 import { onboardingSchema, type OnboardingFormValues } from '../form';
@@ -24,6 +25,7 @@ export function EditProfileScreen() {
   const toast = useToast();
   const me = useSessionStore((s) => s.me);
   const setMe = useSessionStore((s) => s.setMe);
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const { control, handleSubmit, formState } = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
@@ -42,8 +44,11 @@ export function EditProfileScreen() {
       status: NonNullable<typeof me>['status'];
       neighborhood: NonNullable<typeof me>['neighborhood'];
       interests: NonNullable<typeof me>['interests'];
+      avatarUri: string | null;
     }) => {
-      return updateProfile(values);
+      const { avatarUri: selectedAvatar, ...changes } = values;
+      const avatarUrl = selectedAvatar ? await uploadAvatar(selectedAvatar) : undefined;
+      return updateProfile({ ...changes, ...(avatarUrl ? { avatarUrl } : {}) });
     },
     onSuccess: async (updated) => {
       await setMe(updated);
@@ -57,7 +62,7 @@ export function EditProfileScreen() {
   });
 
   const submit = handleSubmit(({ firstName, status, neighborhood, interests: list }) =>
-    save.mutate({ firstName, status, neighborhood, interests: list }),
+    save.mutate({ firstName, status, neighborhood, interests: list, avatarUri }),
   );
 
   if (!me) return null;
@@ -66,7 +71,12 @@ export function EditProfileScreen() {
       <ScreenHeader title={t('settings.editProfile.title')} onBack={() => router.back()} />
       <KeyboardAvoidingView behavior="padding" style={styles.flex}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <AvatarPlaceholder />
+          <AvatarPicker
+            name={me.firstName}
+            uri={avatarUri ?? me.avatarUrl}
+            onChange={setAvatarUri}
+            disabled={save.isPending}
+          />
           <Controller
             control={control}
             name="firstName"

@@ -1,3 +1,11 @@
+import {
+  PRIVACY_EN,
+  PRIVACY_FR,
+  TERMS_EN,
+  TERMS_FR,
+  type LegalBlock,
+  type LegalDocument,
+} from '@lokky/shared';
 import { router } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -5,11 +13,6 @@ import { useTranslation } from '@/i18n';
 import { makeStyles } from '@/theme';
 import { ScreenHeader, Text } from '@/ui';
 import { currentLanguage } from '@/lib';
-import { PRIVACY_EN } from '../legal/privacy.en';
-import { PRIVACY_FR } from '../legal/privacy.fr';
-import { TERMS_EN } from '../legal/terms.en';
-import { TERMS_FR } from '../legal/terms.fr';
-import type { LegalBlock, LegalDocument } from '../legal/types';
 
 export const LEGAL_DOCUMENTS = {
   fr: { terms: TERMS_FR, privacy: PRIVACY_FR },

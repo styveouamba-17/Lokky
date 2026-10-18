@@ -3,7 +3,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { useSessionStore } from '@/state/session';
 import { renderWithProviders } from '@/test/render';
-import { completeOnboarding } from '../api';
+import { completeOnboarding, setAvatarUrl, uploadAvatar } from '../api';
+import { pickAvatar } from '../avatar';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 
 jest.mock('expo-secure-store', () => ({
@@ -66,11 +67,10 @@ describe('OnboardingScreen', () => {
     });
   });
 
-  it('préremplit le prénom reçu d’Apple ou Google et affiche un avatar non modifiable', async () => {
+  it('préremplit le prénom reçu d’Apple ou Google et permet d’ajouter une photo', async () => {
     await renderOnboarding();
     expect(screen.getByLabelText('Ton prénom').props.value).toBe('Awa');
-    expect(screen.getByLabelText('Photo de profil indisponible pour le moment')).toBeOnTheScreen();
-    expect(screen.queryByRole('button', { name: 'Ajouter une photo' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Ajouter une photo' })).toBeOnTheScreen();
     expect(continueButton()).toBeDisabled(); // date de naissance manquante
   });
 
@@ -84,12 +84,22 @@ describe('OnboardingScreen', () => {
   });
 
   it('parcours complet : profil envoyé, session connectée', async () => {
+    jest.mocked(pickAvatar).mockResolvedValue('file:///avatar.jpg');
+    jest.mocked(uploadAvatar).mockResolvedValue('https://avatars.test/avatar.jpg');
     jest.mocked(completeOnboarding).mockResolvedValue({
       id: 'u_awa',
       firstName: 'Awa',
       moderation: { status: 'active', suspendedUntil: null, warnedAt: null },
     } as Me);
+    jest.mocked(setAvatarUrl).mockResolvedValue({
+      id: 'u_awa',
+      firstName: 'Awa',
+      avatarUrl: 'https://avatars.test/avatar.jpg',
+      moderation: { status: 'active', suspendedUntil: null, warnedAt: null },
+    } as Me);
     await renderOnboarding();
+    await fireEvent.press(screen.getByRole('button', { name: 'Ajouter une photo' }));
+    await waitFor(() => expect(screen.getByTestId('avatar-image')).toBeOnTheScreen());
     await fillYou('2003-04-10');
 
     await screen.findByRole('header', { name: 'Ta situation' });
@@ -117,6 +127,41 @@ describe('OnboardingScreen', () => {
       neighborhood: 'fann',
       interests: ['beach', 'cinema', 'music'],
     });
+    expect(uploadAvatar).toHaveBeenCalledWith('file:///avatar.jpg');
+    expect(setAvatarUrl).toHaveBeenCalledWith('https://avatars.test/avatar.jpg');
+  });
+
+  it('photo non envoyée : le profil est quand même validé, avec un message', async () => {
+    jest.mocked(pickAvatar).mockResolvedValue('file:///avatar.jpg');
+    jest.mocked(uploadAvatar).mockRejectedValue(new Error('R2 indisponible'));
+    jest.mocked(completeOnboarding).mockResolvedValue({
+      id: 'u_awa',
+      firstName: 'Awa',
+      moderation: { status: 'active', suspendedUntil: null, warnedAt: null },
+    } as Me);
+    await renderOnboarding();
+    await fireEvent.press(screen.getByRole('button', { name: 'Ajouter une photo' }));
+    await waitFor(() => expect(screen.getByTestId('avatar-image')).toBeOnTheScreen());
+    await fillYou('2003-04-10');
+    await screen.findByRole('header', { name: 'Ta situation' });
+    await fireEvent.press(screen.getByRole('radio', { name: /Étudiant·e/ }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Fann' }));
+    await fireEvent.press(continueButton());
+    await screen.findByRole('header', { name: 'Tes envies' });
+    for (const name of [/Plage/, /Ciné/, /Musique/]) {
+      await fireEvent.press(screen.getByRole('button', { name }));
+    }
+    await fireEvent.press(continueButton());
+    await screen.findByRole('header', { name: 'Dernière étape' });
+    await fireEvent.press(screen.getByRole('button', { name: 'C’est parti !' }));
+
+    await waitFor(() => expect(useSessionStore.getState().status).toBe('signedIn'));
+    expect(setAvatarUrl).not.toHaveBeenCalled();
+    expect(
+      await screen.findByText(
+        'Ton profil est créé, mais la photo n’a pas pu être envoyée. Ajoute-la depuis ton profil.',
+      ),
+    ).toBeOnTheScreen();
   });
 
   it('revenir en arrière à la 1re étape ramène à la connexion', async () => {

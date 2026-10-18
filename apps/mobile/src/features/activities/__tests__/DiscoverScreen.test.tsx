@@ -1,7 +1,9 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { router } from 'expo-router';
 import { listActivities } from '../api';
 import { DiscoverScreen } from '../screens/DiscoverScreen';
 import { makeTestClient, renderWithQuery, signInAs } from '@/test/mockApi';
+import { useSessionStore } from '@/state/session';
 
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), navigate: jest.fn() } }));
 jest.mock('expo-location', () => ({
@@ -11,6 +13,7 @@ jest.mock('../api', () => ({ listActivities: jest.fn() }));
 
 describe('DiscoverScreen', () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     const { client, me } = makeTestClient();
     signInAs(me);
     jest
@@ -21,7 +24,21 @@ describe('DiscoverScreen', () => {
   it('salue par le prénom et affiche les sorties de Dakar', async () => {
     await renderWithQuery(<DiscoverScreen />);
     expect(screen.getByText('Salut Awa')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Voir le profil de Awa' })).toBeOnTheScreen();
     expect(await screen.findByText('Ciné en plein air')).toBeOnTheScreen();
+  });
+
+  it('ouvre le profil depuis l’avatar en haut de Découvrir', async () => {
+    await renderWithQuery(<DiscoverScreen />);
+    await fireEvent.press(screen.getByRole('button', { name: 'Voir le profil de Awa' }));
+    expect(router.navigate).toHaveBeenCalledWith('/profile');
+  });
+
+  it('garde le logo Lokky si aucun profil utilisateur n’existe', async () => {
+    useSessionStore.setState({ me: null });
+    await renderWithQuery(<DiscoverScreen />);
+    expect(screen.getByLabelText('Lokky')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Voir le profil de Awa' })).toBeNull();
   });
 
   it('sans GPS : se rabat sur le quartier déclaré (Fann)', async () => {

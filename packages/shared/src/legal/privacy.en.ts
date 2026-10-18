@@ -1,4 +1,4 @@
-import { LEGAL_CONTACT_EMAIL } from '@/lib/links';
+import { LEGAL_CONTACT_EMAIL } from './contact';
 import type { LegalDocument } from './types';
 
 // English version of the draft privacy policy (privacy.fr.ts is the reference).

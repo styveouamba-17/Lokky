@@ -29,6 +29,8 @@ export interface AdminRouteDeps {
   strictOutput: boolean;
   // Cookie Secure (HTTPS) : toujours en production.
   secureCookie: boolean;
+  // SameSite=None est nécessaire quand le frontend admin est une origine différente.
+  crossOrigin: boolean;
 }
 
 const MINUTE = 60;
@@ -101,11 +103,17 @@ export function registerAdminRoutes(app: FastifyInstance, deps: AdminRouteDeps) 
           session: {
             open: async (userId) => {
               const opened = await openAdminSession(deps.db, userId, now);
-              void reply.header('Set-Cookie', sessionCookie(opened, deps.secureCookie));
+              void reply.header(
+                'Set-Cookie',
+                sessionCookie(opened, deps.secureCookie, deps.crossOrigin),
+              );
             },
             close: async () => {
               if (token) await closeAdminSession(deps.db, token, now);
-              void reply.header('Set-Cookie', sessionCookie(null, deps.secureCookie));
+              void reply.header(
+                'Set-Cookie',
+                sessionCookie(null, deps.secureCookie, deps.crossOrigin),
+              );
             },
           },
         });

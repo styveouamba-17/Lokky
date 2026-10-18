@@ -30,7 +30,7 @@ export function MyProfileScreen() {
   const fresh = useUser(me?.id ?? '');
   const organized = useOrganizedActivities(me?.id ?? '');
   if (!me) return null;
-  const user = fresh.data ?? me;
+  const user = fresh.data ? { ...me, trust: fresh.data.trust } : me;
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>

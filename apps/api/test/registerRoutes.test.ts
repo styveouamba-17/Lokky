@@ -32,7 +32,7 @@ const AWA = '01a10000-0000-7000-8000-000000000001';
 async function setup(handlers: Handlers) {
   const test = await createTestApp({
     handlers,
-    authenticate: async (token) => (token === 'ok' ? AWA : null),
+    authenticate: async (token) => (token === 'ok' ? { userId: AWA, sessionId: null } : null),
   });
   close = test.close;
   return test.app;

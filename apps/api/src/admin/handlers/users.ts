@@ -3,6 +3,7 @@ import { and, count, desc, eq, ilike, isNotNull, isNull, or, type SQL } from 'dr
 import type { Database } from '../../db/client';
 import { activities, authIdentities, participations, reports, users } from '../../db/schema';
 import { HttpError } from '../../http/errors';
+import { announceWithdrawal } from '../../modules/activities/withdraw';
 import { trustOf } from '../../modules/trust/stats';
 import { applyModeration } from '../../modules/users/moderation';
 import { findUser } from '../../modules/users/users';
@@ -68,7 +69,7 @@ export const adminUserHandlers: AdminHandlers = {
     assertCanModerate(staff, target, status);
 
     const until = status === 'suspended' && days ? new Date(now.getTime() + days * DAY_MS) : null;
-    const notice = await applyModeration(ctx.db, {
+    const { notice, withdrawal } = await applyModeration(ctx.db, {
       userId: id,
       status,
       until,
@@ -86,6 +87,7 @@ export const adminUserHandlers: AdminHandlers = {
     });
     await ctx.publishModeration(notice);
     await ctx.events.emit('user.moderated', { userId: id, status, suspendedUntil: until });
+    await announceWithdrawal(ctx.events, id, withdrawal, now);
     return userDetail(ctx.db, id, now);
   },
 };

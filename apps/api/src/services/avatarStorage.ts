@@ -30,6 +30,14 @@ export interface R2Settings {
 export const avatarPrefix = (userId: string) => `avatars/${userId}/`;
 
 export function createR2AvatarStorage(settings: R2Settings): AvatarStorage {
+  const publicBase = new URL(settings.publicBaseUrl);
+  const s3EndpointHost = `${settings.accountId}.r2.cloudflarestorage.com`.toLowerCase();
+  if (publicBase.hostname.toLowerCase() === s3EndpointHost) {
+    throw new Error(
+      'AVATAR_PUBLIC_BASE_URL doit être une URL publique R2 (r2.dev ou domaine personnalisé), pas l’endpoint S3.',
+    );
+  }
+
   const client = new AwsClient({
     accessKeyId: settings.accessKeyId,
     secretAccessKey: settings.secretAccessKey,

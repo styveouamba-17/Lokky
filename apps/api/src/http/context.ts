@@ -15,6 +15,8 @@ export interface HandlerContext {
   log: FastifyBaseLogger;
   // null seulement pour les routes publiques (connexion).
   viewerId: string | null;
+  // Connexion (famille de refresh tokens) du jeton d'accès, si la route est authentifiée.
+  sessionId: string | null;
 }
 
 export type Handler<R extends RouteName> = (

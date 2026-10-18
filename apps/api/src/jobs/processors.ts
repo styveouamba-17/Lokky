@@ -11,7 +11,7 @@ import {
   notInArray,
   or,
 } from 'drizzle-orm';
-import type { ModerationStatus } from '@lokky/shared';
+import { haversineKm, LIMITS, NEIGHBORHOODS, type ModerationStatus } from '@lokky/shared';
 import type { Database } from '../db/client';
 import {
   activities,
@@ -87,18 +87,37 @@ export function createProcessors({ db, push, now }: ProcessorDeps): Processors {
   return {
     'activity-discovery': async ({ activityId }) => {
       const activity = await activityOrNull(activityId);
-      if (!activity || statusOf(activity, now()) !== 'upcoming') return;
-      const recipients = await db
-        .select({ id: users.id })
+      const at = now();
+      if (!activity || statusOf(activity, at) !== 'upcoming') return;
+      const candidates = await db
+        .select({
+          id: users.id,
+          neighborhood: users.neighborhood,
+          status: users.moderationStatus,
+          suspendedUntil: users.suspendedUntil,
+        })
         .from(users)
         .where(
           and(
             arrayOverlaps(users.interests, [activity.category]),
             isNotNull(users.onboardedAt),
             isNull(users.deletedAt),
+            ne(users.moderationStatus, 'banned'),
             ne(users.id, activity.creatorId),
           ),
         );
+      // Ni compte suspendu, ni lien coupé avec l'organisateur (blocage dans un sens ou
+      // dans l'autre), ni quartier trop loin du lieu de la sortie.
+      const cutOff = await cutOffIds(db, activity.creatorId);
+      const spot = { lat: activity.lat, lng: activity.lng };
+      const recipients = candidates.filter(
+        (u) =>
+          !(u.status === 'suspended' && (!u.suspendedUntil || u.suspendedUntil > at)) &&
+          !cutOff.has(u.id) &&
+          (!u.neighborhood ||
+            haversineKm(NEIGHBORHOODS[u.neighborhood].coordinates, spot) <=
+              LIMITS.activity.discoveryPushRadiusKm),
+      );
       await notify(
         db,
         push,

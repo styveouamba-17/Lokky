@@ -22,7 +22,7 @@
       "distribution": "internal",
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_API_MODE": "mock",
+        "EXPO_PUBLIC_API_MODE": "http",
         "SENTRY_DISABLE_AUTO_UPLOAD": "false",
         "EXPO_PUBLIC_SENTRY_DSN": "https://4d3315dc9b3eaaf887fd0735c455e0c9@o4510900988542976.ingest.de.sentry.io/4512220969762896"
       }
@@ -33,6 +33,7 @@
       "autoIncrement": true,
       "channel": "production",
       "env": {
+        "EXPO_PUBLIC_API_MODE": "http",
         "SENTRY_DISABLE_AUTO_UPLOAD": "false",
         "EXPO_PUBLIC_SENTRY_DSN": "https://4d3315dc9b3eaaf887fd0735c455e0c9@o4510900988542976.ingest.de.sentry.io/4512220969762896"
       }

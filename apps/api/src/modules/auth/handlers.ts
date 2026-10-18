@@ -68,8 +68,9 @@ export const authHandlers: Handlers = {
     rotateSession(db, services.tokens, refreshToken, now()),
 
   'auth.logout': async ({ refreshToken }, ctx) => {
-    viewer(ctx);
-    await closeSession(ctx.db, refreshToken, ctx.now());
+    const me = viewer(ctx);
+    const familyId = await closeSession(ctx.db, refreshToken, ctx.now());
+    if (familyId) await ctx.events.emit('session.revoked', { userId: me, sessionId: familyId });
     return { ok: true as const };
   },
 };

@@ -27,7 +27,7 @@ de développement. Une première connexion OAuth nécessite un email vérifié.
 
 ## 1. Liens vers une sortie (`lokky.akylian.com/activity/:id`)
 
-L'app est configurée (`app.config.ts` : `associatedDomains` iOS, `intentFilters` Android). Il reste à publier **deux fichiers** sur `https://lokky.akylian.com`, en HTTPS, avec le type `application/json` et sans redirection.
+L'app est configurée (`app.config.ts` : `associatedDomains` iOS, `intentFilters` Android). Les **deux fichiers** sont dans `apps/web/public/.well-known/` et publiés avec le site (Vercel, §5), en HTTPS, avec le type `application/json` (`apps/web/vercel.json`) et sans redirection.
 
 ### iOS : `/.well-known/apple-app-site-association` (sans extension)
 
@@ -59,13 +59,13 @@ L'app est configurée (`app.config.ts` : `associatedDomains` iOS, `intentFilters
 ]
 ```
 
-L'empreinte s'obtient avec `npx eas-cli@latest credentials -p android` (certificat de signature de production). Si l'app est distribuée par Google Play, ajoute aussi l'empreinte « App signing key » de la Play Console.
+**À faire** : remplacer `REMPLACER_PAR_L_EMPREINTE_SHA256_DE_LA_CLE_DE_SIGNATURE` dans `apps/web/public/.well-known/assetlinks.json`. L'empreinte s'obtient avec `npx eas-cli@latest credentials -p android` (certificat de signature de production). Si l'app est distribuée par Google Play, ajoute aussi l'empreinte « App signing key » de la Play Console (la liste accepte plusieurs empreintes).
 
 ### Page web de secours
 
 Le site public `apps/web` présente Lokky et est généré en statique par Astro (`npm run build --workspace @lokky/web` → `apps/web/dist`). Il peut être publié sur un hébergeur statique depuis le monorepo.
 
-La page d'accueil est en place, mais la page de secours propre à chaque lien (`/activity/:id`) reste à créer : elle devra présenter la sortie et les liens App Store et Google Play lorsque ceux-ci seront disponibles.
+`/activity/:id` sert une page de secours unique (`src/pages/activity/index.astro`, réécriture dans `vercel.json`) : bouton « Ouvrir dans Lokky » (`lokky://activity/:id`) et liens des stores (`src/config.ts`). Le lien App Store ne s'affiche qu'une fois `STORE_LINKS.ios` renseigné avec l'identifiant App Store Connect.
 
 ### Comportement dans l'app
 
@@ -110,10 +110,24 @@ Chaque écran a son écran d'erreur illustré (« Réessayer ») : une erreur da
 
 ## 4. Admin de modération (`apps/admin`)
 
-L'admin est une application web statique (`npm run build -w @lokky/admin` → `apps/admin/dist`).
-Elle appelle l'API **sur sa propre origine**, sous `/api` : le cookie de session est `HttpOnly`,
-`SameSite=Strict` et `Secure` en production, et chaque requête porte l'en-tête `x-lokky-admin: 1`
-(protection CSRF). Pas de CORS à ouvrir.
+L'admin est une application web statique. Pour la publier sur Render Static Site :
+
+- **Build command** (depuis la racine du monorepo) : `npm ci && npm run build --workspace @lokky/admin`
+- **Publish directory** : `apps/admin/dist` (ne pas publier `apps/admin` lui-même ni son dossier source).
+- Ajouter `VITE_API_URL=https://lokky.onrender.com` aux variables de build du site statique.
+- Ajouter `ADMIN_WEB_ORIGIN=https://<domaine-exact-du-site-admin>` aux variables du backend Render,
+  puis redéployer le backend. Cette origine unique est autorisée en CORS pour les routes admin ;
+  les cookies de session sont envoyés avec les requêtes (`HttpOnly`, `Secure`, `SameSite=None`)
+  et les requêtes gardent l'en-tête CSRF `x-lokky-admin: 1`.
+
+En local, `npm run dev --workspace @lokky/admin` utilise par défaut le backend Render via le proxy
+Vite, sans configuration CORS dans le navigateur. Pour viser un autre backend, définir
+`LOKKY_API_URL` avant de démarrer Vite (par exemple `http://127.0.0.1:3000`).
+
+Le déploiement doit servir les fichiers compilés de `apps/admin/dist`. Servir `index.html` depuis
+le code source ou ouvrir le fichier directement peut faire demander `/src/main.tsx` au serveur ;
+celui-ci renvoie alors du HTML au lieu d'un module JavaScript et le navigateur affiche l'erreur
+de type MIME.
 
 Caddy (domaine à adapter) :
 
@@ -146,11 +160,21 @@ En local : `npm run dev -w @lokky/api` puis `npm run dev -w @lokky/admin` → ht
 
 ## 5. Site public (`apps/web`)
 
-Le site vit dans le monorepo, est construit avec Astro et ne nécessite pas de serveur backend :
-`npm run build --workspace @lokky/web` produit les fichiers statiques dans `apps/web/dist`.
-Publier ce dossier sur un hébergeur statique et associer le domaine public. Il partage le domaine
-prévu pour les liens `lokky.akylian.com`; les pages `/activity/:id` de secours ne sont pas encore
-implémentées.
+Le site vit dans le monorepo, est construit avec Astro et ne nécessite pas de serveur backend.
+Il dépend de `@lokky/shared` (textes légaux communs avec l'app).
+
+Sur **Vercel** :
+
+- **Root Directory** : `apps/web` (laisser « Include files outside the root directory » activé :
+  le paquet `@lokky/shared` est dans `packages/`).
+- **Framework** : Astro ; **Install Command** : `cd ../.. && npm ci` ; **Build Command** :
+  `npm run build` ; **Output Directory** : `dist`.
+- Associer le domaine des liens partagés (aujourd'hui `lokky.akylian.com`, cf. `app.config.ts` et
+  `src/lib/share.ts` côté mobile).
+
+Pages : `/` (accueil), `/confidentialite`, `/conditions`, `/suppression-compte` (URL de suppression
+de compte demandée par Google Play), `/activity/:id` (§1). Les deux textes légaux viennent de
+`packages/shared/src/legal/` : les modifier là met à jour l'app et le site.
 
 ## 6. Reste à faire hors code
 

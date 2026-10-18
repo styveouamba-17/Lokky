@@ -88,6 +88,8 @@ export const LIMITS = {
     maxAheadDays: 60,
     defaultRadiusKm: 25,
     radiusKmMax: 50,
+    // Push « Une sortie pour toi » : seulement si le quartier déclaré est à cette distance.
+    discoveryPushRadiusKm: 10,
   },
   message: { bodyMax: 2000 },
   review: { commentMax: 300 },

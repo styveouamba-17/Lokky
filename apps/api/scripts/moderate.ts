@@ -2,7 +2,11 @@ import { eq } from 'drizzle-orm';
 import { Redis } from 'ioredis';
 import { createDatabase } from '../src/db/client';
 import { users } from '../src/db/schema';
+import { createEventBus } from '../src/events';
 import { createBullScheduler } from '../src/jobs/bullmq';
+import { registerJobListeners } from '../src/jobs/listeners';
+import { announceWithdrawal } from '../src/modules/activities/withdraw';
+import { registerChatListeners } from '../src/modules/chat/handlers';
 import { applyModeration, MODERATION_CHANNEL } from '../src/modules/users/moderation';
 
 // Modération en ligne de commande, en attendant l'admin (spec backend §16) :
@@ -28,12 +32,18 @@ try {
   if (!user) throw new Error(`Aucun compte pour ${email}.`);
   const until =
     status === 'suspended' && days ? new Date(Date.now() + Number(days) * 86_400_000) : null;
-  const notice = await applyModeration(database.db, {
+  const { notice, withdrawal } = await applyModeration(database.db, {
     userId: user.id,
     status: status as Status,
     until,
     reason: reasonWords.join(' ') || null,
   });
+  // Bannissement : sorties retirées, participants prévenus par push et message de groupe.
+  const events = createEventBus((error) => console.error(error));
+  registerChatListeners(events, database.db);
+  registerJobListeners(events, scheduler, database.db, () => new Date());
+  await announceWithdrawal(events, user.id, withdrawal, new Date());
+  await events.settled();
   await redis.publish(MODERATION_CHANNEL, JSON.stringify(notice));
   await scheduler.schedule('moderation-push', {
     userId: user.id,

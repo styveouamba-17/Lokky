@@ -1,0 +1,10 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["7UZ7GPX6A4.com.nach17.Lokky"],
+        "components": [{ "/": "/activity/*", "comment": "Sortie partagée : ouverte dans l'app" }]
+      }
+    ]
+  }
+}

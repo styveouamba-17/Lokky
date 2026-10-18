@@ -44,6 +44,7 @@ describe('MessagesScreen', () => {
   it('aucune discussion : invite à découvrir des sorties', async () => {
     jest.mocked(listConversations).mockResolvedValue({ items: [], nextCursor: null });
     await renderWithQuery(<MessagesScreen />);
+    expect(await screen.findByTestId('empty-state-artwork-fade')).toBeOnTheScreen();
     await fireEvent.press(await screen.findByRole('button', { name: 'Découvrir des sorties' }));
     expect(router.navigate).toHaveBeenCalledWith('/discover');
   });

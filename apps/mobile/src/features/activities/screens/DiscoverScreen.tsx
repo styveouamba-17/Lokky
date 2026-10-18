@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from '@/i18n';
 import { useSessionStore } from '@/state/session';
 import { makeStyles, useTheme } from '@/theme';
-import { EmptyState, IconDisc, LokkyLogo, Skeleton, Text } from '@/ui';
+import { Avatar, EmptyState, IconButton, IconDisc, LokkyLogo, Skeleton, Text } from '@/ui';
 import { ActivityCard } from '../components/ActivityCard';
 import { DEFAULT_FILTERS, FilterBar, type FeedFilters } from '../components/FilterBar';
 import { useActivityFeed } from '../hooks/useActivityFeed';
@@ -20,7 +20,8 @@ export function DiscoverScreen() {
   const styles = useStyles();
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const firstName = useSessionStore((s) => s.me?.firstName ?? '');
+  const me = useSessionStore((s) => s.me);
+  const firstName = me?.firstName ?? '';
   const [filters, setFilters] = useState<FeedFilters>(DEFAULT_FILTERS);
   const { origin, ready } = useViewerOrigin();
   const feed = useActivityFeed(
@@ -49,7 +50,15 @@ export function DiscoverScreen() {
             {t('discover.title')}
           </Text>
         </View>
-        <LokkyLogo variant="symbol" size={40} />
+        {me ? (
+          <IconButton
+            accessibilityLabel={t('profile.openProfile', { name: me.firstName })}
+            onPress={() => router.navigate('/profile')}
+            icon={<Avatar name={me.firstName} uri={me.avatarUrl} size="md" />}
+          />
+        ) : (
+          <LokkyLogo variant="symbol" size={40} />
+        )}
       </View>
       <FilterBar filters={filters} onChange={setFilters} />
     </View>

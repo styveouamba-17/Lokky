@@ -36,6 +36,7 @@ export function MessagesScreen() {
   ) : (
     <EmptyState
       artwork="empty-messages"
+      artworkFadeBottom
       illustration={<IconDisc icon={ChatsCircle} />}
       title={t('messages.emptyTitle')}
       description={t('messages.emptyBody')}

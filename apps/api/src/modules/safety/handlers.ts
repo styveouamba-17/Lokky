@@ -1,11 +1,11 @@
-import { and, desc, eq, gt, inArray, isNull, ne } from 'drizzle-orm';
+import { and, desc, eq } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import {
   activities,
   authIdentities,
   blocks,
   messages,
-  participations,
+  pushTokens,
   reports,
   sessions,
   users,
@@ -13,7 +13,7 @@ import {
 import { viewer, type Handlers } from '../../http/context';
 import { HttpError } from '../../http/errors';
 import { uuidv7 } from '../../lib/ids';
-import { removeGroupMember } from '../chat/groups';
+import { announceWithdrawal, withdrawFromUpcoming } from '../activities/withdraw';
 import { findUser, toUserPreview } from '../users/users';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -96,39 +96,11 @@ export const safetyHandlers: Handlers = {
   'me.delete': async (_input, ctx) => {
     const me = viewer(ctx);
     const now = ctx.now();
-    await ctx.db.transaction(async (tx) => {
+    const withdrawal = await ctx.db.transaction(async (tx) => {
       // Ses sorties à venir sont annulées ; il quitte celles des autres.
-      await tx
-        .update(activities)
-        .set({ cancelledAt: now })
-        .where(
-          and(
-            eq(activities.creatorId, me),
-            isNull(activities.cancelledAt),
-            gt(activities.startsAt, now),
-          ),
-        );
-      const upcoming = await tx
-        .select({ id: participations.activityId })
-        .from(participations)
-        .innerJoin(activities, eq(activities.id, participations.activityId))
-        .where(
-          and(
-            eq(participations.userId, me),
-            ne(activities.creatorId, me),
-            gt(activities.startsAt, now),
-          ),
-        );
-      const upcomingIds = upcoming.map((u) => u.id);
-      if (upcomingIds.length) {
-        await tx
-          .delete(participations)
-          .where(
-            and(eq(participations.userId, me), inArray(participations.activityId, upcomingIds)),
-          );
-        for (const activityId of upcomingIds) await removeGroupMember(tx, activityId, me);
-      }
+      const withdrawn = await withdrawFromUpcoming(tx, me, now);
       await tx.delete(sessions).where(eq(sessions.userId, me));
+      await tx.delete(pushTokens).where(eq(pushTokens.userId, me));
       await tx.delete(authIdentities).where(eq(authIdentities.userId, me));
       await tx
         .update(users)
@@ -143,7 +115,10 @@ export const safetyHandlers: Handlers = {
           deletedAt: now,
         })
         .where(eq(users.id, me));
+      return withdrawn;
     });
+    await announceWithdrawal(ctx.events, me, withdrawal, now);
+    await ctx.events.emit('account.closed', { userId: me });
     return { ok: true as const };
   },
 };

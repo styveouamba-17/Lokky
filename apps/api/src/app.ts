@@ -5,6 +5,7 @@ import { sql } from 'drizzle-orm';
 import type { Database } from './db/client';
 import { createEventBus, type EventBus } from './events';
 import type { Services } from './services';
+import type { AccessClaims } from './services/accessTokens';
 import type { Handlers } from './http/context';
 import { errorBody, HttpError } from './http/errors';
 import { createRedisRateLimiter, type RateLimiter } from './http/rateLimit';
@@ -25,7 +26,7 @@ export interface AppDeps {
   logLevel?: string;
   handlers?: Handlers;
   now?: () => Date;
-  authenticate?: (token: string) => Promise<string | null>;
+  authenticate?: (token: string) => Promise<AccessClaims | null>;
   strictOutput?: boolean;
   // Par défaut, limitation de débit sur Redis ; null pour la désactiver (tests).
   rateLimiter?: RateLimiter | null;
@@ -33,6 +34,8 @@ export interface AppDeps {
   trustProxy?: boolean;
   // Cookie de session de l'admin réservé à HTTPS (production).
   adminSecureCookie?: boolean;
+  // Origine exacte de l'admin statique, si elle n'est pas servie derrière le même proxy.
+  adminWebOrigin?: string;
 }
 
 // Construit l'app sans l'écouter : main.ts la démarre, les tests l'appellent avec app.inject.
@@ -49,6 +52,7 @@ export async function buildApp({
   rateLimiter,
   trustProxy = false,
   adminSecureCookie = false,
+  adminWebOrigin,
 }: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     trustProxy,
@@ -68,6 +72,28 @@ export async function buildApp({
   });
 
   await app.register(helmet);
+
+  // Accès cross-origin uniquement depuis le frontend admin configuré. Le mode proxy /api
+  // reste disponible sans CORS et demeure préférable quand l'admin et l'API partagent un domaine.
+  app.addHook('onRequest', async (req, reply) => {
+    const origin = req.headers.origin;
+    if (origin && origin === adminWebOrigin) {
+      void reply
+        .header('Access-Control-Allow-Origin', origin)
+        .header('Access-Control-Allow-Credentials', 'true')
+        .header('Vary', 'Origin');
+    }
+    if (req.method === 'OPTIONS' && req.headers['access-control-request-method']) {
+      if (!origin || origin !== adminWebOrigin) {
+        return reply.code(403).send();
+      }
+      void reply
+        .header('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS')
+        .header('Access-Control-Allow-Headers', 'content-type, x-lokky-admin')
+        .header('Access-Control-Max-Age', '600');
+      return reply.code(204).send();
+    }
+  });
 
   app.setErrorHandler((error, req, reply) => {
     if (error instanceof HttpError) {
@@ -119,8 +145,8 @@ export async function buildApp({
     authenticate:
       authenticate ??
       (async (token) => {
-        const userId = await services.tokens.verify(token, now());
-        return userId && (await isActiveAccount(db, userId)) ? userId : null;
+        const claims = await services.tokens.verifyClaims(token, now());
+        return claims && (await isActiveAccount(db, claims.userId)) ? claims : null;
       }),
     rateLimiter: limiter,
     strictOutput,
@@ -142,6 +168,7 @@ export async function buildApp({
     rateLimiter: limiter,
     strictOutput,
     secureCookie: adminSecureCookie,
+    crossOrigin: Boolean(adminWebOrigin),
   });
   registerAdminLive(app, { db, redis, events: bus, now });
   return app;

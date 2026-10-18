@@ -1,7 +1,9 @@
 import type { ClientToServerEvents, ServerToClientEvents } from '@lokky/shared';
 import type { AddressInfo } from 'node:net';
 import { io as connect, type Socket } from 'socket.io-client';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { eq } from 'drizzle-orm';
+import { sessions } from '../src/db/schema';
 import { attachRealtime, type RealtimeServer } from '../src/realtime';
 import { createActivity, createMember } from './factories';
 import { createTestApp, resetDatabase } from './helpers';
@@ -16,13 +18,16 @@ let ioServer: RealtimeServer;
 let url = '';
 const clients: Client[] = [];
 
+// Le contrat partagé valide les dates avec l'horloge réelle : on la fige sur NOW.
 beforeAll(async () => {
+  vi.useFakeTimers({ toFake: ['Date'], now: NOW });
   t = await createTestApp({ now: () => NOW });
   ioServer = attachRealtime(t.app.server, {
     db: t.db,
     services: t.services,
     events: t.app.events,
     now: () => NOW,
+    sessionRecheckMs: 200,
   });
   await t.app.listen({ port: 0, host: '127.0.0.1' });
   url = `http://127.0.0.1:${(t.app.server.address() as AddressInfo).port}`;
@@ -30,6 +35,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await ioServer.close();
   await t.close();
+  vi.useRealTimers();
 });
 beforeEach(() => resetDatabase(t.db));
 afterEach(() => {
@@ -55,9 +61,36 @@ const next = <E extends keyof ServerToClientEvents>(socket: Client, event: E) =>
       resolve(payload)) as never);
   });
 
+const closedByServer = (socket: Client) =>
+  new Promise<string>((resolve) => socket.on('disconnect', (reason) => resolve(reason)));
+
 describe('temps réel', () => {
   it('refuse une connexion sans jeton valide', async () => {
     await expect(open('faux')).rejects.toThrow('unauthorized');
+  });
+
+  it('se déconnecter coupe le temps réel de ce téléphone', async () => {
+    const awa = await createMember(t, 'Awa');
+    const socket = await open(awa.token);
+    const closed = closedByServer(socket);
+    await awa.call('POST', '/auth/logout', { refreshToken: awa.refreshToken });
+    expect(await closed).toBe('io server disconnect');
+  });
+
+  it('compte supprimé : ses connexions sont coupées', async () => {
+    const awa = await createMember(t, 'Awa');
+    const socket = await open(awa.token);
+    const closed = closedByServer(socket);
+    await awa.call('DELETE', '/me');
+    expect(await closed).toBe('io server disconnect');
+  });
+
+  it('connexion révoquée ailleurs : coupée à la revérification suivante', async () => {
+    const awa = await createMember(t, 'Awa');
+    const socket = await open(awa.token);
+    const closed = closedByServer(socket);
+    await t.db.update(sessions).set({ revokedAt: NOW }).where(eq(sessions.userId, awa.id));
+    expect(await closed).toBe('io server disconnect');
   });
 
   it('un message arrive chez les membres', async () => {

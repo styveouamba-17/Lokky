@@ -74,6 +74,11 @@ export function EditActivityScreen({ id }: { id: string }) {
   return <EditActivityForm activity={activity.data} />;
 }
 
+// Avec des participants, l'horaire ne se change plus à moins d'une heure du départ.
+function startsWithinEditLock(startsAt: string) {
+  return new Date(startsAt).getTime() - Date.now() < ACTIVITY_EDIT_LOCK_MINUTES * 60_000;
+}
+
 function EditActivityForm({ activity }: { activity: Activity }) {
   const styles = useStyles();
   const { colors } = useTheme();
@@ -113,11 +118,7 @@ function EditActivityForm({ activity }: { activity: Activity }) {
     const input = updateInput(activity, initial, draft);
     if (input.startsAt !== undefined) {
       const parsed = makeCreateActivityInputSchema().safeParse(toCreateInput(draft));
-      if (
-        !parsed.success ||
-        (hasJoinedParticipants &&
-          new Date(input.startsAt).getTime() - Date.now() < ACTIVITY_EDIT_LOCK_MINUTES * 60_000)
-      ) {
+      if (!parsed.success || (hasJoinedParticipants && startsWithinEditLock(input.startsAt))) {
         toast.show(t('editActivity.errors.startsAt'), 'error');
         setStep(steps.indexOf(1));
         return;

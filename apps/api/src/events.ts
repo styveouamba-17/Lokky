@@ -21,6 +21,10 @@ export interface DomainEvents {
   'conversation.read': { conversationId: string; userId: string; readAt: Date };
   // Décision de l'équipe sur un compte (admin) : la personne est prévenue par push.
   'user.moderated': { userId: string; status: ModerationStatus; suspendedUntil: Date | null };
+  // Connexion fermée (déconnexion) : le temps réel de ce téléphone est coupé.
+  'session.revoked': { userId: string; sessionId: string };
+  // Compte supprimé ou banni : toutes ses connexions temps réel sont coupées.
+  'account.closed': { userId: string };
   // Signalements créés ou clos : le compteur de l'admin se met à jour en direct.
   'reports.changed': Record<string, never>;
 }

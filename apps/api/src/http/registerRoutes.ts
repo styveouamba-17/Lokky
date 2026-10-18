@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { Database } from '../db/client';
 import type { EventBus } from '../events';
 import type { Services } from '../services';
+import type { AccessClaims } from '../services/accessTokens';
 import type { Handler, Handlers } from './context';
 import { HttpError } from './errors';
 import { policyFor, type RateLimiter } from './rateLimit';
@@ -14,7 +15,7 @@ export interface RouteDeps {
   handlers: Handlers;
   now: () => Date;
   // Renvoie l'utilisateur du jeton d'accès, ou null s'il est absent, invalide ou expiré.
-  authenticate: (token: string) => Promise<string | null>;
+  authenticate: (token: string) => Promise<AccessClaims | null>;
   // Une réponse hors contrat est une erreur de code : visible tout de suite hors production.
   strictOutput: boolean;
   // Refuse l'écriture à un compte suspendu ou banni (module users, modération).
@@ -39,7 +40,8 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps) {
       method: def.method,
       url: def.path,
       handler: async (req, reply) => {
-        const viewerId = def.auth ? await requireViewer(req, deps) : null;
+        const claims = def.auth ? await requireViewer(req, deps) : null;
+        const viewerId = claims?.userId ?? null;
         if (deps.rateLimiter) {
           const { policy, scope } = policyFor(name, viewerId);
           const who = scope === 'user' ? viewerId : req.ip;
@@ -77,6 +79,7 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps) {
           now: deps.now,
           log: req.log,
           viewerId,
+          sessionId: claims?.sessionId ?? null,
         });
 
         const output = def.output.safeParse(result);
@@ -93,9 +96,9 @@ export function registerRoutes(app: FastifyInstance, deps: RouteDeps) {
   }
 }
 
-async function requireViewer(req: FastifyRequest, deps: RouteDeps): Promise<string> {
+async function requireViewer(req: FastifyRequest, deps: RouteDeps): Promise<AccessClaims> {
   const token = bearer(req);
-  const viewerId = token ? await deps.authenticate(token) : null;
-  if (!viewerId) throw new HttpError('unauthorized', 'Session expirée ou absente.');
-  return viewerId;
+  const claims = token ? await deps.authenticate(token) : null;
+  if (!claims) throw new HttpError('unauthorized', 'Session expirée ou absente.');
+  return claims;
 }

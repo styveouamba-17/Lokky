@@ -11,6 +11,8 @@ const envSchema = z.object({
   DB_POOL_SIZE: z.coerce.number().int().positive().default(20),
   REDIS_URL: z.url(),
   PUBLIC_WEB_ORIGIN: z.url(),
+  // Origine exacte du frontend admin hébergé séparément (autorisation CORS limitée).
+  ADMIN_WEB_ORIGIN: z.url().optional(),
   // Derrière un proxy (Caddy en production) : l'IP réelle vient de X-Forwarded-For.
   TRUST_PROXY: z.stringbool().default(false),
 

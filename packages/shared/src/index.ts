@@ -14,3 +14,4 @@ export * from './api/routes';
 export * from './realtime';
 export * from './places';
 export * from './push';
+export * from './legal';

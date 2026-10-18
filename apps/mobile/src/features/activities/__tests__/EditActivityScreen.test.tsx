@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
-import { makeTestClient, renderWithQuery, signInAs } from '@/test/mockApi';
+import { makeTestClient, renderWithQuery, signInAs, TEST_NOW } from '@/test/mockApi';
 import { getActivity, updateActivity } from '../api';
 import { EditActivityScreen } from '../screens/EditActivityScreen';
 
@@ -11,6 +11,30 @@ jest.mock('../api', () => ({
 }));
 
 describe('EditActivityScreen', () => {
+  // L'écran lit l'heure réelle (verrou à 1 h du départ) : on la cale sur l'horloge des données.
+  beforeAll(() => {
+    jest.useFakeTimers({
+      now: TEST_NOW,
+      doNotFake: [
+        'hrtime',
+        'nextTick',
+        'performance',
+        'queueMicrotask',
+        'requestAnimationFrame',
+        'cancelAnimationFrame',
+        'requestIdleCallback',
+        'cancelIdleCallback',
+        'setImmediate',
+        'clearImmediate',
+        'setInterval',
+        'clearInterval',
+        'setTimeout',
+        'clearTimeout',
+      ],
+    });
+  });
+  afterAll(() => jest.useRealTimers());
+
   beforeEach(() => {
     jest.clearAllMocks();
     const { client, me } = makeTestClient();

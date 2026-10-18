@@ -119,6 +119,27 @@ describe('createHttpClient', () => {
       jest.useRealTimers();
     }
   });
+
+  it('abandonne aussi si le corps de la réponse reste bloqué', async () => {
+    jest.useFakeTimers();
+    try {
+      const { client } = setup(async (_url, init) => ({
+        ok: true,
+        status: 200,
+        json: () =>
+          new Promise((_resolve, reject) => {
+            init.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+          }),
+      }) as Response);
+      const assertion = expect(
+        client.request('users.get', { id: 'u1' }),
+      ).rejects.toMatchObject({ code: 'timeout' });
+      await jest.advanceTimersByTimeAsync(15_000);
+      await assertion;
+    } finally {
+      jest.useRealTimers();
+    }
+  });
 });
 
 describe('jeton expiré (401)', () => {

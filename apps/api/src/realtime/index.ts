@@ -6,6 +6,7 @@ import { Server } from 'socket.io';
 import type { Database } from '../db/client';
 import type { EventBus } from '../events';
 import { participantIdsOf, findActivity } from '../modules/activities/handlers';
+import { isSessionActive } from '../modules/auth/sessions';
 import { toActivities } from '../modules/activities/views';
 import { membersOf, unreadTotal } from '../modules/chat/conversations';
 import { cutOffIds } from '../modules/safety/blocks';
@@ -21,11 +22,15 @@ export type RealtimeServer = Server<
   ClientToServerEvents,
   ServerToClientEvents,
   object,
-  { userId: string }
+  { userId: string; sessionId: string | null }
 >;
 
 const room = (userId: string) => `user:${userId}`;
+const sessionRoom = (sessionId: string) => `session:${sessionId}`;
 const TYPING_INTERVAL_MS = 1000;
+// Le jeton n'est vérifié qu'à la connexion : on revérifie régulièrement que la connexion et
+// le compte sont toujours valables (session révoquée ailleurs, réutilisation d'un jeton volé…).
+export const SESSION_RECHECK_MS = 5 * 60_000;
 
 export interface RealtimeDeps {
   db: Database;
@@ -34,6 +39,8 @@ export interface RealtimeDeps {
   now: () => Date;
   // Plusieurs instances de l'API : les événements passent par Redis.
   redis?: Redis;
+  // Intervalle de revérification de la connexion (tests : plus court).
+  sessionRecheckMs?: number;
 }
 
 export function attachRealtime(server: HttpServer, deps: RealtimeDeps): RealtimeServer {
@@ -47,23 +54,41 @@ export function attachRealtime(server: HttpServer, deps: RealtimeDeps): Realtime
     const token = (socket.handshake.auth as { token?: unknown } | undefined)?.token;
     if (typeof token !== 'string') return next(new Error('unauthorized'));
     services.tokens
-      .verify(token, now())
-      .then(async (userId) => {
-        if (!userId || !(await isActiveAccount(db, userId))) {
+      .verifyClaims(token, now())
+      .then(async (claims) => {
+        if (!claims || !(await stillValid(claims.userId, claims.sessionId))) {
           return next(new Error('unauthorized'));
         }
-        socket.data.userId = userId;
+        socket.data.userId = claims.userId;
+        socket.data.sessionId = claims.sessionId;
         return next();
       })
       .catch(() => next(new Error('unauthorized')));
   });
 
+  const stillValid = async (userId: string, sessionId: string | null) =>
+    (await isActiveAccount(db, userId)) &&
+    (sessionId === null || (await isSessionActive(db, sessionId, now())));
+
   io.on('connection', (socket) => {
-    const userId = socket.data.userId;
-    void Promise.resolve(socket.join(room(userId)))
+    const { userId, sessionId } = socket.data;
+    const rooms = sessionId ? [room(userId), sessionRoom(sessionId)] : [room(userId)];
+    void Promise.resolve(socket.join(rooms))
       .then(() => sendUnread([userId]))
-      .catch((error: unknown) => console.error('Impossible de synchroniser les messages non lus.', error));
+      .catch((error: unknown) =>
+        console.error('Impossible de synchroniser les messages non lus.', error),
+      );
     let lastTyping = 0;
+
+    const recheck = setInterval(() => {
+      stillValid(userId, sessionId)
+        .then((valid) => {
+          if (!valid) socket.disconnect(true);
+        })
+        .catch(() => undefined);
+    }, deps.sessionRecheckMs ?? SESSION_RECHECK_MS);
+    recheck.unref();
+    socket.on('disconnect', () => clearInterval(recheck));
 
     // Salles de conversation inutiles ici (diffusion par personne) : acceptées sans effet.
     socket.on('conversation:join', () => undefined);
@@ -162,6 +187,23 @@ export function attachRealtime(server: HttpServer, deps: RealtimeDeps): Realtime
     { background: true },
   );
 
+  // Déconnexion d'un téléphone, compte supprimé : plus rien n'arrive sur ces connexions.
+  // Avec l'adaptateur Redis, la coupure s'applique aussi aux autres instances.
+  events.on(
+    'session.revoked',
+    ({ sessionId }) => {
+      io.in(sessionRoom(sessionId)).disconnectSockets(true);
+    },
+    { background: true },
+  );
+  events.on(
+    'account.closed',
+    ({ userId }) => {
+      io.in(room(userId)).disconnectSockets(true);
+    },
+    { background: true },
+  );
+
   // Décisions de modération (script, admin) : la personne est prévenue tout de suite.
   if (deps.redis) {
     const subscriber = deps.redis.duplicate();
@@ -174,6 +216,8 @@ export function attachRealtime(server: HttpServer, deps: RealtimeDeps): Realtime
           suspendedUntil: notice.suspendedUntil,
           warnedAt: notice.warnedAt,
         });
+        // Compte banni : prévenu (écran dédié), puis plus aucun message ne lui est livré.
+        if (notice.status === 'banned') io.in(room(notice.userId)).disconnectSockets(true);
       } catch {
         // message illisible : ignoré
       }

@@ -5,9 +5,7 @@ import { adminSessions, users } from '../db/schema';
 import { uuidv7 } from '../lib/ids';
 import { randomToken, sha256 } from '../lib/secrets';
 
-// Session de l'admin web : jeton opaque dans un cookie httpOnly, SameSite=Strict (le
-// navigateur ne l'envoie jamais depuis un autre site), haché en base, 12 heures.
-// L'admin est servi sur la même origine que son API (Caddy en production, Vite en local).
+// Session admin : jeton opaque httpOnly, haché en base, durée de 12 heures.
 export const ADMIN_COOKIE = 'lokky_admin';
 export const ADMIN_SESSION_HOURS = 12;
 const HOUR_MS = 3_600_000;
@@ -25,12 +23,12 @@ export function readCookie(header: string | undefined, name: string): string | n
   return null;
 }
 
-export function sessionCookie(token: string | null, secure: boolean): string {
+export function sessionCookie(token: string | null, secure: boolean, crossOrigin = false): string {
   const attributes = [
     `${ADMIN_COOKIE}=${token ? encodeURIComponent(token) : ''}`,
     'Path=/',
     'HttpOnly',
-    'SameSite=Strict',
+    crossOrigin ? 'SameSite=None' : 'SameSite=Strict',
     `Max-Age=${token ? ADMIN_SESSION_HOURS * 3600 : 0}`,
   ];
   if (secure) attributes.push('Secure');

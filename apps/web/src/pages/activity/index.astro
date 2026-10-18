@@ -1,0 +1,135 @@
+---
+import PageShell from '../../components/PageShell.astro';
+import { APP, STORE_LINKS } from '../../config';
+
+// Lien de sortie partagé (lokky…/activity/:id) ouvert sans l'app : Vercel sert cette page pour
+// tous les identifiants (vercel.json). Avec l'app installée, iOS et Android l'ouvrent
+// directement (liens universels, .well-known/) et cette page n'apparaît pas.
+---
+
+<PageShell
+  title="Une sortie t’attend sur Lokky"
+  description="On t’a partagé une sortie Lokky. Ouvre-la dans l’app pour voir le programme et rejoindre le groupe."
+>
+  <section class="invite">
+    <img class="invite-mark" src="/icon.webp" alt="" width="72" height="72" />
+    <p class="invite-eyebrow">Invitation</p>
+    <h1>Une sortie t’attend<br />sur Lokky</h1>
+    <p class="invite-body">
+      On t’a partagé une sortie. Ouvre-la dans l’app pour voir le programme, qui vient déjà, et
+      rejoindre le groupe.
+    </p>
+    <div class="invite-actions">
+      <a class="invite-button invite-primary" id="open-in-app" href={`${APP.scheme}://`}>
+        Ouvrir dans Lokky
+      </a>
+      {
+        STORE_LINKS.ios ? (
+          <a class="invite-button invite-secondary" href={STORE_LINKS.ios}>
+            Télécharger sur l’App Store
+          </a>
+        ) : null
+      }
+      <a class="invite-button invite-secondary" href={STORE_LINKS.android}>
+        Télécharger sur Google Play
+      </a>
+    </div>
+    <p class="invite-hint">Pas encore l’app ? Installe-la, puis rouvre ce lien.</p>
+  </section>
+</PageShell>
+
+<script is:inline define:vars={{ scheme: APP.scheme }}>
+  // /activity/<id> → lokky://activity/<id> (même chemin que les liens universels).
+  const match = window.location.pathname.match(/^\/activity\/([^/?#]+)/);
+  if (match) {
+    const link = document.getElementById('open-in-app');
+    if (link) link.setAttribute('href', `${scheme}://activity/${match[1]}`);
+  }
+</script>
+
+<style>
+  .invite {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 24px;
+    text-align: center;
+  }
+
+  .invite-mark {
+    border-radius: 20px;
+    box-shadow: 0 14px 30px #ff6b3d33;
+  }
+
+  .invite-eyebrow {
+    margin: 28px 0 10px;
+    color: #b45131;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0 0 14px;
+    font: 600 clamp(32px, 8vw, 46px) / 1.08 'Fredoka', sans-serif;
+    letter-spacing: -0.03em;
+  }
+
+  .invite-body {
+    max-width: 440px;
+    margin: 0 0 28px;
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1.55;
+  }
+
+  .invite-actions {
+    display: flex;
+    width: 100%;
+    max-width: 340px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .invite-button {
+    display: flex;
+    min-height: 54px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 23px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 160ms ease;
+  }
+
+  .invite-button:hover {
+    transform: translateY(-2px);
+  }
+
+  .invite-primary {
+    color: white;
+    background: var(--orange);
+    box-shadow: 0 10px 24px #ff6b3d3b;
+  }
+
+  .invite-secondary {
+    color: var(--ink);
+    background: white;
+    border: 1px solid #eee4d9;
+  }
+
+  .invite-hint {
+    margin: 18px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .invite-button {
+      transition: none;
+    }
+  }
+</style>

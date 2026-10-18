@@ -12,7 +12,7 @@ import {
 import { eq } from 'drizzle-orm';
 import { Redis } from 'ioredis';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { adminAudit, users } from '../src/db/schema';
+import { activities, adminAudit, participations, users } from '../src/db/schema';
 import { MODERATION_CHANNEL } from '../src/modules/users/moderation';
 import { TEST_REDIS_URL } from './env';
 import { createActivity, createMember } from './factories';
@@ -24,7 +24,11 @@ const at = (hours: number) => new Date(NOW.getTime() + hours * H);
 
 let t: Awaited<ReturnType<typeof createTestApp>>;
 beforeAll(async () => {
-  t = await createTestApp({ now: () => NOW });
+  t = await createTestApp({
+    now: () => NOW,
+    adminSecureCookie: true,
+    adminWebOrigin: 'https://admin.example.com',
+  });
 });
 afterAll(() => t.close());
 beforeEach(() => resetDatabase(t.db));
@@ -52,13 +56,14 @@ async function staffMember(firstName: string, role: StaffRole) {
     headers: CSRF,
   });
   expect(verify.statusCode).toBe(200);
-  const cookie = String(verify.headers['set-cookie']).split(';')[0]!;
+  const setCookie = String(verify.headers['set-cookie']);
+  const cookie = setCookie.split(';')[0]!;
   const call = async (method: 'GET' | 'POST', url: string, payload?: object) => {
     const res = await t.app.inject({ method, url, payload, headers: { ...CSRF, cookie } });
     await t.app.events.settled();
     return res;
   };
-  return { ...member, email, cookie, call };
+  return { ...member, email, cookie, setCookie, call };
 }
 
 describe('connexion à l’admin', () => {
@@ -85,6 +90,8 @@ describe('connexion à l’admin', () => {
   it('cookie httpOnly, en-tête anti-CSRF exigé, déconnexion', async () => {
     const mod = await staffMember('Khady', 'moderator');
     expect(mod.cookie).toMatch(/^lokky_admin=/);
+    expect(mod.setCookie).toContain('SameSite=None');
+    expect(mod.setCookie).toContain('Secure');
     const me = await mod.call('GET', '/admin/me');
     expect(me.json()).toMatchObject({ id: mod.id, role: 'moderator' });
     expect(me.headers['cache-control']).toBe('no-store');
@@ -98,6 +105,32 @@ describe('connexion à l’admin', () => {
 
     expect((await mod.call('POST', '/admin/auth/logout')).statusCode).toBe(200);
     expect((await mod.call('GET', '/admin/me')).statusCode).toBe(401);
+  });
+
+  it('autorise en CORS uniquement l’origine admin configurée', async () => {
+    const allowed = await t.app.inject({
+      method: 'OPTIONS',
+      url: '/admin/me',
+      headers: {
+        origin: 'https://admin.example.com',
+        'access-control-request-method': 'GET',
+        'access-control-request-headers': 'x-lokky-admin',
+      },
+    });
+    expect(allowed.statusCode).toBe(204);
+    expect(allowed.headers['access-control-allow-origin']).toBe('https://admin.example.com');
+    expect(allowed.headers['access-control-allow-credentials']).toBe('true');
+
+    const rejected = await t.app.inject({
+      method: 'OPTIONS',
+      url: '/admin/me',
+      headers: {
+        origin: 'https://evil.example',
+        'access-control-request-method': 'GET',
+      },
+    });
+    expect(rejected.statusCode).toBe(403);
+    expect(rejected.headers['access-control-allow-origin']).toBeUndefined();
   });
 
   it('un rôle retiré ou un compte suspendu perd l’accès tout de suite', async () => {
@@ -241,6 +274,32 @@ describe('comptes', () => {
     await expect.poll(() => notices.length).toBe(1);
     expect(JSON.parse(notices[0]!)).toMatchObject({ userId: awa.id, status: 'suspended' });
     subscriber.disconnect();
+  });
+
+  it('bannir retire le compte de ses sorties à venir, sans toucher aux sorties commencées', async () => {
+    const admin = await staffMember('Moussa', 'admin');
+    const awa = await createMember(t, 'Awa');
+    const fatou = await createMember(t, 'Fatou');
+    const organized = await createActivity(t, awa.id, { startsAt: at(8) });
+    const started = await createActivity(t, awa.id, { startsAt: at(-1) });
+    const joined = await createActivity(t, fatou.id, { startsAt: at(8), participantIds: [awa.id] });
+
+    const res = await admin.call('POST', `/admin/users/${awa.id}/moderation`, {
+      status: 'banned',
+      reason: 'Comportement dangereux',
+    });
+    expect(res.statusCode).toBe(200);
+
+    const cancelledAt = async (id: string) =>
+      (await t.db.select().from(activities).where(eq(activities.id, id)))[0]!.cancelledAt;
+    expect(await cancelledAt(organized.id)).toEqual(NOW);
+    expect(await cancelledAt(started.id)).toBeNull();
+    expect(await cancelledAt(joined.id)).toBeNull();
+    const people = await t.db
+      .select({ userId: participations.userId })
+      .from(participations)
+      .where(eq(participations.activityId, joined.id));
+    expect(people.map((p) => p.userId)).toEqual([fatou.id]);
   });
 
   it('bannir est réservé aux administrateurs ; personne ne se modère soi-même', async () => {

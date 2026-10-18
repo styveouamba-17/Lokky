@@ -32,7 +32,7 @@ export function createHttpClient({
     method: string,
     body: unknown,
     token: string | null,
-  ): Promise<Response> {
+  ): Promise<{ response: Response; json: unknown }> {
     if (__DEV__ && process.env.NODE_ENV !== 'test') {
       const target = new URL(url);
       console.info(`[Lokky API] ${method} ${target.origin}${target.pathname}`);
@@ -44,12 +44,19 @@ export function createHttpClient({
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      return await fetchFn(url, {
+      const response = await fetchFn(url, {
         method,
         headers,
         body: body ? JSON.stringify(body) : undefined,
         signal: controller.signal,
       });
+      let json: unknown = null;
+      try {
+        json = await response.json();
+      } catch {
+        if (controller.signal.aborted) throw new Error('Request timed out');
+      }
+      return { response, json };
     } catch {
       throw controller.signal.aborted
         ? new ApiError('timeout', 'La requête a pris trop de temps.')
@@ -69,16 +76,20 @@ export function createHttpClient({
     const req = buildRequest(def, parsed);
     const url = `${baseUrl}${req.path}${req.query ? `?${toQueryString(req.query)}` : ''}`;
 
-    let res = await send(url, req.method, req.body, def.auth ? await getAccessToken() : null);
+    let { response: res, json } = await send(
+      url,
+      req.method,
+      req.body,
+      def.auth ? await getAccessToken() : null,
+    );
 
     // Jeton expiré : un seul rafraîchissement, puis on rejoue la requête une fois (spec §7.2).
     if (res.status === 401 && def.auth && refreshAccessToken) {
       const fresh = await refreshAccessToken();
       if (!fresh) throw new ApiError('unauthorized', 'Session expirée.', 401);
-      res = await send(url, req.method, req.body, fresh);
+      ({ response: res, json } = await send(url, req.method, req.body, fresh));
     }
 
-    const json: unknown = await res.json().catch(() => null);
     if (!res.ok) {
       const body = apiErrorBodySchema.safeParse(json);
       if (body.success)

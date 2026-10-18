@@ -4,6 +4,7 @@ import type { Database } from '../../db/client';
 import { moderationEvents, users } from '../../db/schema';
 import { HttpError } from '../../http/errors';
 import { uuidv7 } from '../../lib/ids';
+import { withdrawFromUpcoming, type Withdrawal } from '../activities/withdraw';
 
 // Canal Redis des décisions de modération : le serveur temps réel prévient l'app
 // (moderation:update), quel que soit le processus qui a pris la décision (script, admin).
@@ -14,6 +15,13 @@ export interface ModerationNotice {
   status: ModerationStatus;
   suspendedUntil: string | null;
   warnedAt: string | null;
+}
+
+export interface ModerationOutcome {
+  // À publier sur MODERATION_CHANNEL : l'app de la personne se met à jour.
+  notice: ModerationNotice;
+  // Bannissement : sorties à venir annulées ou quittées (announceWithdrawal), sinon vide.
+  withdrawal: Withdrawal;
 }
 
 // Routes encore permises à un compte suspendu ou banni : partir, supprimer son compte.
@@ -59,8 +67,8 @@ export async function applyModeration(
     actorId?: string | null;
     now?: Date;
   },
-): Promise<ModerationNotice> {
-  const warnedAt = await db.transaction(async (tx) => {
+): Promise<ModerationOutcome> {
+  const { warnedAt, withdrawal } = await db.transaction(async (tx) => {
     const [row] = await tx
       .update(users)
       .set({
@@ -80,12 +88,20 @@ export async function applyModeration(
       actorId,
       createdAt: now,
     });
-    return row?.warnedAt ?? null;
+    // Un compte banni ne sort plus avec personne : ses sorties à venir sont retirées.
+    const withdrawn: Withdrawal =
+      status === 'banned'
+        ? await withdrawFromUpcoming(tx, userId, now)
+        : { cancelled: [], left: [] };
+    return { warnedAt: row?.warnedAt ?? null, withdrawal: withdrawn };
   });
   return {
-    userId,
-    status,
-    suspendedUntil: status === 'suspended' && until ? until.toISOString() : null,
-    warnedAt: warnedAt?.toISOString() ?? null,
+    notice: {
+      userId,
+      status,
+      suspendedUntil: status === 'suspended' && until ? until.toISOString() : null,
+      warnedAt: warnedAt?.toISOString() ?? null,
+    },
+    withdrawal,
   };
 }

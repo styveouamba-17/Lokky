@@ -15,6 +15,7 @@ describe('client de l’API admin', () => {
     const [url, init] = fetcher.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('/api/admin/reports/r1/resolve');
     expect(init.headers).toMatchObject({ 'x-lokky-admin': '1' });
+    expect(init.credentials).toBe('include');
     expect(JSON.parse(String(init.body))).toEqual({ status: 'resolved' });
   });
 

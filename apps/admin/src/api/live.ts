@@ -17,7 +17,7 @@ export function useLiveOpenReports(): number | undefined {
   const toast = useToast();
 
   useEffect(() => {
-    const source = new EventSource(`${API_BASE}/admin/events`);
+    const source = new EventSource(`${API_BASE}/admin/events`, { withCredentials: true });
     source.addEventListener('reports', (event) => {
       const { open } = JSON.parse((event as MessageEvent<string>).data) as { open: number };
       if (previous.current !== undefined && open > previous.current) {
