@@ -299,7 +299,7 @@ Chaque étape se termine avec ses tests d'intégration verts et l'app capable d'
 
 ## 18. Changement de domaine (`lokky.app`)
 
-Le domaine définitif sera `lokky.app` (achat prévu). D'ici là, tout utilise `lokky.akylian.com`. Le jour du changement :
+Le domaine définitif `lokky.app` est acheté (Cloudflare, 2026-10-18). Fait : site (Vercel, redirection de l'ancien domaine hors `/.well-known` et `/activity`), app (`associatedDomains`, `intentFilters` avec les deux domaines, `WEB_ORIGIN`), adresse de contact `contact@lokky.app`. Reste : API (`api.lokky.app`), admin, Resend. Liste initiale :
 
 - **Backend** : variables d'environnement seulement (`PUBLIC_WEB_ORIGIN`, `API_PUBLIC_URL`, adresse d'envoi des emails, domaine vérifié dans Resend) et le nom de domaine dans la configuration de Caddy. Aucun domaine n'est écrit en dur dans le code de l'API.
 - **App** : `app.config.ts` (`associatedDomains`, `intentFilters`), `src/lib/share.ts` (`WEB_ORIGIN`), `src/lib/links.ts` (adresse de contact), puis un nouveau build (les liens universels sont natifs). Garder l'ancien domaine dans `associatedDomains` et `intentFilters` pendant une transition, pour que les liens déjà partagés continuent d'ouvrir l'app.

@@ -1,5 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/((?!\\.well-known/|activity/).*)",
+      "has": [{ "type": "host", "value": "lokky.akylian.com" }],
+      "destination": "https://lokky.app/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [{ "source": "/activity/:id", "destination": "/activity" }],
   "headers": [
     {

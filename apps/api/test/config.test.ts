@@ -4,7 +4,7 @@ import { loadConfig } from '../src/config';
 const valid = {
   DATABASE_URL: 'postgres://lokky:lokky@localhost:5434/lokky',
   REDIS_URL: 'redis://localhost:6380',
-  PUBLIC_WEB_ORIGIN: 'https://lokky.akylian.com',
+  PUBLIC_WEB_ORIGIN: 'https://lokky.app',
   JWT_PRIVATE_KEY: 'clé de test',
 };
 

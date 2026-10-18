@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-// Sortie à ouvrir après un lien (lokky.akylian.com/activity/:id). Le lien peut arriver avant
+// Sortie à ouvrir après un lien (lokky.app/activity/:id). Le lien peut arriver avant
 // la connexion : il attend ici que l'utilisateur soit dans l'app (app/+native-intent.tsx).
 export const usePendingLink = create<{ activityId: string | null }>()(() => ({
   activityId: null,

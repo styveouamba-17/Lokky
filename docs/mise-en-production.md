@@ -25,7 +25,7 @@ le client simulé accepte n'importe quel jeton et ne teste pas la validation des
 Apple Sign-In s'essaie sur iOS ; Google peut être testé sur Android ou iOS avec un build natif
 de développement. Une première connexion OAuth nécessite un email vérifié.
 
-## 1. Liens vers une sortie (`lokky.akylian.com/activity/:id`)
+## 1. Liens vers une sortie (`lokky.app/activity/:id`)
 
 L'app est configurée (`app.config.ts` : `associatedDomains` iOS, `intentFilters` Android). Les **deux fichiers** sont dans `apps/web/public/.well-known/` et publiés avec le site (Vercel, §5), en HTTPS, avec le type `application/json` (`apps/web/vercel.json`) et sans redirection.
 
@@ -169,8 +169,26 @@ Sur **Vercel** :
   le paquet `@lokky/shared` est dans `packages/`).
 - **Framework** : Astro ; **Install Command** : `cd ../.. && npm ci` ; **Build Command** :
   `npm run build` ; **Output Directory** : `dist`.
-- Associer le domaine des liens partagés (aujourd'hui `lokky.akylian.com`, cf. `app.config.ts` et
-  `src/lib/share.ts` côté mobile).
+- Domaines (Settings › Domains) : `lokky.app` (principal), `www.lokky.app` (redirigé vers
+  `lokky.app`) et, pendant la transition, `lokky.akylian.com` **sans redirection dans Vercel** :
+  `vercel.json` le redirige lui-même vers `lokky.app`, sauf `/.well-known/*` et `/activity/*`
+  (Apple et Google ne suivent pas de redirection pour vérifier les liens universels).
+
+DNS chez **Cloudflare** (zone `lokky.app`, onglet DNS) — reprendre exactement les valeurs que
+Vercel affiche pour chaque domaine :
+
+| Type | Nom | Valeur | Proxy |
+|---|---|---|---|
+| A | `@` | `76.76.21.21` (ou l'IP indiquée par Vercel) | DNS only (nuage gris) |
+| CNAME | `www` | `cname.vercel-dns.com` (ou la cible indiquée par Vercel) | DNS only (nuage gris) |
+
+Le nuage doit rester **gris** : Vercel émet lui-même le certificat HTTPS, et le proxy Cloudflare
+peut bloquer cette émission et la vérification des liens universels. `.app` impose HTTPS
+(HSTS) : le site n'est joignable qu'une fois le certificat Vercel actif.
+
+Adresse `contact@lokky.app` (pages légales) : Cloudflare › Email › Email Routing, créer
+l'adresse `contact` et la transférer vers une boîte existante (Cloudflare ajoute ses propres
+enregistrements MX et SPF).
 
 Pages : `/` (accueil), `/confidentialite`, `/conditions`, `/suppression-compte` (URL de suppression
 de compte demandée par Google Play), `/activity/:id` (§1). Les deux textes légaux viennent de

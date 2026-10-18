@@ -2,5 +2,5 @@ import { defineConfig } from 'astro/config';
 
 export default defineConfig({
   output: 'static',
-  site: 'https://lokky.akylian.com',
+  site: 'https://lokky.app',
 });

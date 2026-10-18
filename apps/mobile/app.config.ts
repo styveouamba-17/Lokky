@@ -20,7 +20,9 @@ const config: ExpoConfig = {
     bundleIdentifier: 'com.nach17.Lokky',
     supportsTablet: false,
     googleServicesFile: './GoogleService-Info.plist',
-    associatedDomains: ['applinks:lokky.akylian.com'],
+    // lokky.app : domaine définitif. lokky.akylian.com reste le temps de la transition, pour que
+    // les liens déjà partagés continuent d'ouvrir l'app.
+    associatedDomains: ['applinks:lokky.app', 'applinks:lokky.akylian.com'],
     usesAppleSignIn: true,
     appleTeamId: '7UZ7GPX6A4',
     infoPlist: { ITSAppUsesNonExemptEncryption: false },
@@ -46,7 +48,10 @@ const config: ExpoConfig = {
       {
         action: 'VIEW',
         autoVerify: true,
-        data: [{ scheme: 'https', host: 'lokky.akylian.com', pathPrefix: '/activity' }],
+        data: [
+          { scheme: 'https', host: 'lokky.app', pathPrefix: '/activity' },
+          { scheme: 'https', host: 'lokky.akylian.com', pathPrefix: '/activity' },
+        ],
         category: ['BROWSABLE', 'DEFAULT'],
       },
     ],
@@ -93,10 +98,7 @@ const config: ExpoConfig = {
         defaultChannel: 'default',
       },
     ],
-    [
-      '@sentry/react-native/expo',
-      { organization: 'nach-corp-5a', project: 'lokky' },
-    ],
+    ['@sentry/react-native/expo', { organization: 'nach-corp-5a', project: 'lokky' }],
   ],
   experiments: { typedRoutes: true },
   extra: { eas: { projectId: '7c688313-8128-4e0f-b8be-9766c1a6d9a5' } },
