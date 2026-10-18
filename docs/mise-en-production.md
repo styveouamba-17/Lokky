@@ -194,6 +194,18 @@ Pages : `/` (accueil), `/confidentialite`, `/conditions`, `/suppression-compte` 
 de compte demandée par Google Play), `/activity/:id` (§1). Les deux textes légaux viennent de
 `packages/shared/src/legal/` : les modifier là met à jour l'app et le site.
 
+Référencement (déjà dans le code) : adresse canonique sur `https://lokky.app` sans « / » final,
+Open Graph et carte X avec `public/og-image.jpg` (1200×630), données structurées schema.org
+(WebSite, Organization, MobileApplication) sur l'accueil, `sitemap.xml`, `robots.txt`, `noindex`
+sur `/activity/:id`, favicon PNG/ICO et `apple-touch-icon`. Une fois le site en ligne :
+
+1. **Google Search Console** › Ajouter une propriété › **Domaine** › `lokky.app`. Google donne un
+   enregistrement **TXT** : l'ajouter dans Cloudflare (DNS › Add record › TXT, nom `@`), puis
+   « Valider ».
+2. Search Console › Sitemaps › soumettre `https://lokky.app/sitemap.xml`.
+3. Vérifier l'aperçu de partage : coller `https://lokky.app` dans WhatsApp, ou utiliser le
+   débogueur de partage de Facebook (il force aussi la mise à jour du cache).
+
 ## 6. Reste à faire hors code
 
 - Surveillance Render : l'API expose `GET https://lokky.onrender.com/health` sans authentification.

@@ -1,13 +1,25 @@
 ---
+import { SITE_NAME } from '../config';
+
 interface Props {
   title?: string;
   description?: string;
+  // Page à ne pas référencer (ex. page de secours des liens de sortie).
+  noindex?: boolean;
 }
 
 const {
-  title = 'Lokky — Des sorties, de vraies rencontres',
+  title = 'Lokky — Des sorties, de vraies rencontres à Dakar',
   description = 'Trouve des activités près de toi à Dakar et rejoins des personnes qui ont envie de sortir, elles aussi.',
+  noindex = false,
 } = Astro.props;
+
+// Adresse de référence sur lokky.app (astro.config.mjs › site), même si la page est ouverte
+// depuis www ou l'ancien domaine.
+// Sans « / » final (comme vercel.json › trailingSlash et le sitemap), sauf pour l'accueil.
+const path = Astro.url.pathname.length > 1 ? Astro.url.pathname.replace(/\/+$/, '') : '/';
+const canonical = new URL(path, Astro.site).href;
+const shareImage = new URL('/og-image.jpg', Astro.site).href;
 ---
 
 <!doctype html>
@@ -25,11 +37,30 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#fffaf4" />
     <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex, follow" /> : null}
+    <link rel="canonical" href={canonical} />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:url" content={canonical} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:locale" content="fr_SN" />
-    <link rel="icon" type="image/webp" href="/favicon.webp" />
+    <meta property="og:image" content={shareImage} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Lokky : un groupe d’amis assis face au coucher de soleil sur la Corniche de Dakar"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={shareImage} />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <slot name="head" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

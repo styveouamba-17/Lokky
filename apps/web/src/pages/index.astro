@@ -1,5 +1,43 @@
 ---
+import { LEGAL_CONTACT_EMAIL } from '@lokky/shared';
+import { SITE_NAME, STORE_LINKS } from '../config';
 import SiteLayout from '../layouts/SiteLayout.astro';
+
+// Données structurées (schema.org) : Google relie le site, l'organisation et l'application.
+const site = Astro.site!.href.replace(/\/$/, '');
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${site}/#website`,
+      name: SITE_NAME,
+      url: `${site}/`,
+      inLanguage: 'fr',
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${site}/#organization`,
+      name: SITE_NAME,
+      url: `${site}/`,
+      logo: `${site}/icon-512.png`,
+      email: LEGAL_CONTACT_EMAIL,
+      areaServed: { '@type': 'City', name: 'Dakar' },
+    },
+    {
+      '@type': 'MobileApplication',
+      name: SITE_NAME,
+      operatingSystem: 'Android, iOS',
+      applicationCategory: 'LifestyleApplication',
+      description:
+        'Trouve des sorties près de toi à Dakar et rejoins des personnes qui ont envie de sortir, elles aussi.',
+      image: `${site}/og-image.jpg`,
+      installUrl: STORE_LINKS.android,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'XOF' },
+      publisher: { '@id': `${site}/#organization` },
+    },
+  ],
+};
 
 const highlights = [
   {
@@ -21,6 +59,7 @@ const highlights = [
 ---
 
 <SiteLayout>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(structuredData)} />
   <header class="nav-wrap">
     <nav class="nav" aria-label="Navigation principale">
       <a class="brand" href="/" aria-label="Lokky, accueil">
