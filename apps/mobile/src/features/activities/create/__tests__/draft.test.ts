@@ -1,11 +1,12 @@
 import { NEIGHBORHOODS } from '@lokky/shared';
-import { nextSaturday, timeSlots, toCreateInput } from '../draft';
+import { knownCover, nextSaturday, timeSlots, toCreateInput } from '../draft';
 
 // Mercredi 7 octobre 2026, 18h10 à Dakar.
 const NOW = new Date('2026-10-07T18:10:00Z');
 
 const DRAFT = {
   category: 'beach' as const,
+  cover: null,
   title: 'Baignade à Ngor',
   description: '',
   day: '2026-10-10',
@@ -44,6 +45,14 @@ describe('brouillon de création', () => {
       meetingPoint: null,
     });
     expect(input.cost).toEqual({ type: 'free' });
+    expect(input.cover).toBeNull();
+  });
+
+  it('couverture : celle choisie, ou automatique si cette version ne la connaît pas', () => {
+    expect(toCreateInput({ ...DRAFT, cover: 'kayak' }).cover).toBe('kayak');
+    expect(knownCover('kayak')).toBe('kayak');
+    expect(knownCover('future-cover')).toBeNull();
+    expect(knownCover(null)).toBeNull();
   });
 
   it('lieu libre : coordonnées du quartier ; coût partagé avec estimation', () => {

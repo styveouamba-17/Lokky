@@ -11,6 +11,7 @@ import { useTranslation } from '@/i18n';
 import { useSessionStore } from '@/state/session';
 import { makeStyles, useTheme } from '@/theme';
 import { Button, IconButton, ScreenHeader, Stepper, useToast } from '@/ui';
+import { CoverPickerSheet } from '../create/components/CoverPickerSheet';
 import { StepCost } from '../create/components/StepCost';
 import { StepCount } from '../create/components/StepCount';
 import { StepReview } from '../create/components/StepReview';
@@ -40,9 +41,11 @@ export function CreateActivityScreen() {
   const create = useCreateActivity();
   const [now] = useState(() => new Date());
   const [step, setStep] = useState(0);
-  const { control, trigger, handleSubmit, formState } = useForm<Draft>({
+  const [coverOpen, setCoverOpen] = useState(false);
+  const { control, trigger, handleSubmit, formState, setValue } = useForm<Draft>({
     resolver: zodResolver(draftSchema),
     defaultValues: {
+      cover: null,
       title: '',
       description: '',
       day: '',
@@ -128,7 +131,14 @@ export function CreateActivityScreen() {
           {step === 2 ? <StepWhere control={control} errors={formState.errors} /> : null}
           {step === 3 ? <StepCount control={control} /> : null}
           {step === 4 ? <StepCost control={control} errors={formState.errors} /> : null}
-          {preview ? <StepReview activity={preview} now={now} onEdit={setStep} /> : null}
+          {preview ? (
+            <StepReview
+              activity={preview}
+              now={now}
+              onEdit={setStep}
+              onChangeCover={() => setCoverOpen(true)}
+            />
+          ) : null}
         </ScrollView>
         <View style={styles.footer}>
           <Button
@@ -141,6 +151,16 @@ export function CreateActivityScreen() {
           />
         </View>
       </KeyboardAvoidingView>
+      {preview ? (
+        <CoverPickerSheet
+          visible={coverOpen}
+          onClose={() => setCoverOpen(false)}
+          activityId={preview.id}
+          category={preview.category}
+          value={values.cover ?? null}
+          onChange={(cover) => setValue('cover', cover, { shouldDirty: true })}
+        />
+      ) : null}
     </View>
   );
 }

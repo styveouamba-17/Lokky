@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { LIMITS } from '../constants';
-import { categorySchema, idSchema, isoDateTimeSchema, paginationQuerySchema } from './common';
+import {
+  activityCoverIdSchema,
+  categorySchema,
+  idSchema,
+  isoDateTimeSchema,
+  paginationQuerySchema,
+} from './common';
 import { userPreviewSchema } from './user';
 
 export const messageReplySchema = z.object({
@@ -27,6 +33,8 @@ export const conversationSchema = z
     type: z.enum(['group', 'direct']),
     activityId: idSchema.nullable(),
     activityCategory: categorySchema.nullable(),
+    // Couverture choisie pour la sortie (null : automatique, ou conversation privée).
+    activityCover: activityCoverIdSchema,
     // Conversation privée : l'autre personne (null pour un groupe).
     peer: userPreviewSchema.nullable(),
     title: z.string().min(1),

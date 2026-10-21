@@ -1,25 +1,32 @@
 import type { Activity } from '@lokky/shared';
+import { ImageSquare } from 'phosphor-react-native/src/icons/ImageSquare';
 import { Pressable, View } from 'react-native';
 import { useTranslation } from '@/i18n';
 import { formatActivityWhen, formatCost } from '@/lib';
-import { makeStyles } from '@/theme';
+import { makeStyles, useTheme } from '@/theme';
 import { StepIntro, Text } from '@/ui';
 import { ActivityCard, placeLabel } from '../../components/ActivityCard';
+import { knownCover } from '../draft';
 
 // Récapitulatif : la carte telle qu'elle apparaîtra, puis chaque champ avec « Modifier ».
 export function StepReview({
   activity,
   now,
   onEdit,
+  onChangeCover,
   editableSteps,
 }: {
   activity: Activity;
   now: Date;
   onEdit: (step: number) => void;
+  // Ouvre la galerie des couvertures.
+  onChangeCover: () => void;
   editableSteps?: readonly number[];
 }) {
   const styles = useStyles();
+  const { colors } = useTheme();
   const { t } = useTranslation();
+  const cover = knownCover(activity.cover);
   const rows = [
     { label: t('create.review.when'), value: formatActivityWhen(activity.startsAt, now), step: 1 },
     { label: t('create.review.where'), value: placeLabel(activity), step: 2 },
@@ -38,6 +45,27 @@ export function StepReview({
     <View style={styles.stack}>
       <StepIntro title={t('create.review.title')} body={t('create.review.body')} />
       <ActivityCard activity={activity} now={now} preview />
+      <View style={[styles.rows, styles.row]}>
+        <ImageSquare size={22} color={colors.textMuted} />
+        <View style={styles.rowText}>
+          <Text variant="caption" color="textMuted">
+            {t('create.cover.label')}
+          </Text>
+          <Text variant="bodyStrong">
+            {cover ? t(`create.cover.names.${cover}`) : t('create.cover.auto')}
+          </Text>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${t('create.cover.change')} : ${t('create.cover.label')}`}
+          hitSlop={12}
+          onPress={onChangeCover}
+        >
+          <Text variant="label" color="action">
+            {t('create.cover.change')}
+          </Text>
+        </Pressable>
+      </View>
       <View style={styles.rows}>
         {rows.map((row) => (
           <View key={row.label} style={styles.row}>

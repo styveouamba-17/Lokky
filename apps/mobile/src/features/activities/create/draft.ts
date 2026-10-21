@@ -1,4 +1,6 @@
 import {
+  ACTIVITY_COVERS,
+  activityCoverSchema,
   categorySchema,
   LIMITS,
   NEIGHBORHOODS,
@@ -18,6 +20,8 @@ const DAY_MS = 86_400_000;
 // convertis en entrée du contrat, que le schéma partagé revalide à la publication.
 export const draftSchema = z.object({
   category: categorySchema,
+  // Image choisie dans la galerie (récapitulatif) ; null = automatique selon la catégorie.
+  cover: activityCoverSchema.nullable(),
   title: z.string().trim().min(L.titleMin).max(L.titleMax),
   description: z.string().trim().max(L.descriptionMax),
   day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -81,6 +85,7 @@ export function toCreateInput(draft: z.output<typeof draftSchema>): CreateActivi
   return {
     title: draft.title,
     category: draft.category,
+    cover: draft.cover,
     description: draft.description,
     startsAt: toStartsAt(draft.day, draft.time).toISOString(),
     location: {
@@ -107,6 +112,7 @@ export function previewActivity(input: CreateActivityInput, me: Me, now: Date): 
     id: 'preview',
     title: input.title,
     category: input.category,
+    cover: input.cover ?? null,
     description: input.description ?? '',
     startsAt: input.startsAt,
     location: input.location,
@@ -131,3 +137,8 @@ export function previewActivity(input: CreateActivityInput, me: Me, now: Date): 
     createdAt: now.toISOString(),
   };
 }
+
+// Couverture d'une activité existante, telle que le formulaire peut la garder : une image que
+// cette version de l'app ne connaît pas repasse en automatique.
+export const knownCover = (cover: string | null): Draft['cover'] =>
+  ACTIVITY_COVERS.find((id) => id === cover) ?? null;

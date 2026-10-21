@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { ACTIVITY_STATUSES, LIMITS } from '../constants';
 import {
+  activityCoverIdSchema,
+  activityCoverSchema,
   categorySchema,
   citySchema,
   coordinatesSchema,
@@ -51,6 +53,8 @@ export const activitySchema = z
     id: idSchema,
     title: titleSchema,
     category: categorySchema,
+    // Couverture choisie par le créateur ; null = automatique (selon la catégorie).
+    cover: activityCoverIdSchema,
     description: descriptionSchema,
     startsAt: isoDateTimeSchema,
     location: activityLocationSchema,
@@ -94,6 +98,7 @@ export function makeCreateActivityInputSchema(now: () => Date = () => new Date()
   return z.object({
     title: titleSchema,
     category: categorySchema,
+    cover: activityCoverSchema.nullable().default(null),
     description: descriptionSchema.default(''),
     startsAt: isoDateTimeSchema.refine(
       (value) => {
@@ -114,6 +119,8 @@ export const updateActivityInputSchema = z.object({
   id: idSchema,
   title: titleSchema.optional(),
   category: categorySchema.optional(),
+  // null revient à la couverture automatique. Modifiable même après l'arrivée de participants.
+  cover: activityCoverSchema.nullable().optional(),
   description: descriptionSchema.optional(),
   startsAt: isoDateTimeSchema.optional(),
   location: activityLocationSchema.optional(),

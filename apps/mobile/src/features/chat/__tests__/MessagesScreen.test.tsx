@@ -1,7 +1,8 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { makeTestClient, renderWithQuery, signInAs } from '@/test/mockApi';
 import { listConversations } from '../api';
+import { useChatStore } from '../chatStore';
 import { MessagesScreen } from '../screens/MessagesScreen';
 
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), navigate: jest.fn() } }));
@@ -30,6 +31,29 @@ describe('MessagesScreen', () => {
     expect(screen.getAllByTestId('activity-group-avatar').length).toBeGreaterThan(0);
     // Dernier message envoyé par Awa elle-même
     expect(screen.getByText('Toi : Grave, j’ai adoré')).toBeOnTheScreen();
+  });
+
+  it('montre qui est en train d’écrire à la place du dernier message', async () => {
+    await renderWithQuery(<MessagesScreen />);
+    await screen.findByText('Moussa : Moi je pars de Yoff, je vous retrouve au parking');
+    const conversationId = 'c_a_mamelles';
+    await act(() =>
+      useChatStore
+        .getState()
+        .setTyping(conversationId, { id: 'u_moussa', firstName: 'Moussa', avatarUrl: null }, true),
+    );
+    expect(screen.getByText('Moussa écrit…')).toBeOnTheScreen();
+    expect(
+      screen.queryByText('Moussa : Moi je pars de Yoff, je vous retrouve au parking'),
+    ).not.toBeOnTheScreen();
+    await act(() =>
+      useChatStore
+        .getState()
+        .setTyping(conversationId, { id: 'u_moussa', firstName: 'Moussa', avatarUrl: null }, false),
+    );
+    expect(
+      screen.getByText('Moussa : Moi je pars de Yoff, je vous retrouve au parking'),
+    ).toBeOnTheScreen();
   });
 
   it('ouvre la discussion', async () => {

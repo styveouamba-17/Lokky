@@ -251,6 +251,7 @@ export const activitiesHandlers: Handlers = {
         id,
         title: input.title,
         category: input.category,
+        cover: input.cover,
         description: input.description,
         startsAt: starts,
         placeName: input.location.name,
@@ -272,7 +273,7 @@ export const activitiesHandlers: Handlers = {
   },
 
   // Modification complète tant que personne n'a rejoint, puis seulement la description et le
-  // point de RDV (spec app §6.3, règle 3).
+  // point de RDV (spec app §6.3, règle 3). La couverture reste modifiable dans tous les cas.
   'activities.update': async ({ id, ...changes }, ctx) => {
     const me = await member(ctx);
     const row = await findActivity(ctx.db, id);
@@ -330,6 +331,7 @@ export const activitiesHandlers: Handlers = {
       .set({
         ...(changes.title !== undefined && { title: changes.title }),
         ...(changes.category !== undefined && { category: changes.category }),
+        ...(changes.cover !== undefined && { cover: changes.cover }),
         ...(changes.description !== undefined && { description: changes.description }),
         ...(changes.startsAt !== undefined && { startsAt: new Date(changes.startsAt) }),
         ...(changes.capacity !== undefined && { capacity: changes.capacity }),

@@ -138,6 +138,7 @@ export const mockHandlers: MockHandlers = {
     }
     Object.assign(activity, {
       ...(input.title !== undefined && { title: input.title }),
+      ...(input.cover !== undefined && { cover: input.cover }),
       ...(input.category !== undefined && { category: input.category }),
       ...(input.description !== undefined && { description: input.description }),
       ...(input.startsAt !== undefined && { startsAt: input.startsAt }),

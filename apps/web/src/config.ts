@@ -9,8 +9,6 @@ export const APP = {
 } as const;
 
 export const STORE_LINKS = {
-  android: `https://play.google.com/store/apps/details?id=${APP.androidPackage}`,
-  // À compléter avec l'identifiant numérique App Store Connect (https://apps.apple.com/app/id…).
-  // Tant qu'il est vide, le bouton App Store n'est pas affiché.
-  ios: '',
+  android: `https://play.google.com/store/apps/details?id=${APP.androidPackage}&hl=en_US`,
+  ios: 'https://apps.apple.com/sn/app/lokky/id6761419238',
 } as const;

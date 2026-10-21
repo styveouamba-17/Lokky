@@ -98,7 +98,7 @@ const highlights = [
               <path d="M5 12h14m-6-6 6 6-6 6" />
             </svg>
           </a>
-          <span class="availability"><span class="status-dot"></span> L’app arrive bientôt</span>
+          <span class="availability"><span class="status-dot"></span> Disponible sur iOS et Android</span>
         </div>
         <div class="hero-note hero-enter hero-enter-5">
           <span class="mini-avatars" aria-hidden="true">
@@ -343,14 +343,19 @@ const highlights = [
 
     <section class="app-cta section-pad" id="application">
       <img class="app-cta-mark" src="/icon.webp" alt="" data-reveal="up" />
-      <p class="eyebrow" data-reveal="up" data-reveal-delay="80">Bientôt sur ton téléphone</p>
+      <p class="eyebrow" data-reveal="up" data-reveal-delay="80">Disponible sur iOS et Android</p>
       <h2 data-reveal="up" data-reveal-delay="140">Garde une place<br />pour l’imprévu.</h2>
       <p data-reveal="up" data-reveal-delay="200">
-        Lokky arrive bientôt. En attendant, fais passer le mot à tes futurs partenaires de sortie.
+        Télécharge Lokky et trouve des personnes avec qui partager ta prochaine sortie.
       </p>
-      <span class="coming-soon" data-reveal="up" data-reveal-delay="240">
-        <span class="status-dot"></span> Disponible bientôt sur iOS et Android
-      </span>
+      <div class="store-links" data-reveal="up" data-reveal-delay="240">
+        <a href={STORE_LINKS.ios} target="_blank" rel="noopener noreferrer">
+          Télécharger sur l’App Store
+        </a>
+        <a href={STORE_LINKS.android} target="_blank" rel="noopener noreferrer">
+          Télécharger sur Google Play
+        </a>
+      </div>
       <img
         class="app-cta-phone"
         src="/phone.webp"
@@ -600,8 +605,7 @@ const highlights = [
     stroke-width: 1.8;
   }
 
-  .availability,
-  .coming-soon {
+  .availability {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -610,8 +614,7 @@ const highlights = [
     font-weight: 600;
   }
 
-  .availability .status-dot,
-  .coming-soon .status-dot {
+  .availability .status-dot {
     width: 7px;
     height: 7px;
     background: var(--teal);
@@ -1700,10 +1703,37 @@ const highlights = [
 
   .app-cta > p:not(.eyebrow) {
     max-width: 480px;
-    margin: 18px auto 22px;
+    margin: 18px auto 26px;
     color: var(--muted);
     font-size: 14px;
     line-height: 1.75;
+  }
+
+  .store-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .store-links a {
+    display: inline-flex;
+    min-height: 50px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 22px;
+    border-radius: 999px;
+    color: white;
+    background: var(--ink);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 160ms ease, background-color 160ms ease;
+  }
+
+  .store-links a:hover {
+    transform: translateY(-2px);
+    background: var(--orange);
   }
 
   .app-cta-phone {

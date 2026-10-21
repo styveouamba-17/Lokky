@@ -1,5 +1,6 @@
 import type {
   ActivityCategory,
+  ActivityCover,
   ActivityCost,
   ActivityLocation,
   City,
@@ -22,6 +23,7 @@ export interface MockActivity {
   id: string;
   title: string;
   category: ActivityCategory;
+  cover?: ActivityCover | null; // absente = automatique
   description: string;
   startsAt: string;
   location: ActivityLocation;

@@ -12,12 +12,15 @@ import type { MessageReply } from '@lokky/shared';
 // même hors ligne.
 export function Composer({
   onSend,
+  onTextChange,
   replyTo,
   editing,
   onCancelAction,
   onEdit,
 }: {
   onSend: (body: string, replyTo: MessageReply | null) => void;
+  // Chaque frappe, pour signaler « en train d'écrire » (pas en modification).
+  onTextChange?: (body: string) => void;
   replyTo: MessageReply | null;
   editing: { id: string; body: string } | null;
   onCancelAction: () => void;
@@ -70,7 +73,10 @@ export function Composer({
         <TextInput
           accessibilityLabel={t('chat.inputLabel')}
           value={body}
-          onChangeText={setBody}
+          onChangeText={(text) => {
+            setBody(text);
+            onTextChange?.(text);
+          }}
           placeholder={editing ? t('chat.editPlaceholder') : t('chat.placeholder')}
           placeholderTextColor={colors.textMuted}
           maxLength={LIMITS.message.bodyMax}

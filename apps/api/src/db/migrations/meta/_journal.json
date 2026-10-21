@@ -78,6 +78,13 @@
       "when": 1792323658042,
       "tag": "0010_push_token_session",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792513216189,
+      "tag": "0011_activity_cover",
+      "breakpoints": true
     }
   ]
 }

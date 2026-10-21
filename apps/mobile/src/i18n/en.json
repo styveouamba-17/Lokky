@@ -343,6 +343,34 @@
       "meetingPoint": "Meeting point",
       "count": "Spots",
       "cost": "Cost"
+    },
+    "cover": {
+      "label": "Image",
+      "auto": "Automatic",
+      "change": "Change",
+      "title": "Choose an image",
+      "body": "It shows on your outing in Discover.",
+      "autoHint": "Based on the category",
+      "suggested": "For “{{category}}”",
+      "others": "All images",
+      "selected": "selected",
+      "names": {
+        "beach-football": "Beach football",
+        "karting": "Karting",
+        "padel": "Padel",
+        "tennis": "Tennis",
+        "running-corniche": "Running on the Corniche",
+        "kayak": "Kayak",
+        "beach-friends": "Friends at the beach",
+        "bike-corniche": "Cycling on the Corniche",
+        "corniche-walk": "Walk on the Corniche",
+        "ferry-goree": "Ferry to Gorée",
+        "mamelles-sunset": "Mamelles lighthouse",
+        "museum": "Museum",
+        "open-air-cinema": "Open-air cinema",
+        "concert": "Concert",
+        "thieb-table": "Meal with friends"
+      }
     }
   },
   "editActivity": {

@@ -32,13 +32,21 @@ import {
 } from '@/ui';
 import { useActivity } from '../hooks/useActivity';
 import { useUpdateActivity } from '../hooks/useManageActivity';
+import { CoverPickerSheet } from '../create/components/CoverPickerSheet';
 import { StepCost } from '../create/components/StepCost';
 import { StepCount } from '../create/components/StepCount';
 import { StepReview } from '../create/components/StepReview';
 import { StepWhat } from '../create/components/StepWhat';
 import { StepWhen } from '../create/components/StepWhen';
 import { StepWhere } from '../create/components/StepWhere';
-import { draftSchema, isoDay, STEP_FIELDS, toCreateInput, type Draft } from '../create/draft';
+import {
+  draftSchema,
+  isoDay,
+  knownCover,
+  STEP_FIELDS,
+  toCreateInput,
+  type Draft,
+} from '../create/draft';
 
 export function EditActivityScreen({ id }: { id: string }) {
   const styles = useStyles();
@@ -99,7 +107,8 @@ function EditActivityForm({ activity }: { activity: Activity }) {
       ? [0, 2, 5]
       : [0, 1, 2, 3, 5];
   const [step, setStep] = useState(0);
-  const { control, trigger, handleSubmit, formState } = useForm<Draft>({
+  const [coverOpen, setCoverOpen] = useState(false);
+  const { control, trigger, handleSubmit, formState, setValue } = useForm<Draft>({
     resolver: zodResolver(draftSchema),
     defaultValues: initial,
   });
@@ -160,6 +169,7 @@ function EditActivityForm({ activity }: { activity: Activity }) {
       ...activity,
       title: input.title,
       category: input.category,
+      cover: parsed.data.cover === initial.cover ? activity.cover : (input.cover ?? null),
       description: input.description ?? '',
       startsAt: input.startsAt,
       location,
@@ -209,6 +219,7 @@ function EditActivityForm({ activity }: { activity: Activity }) {
               activity={preview}
               now={now}
               onEdit={(index) => setStep(steps.indexOf(index))}
+              onChangeCover={() => setCoverOpen(true)}
               editableSteps={
                 hasJoinedParticipants ? (scheduleLocked ? [2] : [1, 2, 3]) : [1, 2, 3, 4]
               }
@@ -226,6 +237,16 @@ function EditActivityForm({ activity }: { activity: Activity }) {
           />
         </View>
       </KeyboardAvoidingView>
+      {preview ? (
+        <CoverPickerSheet
+          visible={coverOpen}
+          onClose={() => setCoverOpen(false)}
+          activityId={preview.id}
+          category={preview.category}
+          value={values.cover ?? null}
+          onChange={(cover) => setValue('cover', cover, { shouldDirty: true })}
+        />
+      ) : null}
     </View>
   );
 }
@@ -253,6 +274,7 @@ function draftFromActivity(activity: Activity): Draft {
   const startsAt = new Date(activity.startsAt);
   return {
     category: activity.category,
+    cover: knownCover(activity.cover),
     title: activity.title,
     description: activity.description,
     day: isoDay(startsAt),
@@ -287,6 +309,7 @@ function updateInput(activity: Activity, initial: Draft, draft: Draft): UpdateAc
   const input: UpdateActivityInput = { id: activity.id };
   if (draft.title !== initial.title) input.title = converted.title;
   if (draft.category !== initial.category) input.category = converted.category;
+  if (draft.cover !== initial.cover) input.cover = converted.cover ?? null;
   if (draft.description !== initial.description) input.description = converted.description;
   if (converted.startsAt !== activity.startsAt) input.startsAt = converted.startsAt;
   if (converted.capacity !== activity.capacity) input.capacity = converted.capacity;

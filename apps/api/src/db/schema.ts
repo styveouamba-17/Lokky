@@ -1,6 +1,7 @@
 import type { StaffRole } from '@lokky/shared/admin';
 import type {
   ActivityCategory,
+  ActivityCover,
   City,
   NeighborhoodId,
   Preferences,
@@ -125,6 +126,8 @@ export const activities = pgTable(
     id: uuid('id').primaryKey(),
     title: text('title').notNull(),
     category: text('category').$type<ActivityCategory>().notNull(),
+    // Couverture choisie par le créateur (ACTIVITY_COVERS) ; null = automatique.
+    cover: text('cover').$type<ActivityCover>(),
     description: text('description').notNull().default(''),
     startsAt: timestamp('starts_at', { withTimezone: true }).notNull(),
     placeName: text('place_name').notNull(),

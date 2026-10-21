@@ -57,6 +57,15 @@ describe('CreateActivityScreen', () => {
     // Récapitulatif puis publication.
     await screen.findByRole('header', { name: 'Récapitulatif' });
     expect(screen.getByText('Baignade entre potes')).toBeOnTheScreen();
+
+    // Image : automatique par défaut, puis choisie dans la galerie (suggestions « Plage »).
+    expect(screen.getByText('Automatique')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Changer : Image' }));
+    expect(await screen.findByText('Pour « Plage »')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Automatique, sélectionnée' })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Kayak' }));
+    expect(await screen.findByText('Kayak')).toBeOnTheScreen();
+
     await fireEvent.press(screen.getByRole('button', { name: 'Publier' }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalled());
@@ -64,6 +73,7 @@ describe('CreateActivityScreen', () => {
       expect.objectContaining({
         title: 'Baignade entre potes',
         category: 'beach',
+        cover: 'kayak',
         capacity: 7,
         cost: { type: 'split', estimateFcfa: 2000 },
         location: expect.objectContaining({ name: 'Plage de Ngor', neighborhood: 'ngor' }),

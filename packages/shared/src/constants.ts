@@ -14,6 +14,27 @@ export const ACTIVITY_CATEGORIES = [
 ] as const;
 export type ActivityCategory = (typeof ACTIVITY_CATEGORIES)[number];
 
+// Couvertures peintes que le créateur peut choisir pour sa sortie. Les images vivent dans
+// l'app (apps/mobile/src/assets/illustrations) ; ajouter une entrée ici avant de la livrer.
+export const ACTIVITY_COVERS = [
+  'beach-football',
+  'karting',
+  'padel',
+  'tennis',
+  'running-corniche',
+  'kayak',
+  'beach-friends',
+  'bike-corniche',
+  'corniche-walk',
+  'ferry-goree',
+  'mamelles-sunset',
+  'museum',
+  'open-air-cinema',
+  'concert',
+  'thieb-table',
+] as const;
+export type ActivityCover = (typeof ACTIVITY_COVERS)[number];
+
 export const USER_STATUSES = ['student', 'newcomer', 'other'] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];
 

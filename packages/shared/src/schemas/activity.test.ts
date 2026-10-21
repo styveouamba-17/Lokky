@@ -99,11 +99,23 @@ describe('création d’activité', () => {
     expect(create.safeParse({ ...validCreate, capacity: 1 }).success).toBe(false);
     expect(create.safeParse({ ...validCreate, capacity: 21 }).success).toBe(false);
   });
+  it('couverture automatique par défaut, ou une couverture de la liste', () => {
+    expect(create.parse(validCreate).cover).toBeNull();
+    expect(create.parse({ ...validCreate, cover: 'karting' }).cover).toBe('karting');
+    expect(create.safeParse({ ...validCreate, cover: 'inconnue' }).success).toBe(false);
+  });
 });
 
 describe('activité', () => {
   it('accepte une activité complète valide', () => {
     expect(activitySchema.safeParse(makeActivity()).success).toBe(true);
+  });
+  it('accepte une couverture absente, connue ou ajoutée après cette version', () => {
+    expect(activitySchema.parse(makeActivity()).cover).toBeNull();
+    expect(activitySchema.parse(makeActivity({ cover: 'padel' })).cover).toBe('padel');
+    expect(activitySchema.parse(makeActivity({ cover: 'future-cover' })).cover).toBe(
+      'future-cover',
+    );
   });
   it('refuse plus de participants que de places', () => {
     expect(activitySchema.safeParse(makeActivity({ participantCount: 11 })).success).toBe(false);

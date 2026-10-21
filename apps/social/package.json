@@ -1,0 +1,27 @@
+{
+  "name": "@lokky/social",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio",
+    "sfx": "node scripts/make-sfx.mjs",
+    "render": "remotion render LokkyCorniche out/lokky-corniche.mp4",
+    "still": "remotion still LokkyCorniche",
+    "typecheck": "tsc --noEmit",
+    "render:peint": "remotion render LokkyCornichePeint out/lokky-corniche-peint.mp4",
+    "render:weekend": "remotion render LokkyWeekend out/lokky-weekend.mp4",
+    "paint": "python scripts/prepare-paint.py"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "@remotion/cli": "4.0.536",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.536"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  }
+}

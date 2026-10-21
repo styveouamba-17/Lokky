@@ -60,6 +60,7 @@ export async function toActivities(
       id: row.id,
       title: row.title,
       category: row.category,
+      cover: row.cover,
       description: row.description,
       startsAt: row.startsAt.toISOString(),
       location: {

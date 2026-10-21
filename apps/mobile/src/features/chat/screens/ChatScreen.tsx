@@ -34,6 +34,7 @@ import { useConversation, useGroupActivity } from '../hooks/useConversations';
 import { useMarkRead } from '../hooks/useMarkRead';
 import { useMessages } from '../hooks/useMessages';
 import { useSendMessage } from '../hooks/useSendMessage';
+import { useTypingSignal } from '../hooks/useTypingSignal';
 import { useOutbox } from '../outbox';
 import { GroupOrganizerTools } from '../components/GroupOrganizerTools';
 import { buildTimeline, type TimelineItem } from '../timeline';
@@ -56,6 +57,7 @@ export function ChatScreen({ id }: { id: string }) {
   const allOutgoing = useOutbox((s) => s.items);
   const typing = useChatStore((s) => s.typing[id] ?? NO_ONE);
   const { send, resend } = useSendMessage(id);
+  const typingSignal = useTypingSignal(id);
   const editMessage = useEditMessage();
   const toast = useToast();
   const [replyTo, setReplyTo] = useState<MessageReply | null>(null);
@@ -254,6 +256,7 @@ export function ChatScreen({ id }: { id: string }) {
           <ActivityGroupAvatar
             activityId={conversation.data.activityId}
             category={conversation.data.activityCategory}
+            cover={conversation.data.activityCover}
             name={conversation.data.title}
             size="md"
           />
@@ -339,7 +342,11 @@ export function ChatScreen({ id }: { id: string }) {
           ) : (
             <Composer
               key={editing?.id ?? 'normal'}
-              onSend={send}
+              onSend={(body, reply) => {
+                typingSignal.stop();
+                send(body, reply);
+              }}
+              onTextChange={editing ? undefined : typingSignal.onTextChange}
               replyTo={replyTo}
               editing={editing}
               onCancelAction={() => {

@@ -1,19 +1,47 @@
 import { Image } from 'expo-image';
 import type { ReactNode } from 'react';
-import type { ActivityCategory } from '@lokky/shared';
-import type { ImageSourcePropType, ImageStyle, StyleProp } from 'react-native';
-import { CATEGORY_COVERS, ILLUSTRATIONS, type IllustrationName } from '@/assets/illustrations';
+import { ACTIVITY_COVERS, type ActivityCategory, type ActivityCover } from '@lokky/shared';
+import type { ImageStyle, StyleProp } from 'react-native';
+import {
+  COVER_IMAGES,
+  ILLUSTRATIONS,
+  type CoverImage,
+  type IllustrationName,
+} from '@/assets/illustrations';
 import { stableIndex } from '@/lib/variant';
 
-export type { IllustrationName };
+export type { CoverImage, IllustrationName };
 export const hasIllustration = (name: IllustrationName) => ILLUSTRATIONS[name] !== undefined;
 
-// Couverture peinte d'une activité, ou null tant que la catégorie n'en a aucune.
+const isKnownCover = (id: string | null | undefined): id is ActivityCover =>
+  !!id && Object.hasOwn(COVER_IMAGES, id);
+
+// Couverture d'une activité : celle choisie par le créateur, sinon (automatique, ou image
+// inconnue de cette version de l'app) une image de sa catégorie, ou null s'il n'y en a pas.
 // key (l'identifiant de l'activité) fixe la variante : une sortie garde toujours la même image.
-export function categoryCover(category: ActivityCategory, key: string): ImageSourcePropType | null {
-  const covers = CATEGORY_COVERS[category];
-  return covers[stableIndex(key, covers.length)] ?? null;
+export function activityCover(activity: {
+  id: string;
+  category: ActivityCategory;
+  cover?: string | null;
+}): CoverImage | null {
+  if (isKnownCover(activity.cover)) return COVER_IMAGES[activity.cover];
+  const auto = ACTIVITY_COVERS.filter(
+    (id) => COVER_IMAGES[id].auto && COVER_IMAGES[id].categories.includes(activity.category),
+  );
+  const id = auto[stableIndex(activity.id, auto.length)];
+  return id ? COVER_IMAGES[id] : null;
 }
+
+// Galerie : d'abord les images pensées pour la catégorie, puis toutes les autres.
+export function coverChoices(category: ActivityCategory): {
+  suggested: ActivityCover[];
+  others: ActivityCover[];
+} {
+  const suggested = ACTIVITY_COVERS.filter((id) => COVER_IMAGES[id].categories.includes(category));
+  return { suggested, others: ACTIVITY_COVERS.filter((id) => !suggested.includes(id)) };
+}
+
+export const coverImage = (id: ActivityCover) => COVER_IMAGES[id];
 
 // Illustration peinte si elle est livrée, sinon le visuel de remplacement fourni.
 // Décorative : le titre et le texte qui l'accompagnent portent le message.

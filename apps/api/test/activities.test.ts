@@ -57,6 +57,22 @@ describe('créer une sortie', () => {
     expect(activity.viewerState.conversationId).toEqual(expect.any(String));
   });
 
+  it('couverture : automatique par défaut, ou choisie dans la liste', async () => {
+    const awa = await createMember(t, 'Awa');
+    const auto = activitySchema.parse((await awa.call('POST', '/activities', NEW_ACTIVITY)).json());
+    expect(auto.cover).toBeNull();
+
+    const chosen = await awa.call('POST', '/activities', { ...NEW_ACTIVITY, cover: 'karting' });
+    expect(activitySchema.parse(chosen.json()).cover).toBe('karting');
+    const group = (await awa.call('GET', '/conversations'))
+      .json()
+      .items.find((c: { activityId: string }) => c.activityId === chosen.json().id);
+    expect(group.activityCover).toBe('karting');
+
+    const unknown = await awa.call('POST', '/activities', { ...NEW_ACTIVITY, cover: 'inconnue' });
+    expect(unknown.statusCode).toBe(400);
+  });
+
   it('refuse un créneau trop proche', async () => {
     const awa = await createMember(t, 'Awa');
     const res = await awa.call('POST', '/activities', {
@@ -253,6 +269,13 @@ describe('modifier et annuler', () => {
     expect(
       (await fatou.call('PATCH', `/activities/${created.id}`, { description: 'x' })).statusCode,
     ).toBe(403);
+
+    // La couverture reste modifiable avec des participants, et null revient à l'automatique.
+    const covered = await awa.call('PATCH', `/activities/${created.id}`, { cover: 'concert' });
+    expect(covered.statusCode).toBe(200);
+    expect(covered.json().cover).toBe('concert');
+    const reset = await awa.call('PATCH', `/activities/${created.id}`, { cover: null });
+    expect(reset.json().cover).toBeNull();
   });
 
   it('jour, heure et capacité restent modifiables jusqu’à une heure avant le départ', async () => {

@@ -1,10 +1,13 @@
-import type { Conversation } from '@lokky/shared';
+import type { Conversation, UserPreview } from '@lokky/shared';
 import { Pressable, View } from 'react-native';
 import { useTranslation } from '@/i18n';
 import { formatMessageTime } from '@/lib';
 import { makeStyles } from '@/theme';
 import { Avatar, Text } from '@/ui';
+import { useChatStore } from '../chatStore';
 import { ActivityGroupAvatar } from './ActivityGroupAvatar';
+
+const NO_ONE: readonly UserPreview[] = [];
 
 export function ConversationRow({
   conversation: c,
@@ -21,6 +24,7 @@ export function ConversationRow({
   const { t } = useTranslation();
   const last = c.lastMessage;
   const unread = c.unreadCount > 0;
+  const typing = useChatStore((s) => s.typing[c.id] ?? NO_ONE);
 
   const preview = !last
     ? t('messages.noMessage')
@@ -45,6 +49,7 @@ export function ConversationRow({
         <ActivityGroupAvatar
           activityId={c.activityId}
           category={c.activityCategory}
+          cover={c.activityCover}
           name={c.title}
           size="lg"
         />
@@ -63,14 +68,20 @@ export function ConversationRow({
           ) : null}
         </View>
         <View style={styles.line}>
-          <Text
-            variant={unread ? 'label' : 'body'}
-            color={unread ? 'text' : 'textMuted'}
-            numberOfLines={1}
-            style={styles.title}
-          >
-            {preview}
-          </Text>
+          {typing.length > 0 ? (
+            <Text variant="label" color="secondary" numberOfLines={1} style={styles.title}>
+              {t('chat.typing', { count: typing.length, name: typing[0]?.firstName ?? '' })}
+            </Text>
+          ) : (
+            <Text
+              variant={unread ? 'label' : 'body'}
+              color={unread ? 'text' : 'textMuted'}
+              numberOfLines={1}
+              style={styles.title}
+            >
+              {preview}
+            </Text>
+          )}
           {unread ? (
             <View style={styles.badge}>
               <Text variant="caption" color="onAction" maxFontSizeMultiplier={1.2}>

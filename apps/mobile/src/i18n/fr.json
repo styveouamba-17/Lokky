@@ -343,6 +343,34 @@
       "meetingPoint": "Point de RDV",
       "count": "Places",
       "cost": "Coût"
+    },
+    "cover": {
+      "label": "Image",
+      "auto": "Automatique",
+      "change": "Changer",
+      "title": "Choisis une image",
+      "body": "Elle s’affiche sur ta sortie dans Découvrir.",
+      "autoHint": "Selon la catégorie",
+      "suggested": "Pour « {{category}} »",
+      "others": "Toutes les images",
+      "selected": "sélectionnée",
+      "names": {
+        "beach-football": "Foot à la plage",
+        "karting": "Karting",
+        "padel": "Padel",
+        "tennis": "Tennis",
+        "running-corniche": "Running sur la Corniche",
+        "kayak": "Kayak",
+        "beach-friends": "Amis à la plage",
+        "bike-corniche": "Vélo sur la Corniche",
+        "corniche-walk": "Balade sur la Corniche",
+        "ferry-goree": "Chaloupe vers Gorée",
+        "mamelles-sunset": "Phare des Mamelles",
+        "museum": "Musée",
+        "open-air-cinema": "Ciné en plein air",
+        "concert": "Concert",
+        "thieb-table": "Repas entre amis"
+      }
     }
   },
   "editActivity": {

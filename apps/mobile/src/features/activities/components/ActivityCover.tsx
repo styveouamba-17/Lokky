@@ -1,25 +1,22 @@
 import type { ActivityCategory } from '@lokky/shared';
 import { Image } from 'expo-image';
 import { makeStyles } from '@/theme';
-import { Badge, CATEGORY_ICONS, categoryCover } from '@/ui';
+import { activityCover, Badge, CATEGORY_ICONS } from '@/ui';
 import { useTranslation } from '@/i18n';
 
-// Couverture peinte d'une activité (spec §3), choisie parmi les variantes de sa catégorie.
-// Rien tant que la catégorie n'a pas d'illustration : la carte s'affiche alors sans bandeau.
-export function ActivityCover({
-  activity,
-  height,
-}: {
-  activity: { id: string; category: ActivityCategory };
-  height: number;
-}) {
+type CoveredActivity = { id: string; category: ActivityCategory; cover?: string | null };
+
+// Couverture peinte d'une activité (spec §3) : celle choisie par le créateur, sinon une image
+// de sa catégorie. Rien si la catégorie n'a pas d'illustration : la carte s'affiche sans bandeau.
+export function ActivityCover({ activity, height }: { activity: CoveredActivity; height: number }) {
   const styles = useStyles();
-  const source = categoryCover(activity.category, activity.id);
-  if (!source) return null;
+  const cover = activityCover(activity);
+  if (!cover) return null;
   return (
     <Image
-      source={source}
+      source={cover.source}
       contentFit="cover"
+      contentPosition={{ top: `${cover.focusY}%`, left: '50%' }}
       transition={150}
       accessible={false}
       style={[styles.cover, { height }]}
@@ -27,8 +24,7 @@ export function ActivityCover({
   );
 }
 
-export const hasActivityCover = (activity: { id: string; category: ActivityCategory }) =>
-  categoryCover(activity.category, activity.id) !== null;
+export const hasActivityCover = (activity: CoveredActivity) => activityCover(activity) !== null;
 
 // Puce de catégorie : icône et nom, en tête du contenu de la carte et du détail.
 export function CategoryTag({ category }: { category: ActivityCategory }) {
