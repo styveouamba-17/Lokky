@@ -72,16 +72,18 @@ export async function toMessages(db: Database, rows: readonly MessageRow[]): Pro
       // Message système, ou auteur dont le compte a été supprimé.
       sender: m.type === 'text' && sender ? toUserPreview(sender) : null,
       type: m.type === 'text' && !sender ? 'system' : m.type,
-      body: m.body,
+      body: m.deletedAt ? '' : m.body,
       replyTo:
         reply?.type === 'text'
           ? {
               id: reply.id,
-              body: reply.body,
+              body: reply.deletedAt ? '' : reply.body,
               sender: replySender ? toUserPreview(replySender) : null,
+              deletedAt: reply.deletedAt?.toISOString() ?? null,
             }
           : null,
       editedAt: m.editedAt?.toISOString() ?? null,
+      deletedAt: m.deletedAt?.toISOString() ?? null,
       createdAt: m.createdAt.toISOString(),
     };
   });

@@ -9,23 +9,33 @@ import {
 } from './common';
 import { userPreviewSchema } from './user';
 
-export const messageReplySchema = z.object({
-  id: idSchema,
-  body: z.string().min(1).max(LIMITS.message.bodyMax),
-  sender: userPreviewSchema.nullable(),
-});
+// Message supprimé : le texte n'est plus transmis (body vide), seule sa place reste visible.
+const hasBodyUnlessDeleted = (m: { body: string; deletedAt: string | null }) =>
+  m.deletedAt !== null || m.body.length > 0;
 
-export const messageSchema = z.object({
-  id: idSchema,
-  clientId: z.string().nullable(),
-  conversationId: idSchema,
-  sender: userPreviewSchema.nullable(), // null pour un message système
-  type: z.enum(['text', 'system']),
-  body: z.string().min(1).max(LIMITS.message.bodyMax),
-  replyTo: messageReplySchema.nullable(),
-  editedAt: isoDateTimeSchema.nullable(),
-  createdAt: isoDateTimeSchema,
-});
+export const messageReplySchema = z
+  .object({
+    id: idSchema,
+    body: z.string().max(LIMITS.message.bodyMax),
+    sender: userPreviewSchema.nullable(),
+    deletedAt: isoDateTimeSchema.nullable(),
+  })
+  .refine(hasBodyUnlessDeleted, { message: 'errors.empty_message' });
+
+export const messageSchema = z
+  .object({
+    id: idSchema,
+    clientId: z.string().nullable(),
+    conversationId: idSchema,
+    sender: userPreviewSchema.nullable(), // null pour un message système
+    type: z.enum(['text', 'system']),
+    body: z.string().max(LIMITS.message.bodyMax),
+    replyTo: messageReplySchema.nullable(),
+    editedAt: isoDateTimeSchema.nullable(),
+    deletedAt: isoDateTimeSchema.nullable(),
+    createdAt: isoDateTimeSchema,
+  })
+  .refine(hasBodyUnlessDeleted, { message: 'errors.empty_message' });
 
 export const conversationSchema = z
   .object({

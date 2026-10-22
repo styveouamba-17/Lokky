@@ -5,6 +5,7 @@ import { useNetworkStore } from '@/state/network';
 import { makeTestClient, renderWithQuery, signInAs, TEST_NOW } from '@/test/mockApi';
 import {
   cancelGroupActivity,
+  deleteMessage,
   getConversation,
   getGroupActivity,
   getGroupParticipants,
@@ -20,6 +21,7 @@ import { ChatScreen } from '../screens/ChatScreen';
 jest.mock('expo-router', () => ({ router: { back: jest.fn(), push: jest.fn() } }));
 jest.mock('../api', () => ({
   cancelGroupActivity: jest.fn(),
+  deleteMessage: jest.fn(),
   getConversation: jest.fn(),
   getGroupActivity: jest.fn(),
   getGroupParticipants: jest.fn(),
@@ -58,6 +60,9 @@ describe('ChatScreen', () => {
     jest
       .mocked(updateMessage)
       .mockImplementation((input) => client.request('messages.update', input));
+    jest
+      .mocked(deleteMessage)
+      .mockImplementation((id) => client.request('messages.delete', { id }));
     jest
       .mocked(getGroupParticipants)
       .mockImplementation((id) => client.request('activities.participants', { id }));
@@ -132,7 +137,12 @@ describe('ChatScreen', () => {
             items: [
               {
                 ...newer,
-                replyTo: { id: older.id, body: older.body, sender: older.sender },
+                replyTo: {
+                  id: older.id,
+                  body: older.body,
+                  sender: older.sender,
+                  deletedAt: null,
+                },
               },
             ],
             nextCursor: 'older-page',
@@ -212,12 +222,9 @@ describe('ChatScreen', () => {
   });
 
   it('modifie son propre message déjà envoyé et affiche le statut modifié', async () => {
-    let action = 'Modifier';
-    const alert = jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
-      buttons?.find((button) => button.text === action)?.onPress?.();
-    });
     await renderWithQuery(<ChatScreen id="c_a_bu" />);
     await fireEvent(await screen.findByText('Droit constitutionnel, et toi ?'), 'longPress');
+    await fireEvent.press(await screen.findByRole('menuitem', { name: 'Modifier' }));
     const input = await screen.findByLabelText('Ton message');
     expect(input).toHaveDisplayValue('Droit constitutionnel, et toi ?');
     await fireEvent.changeText(input, 'Droit constitutionnel, rendez-vous demain.');
@@ -229,6 +236,61 @@ describe('ChatScreen', () => {
       }),
     );
     expect(await screen.findByText('Droit constitutionnel, rendez-vous demain.')).toBeOnTheScreen();
+  });
+
+  it('appui long : un menu sous le message, refermé en touchant à côté', async () => {
+    await renderWithQuery(<ChatScreen id="c_a_bu" />);
+    await fireEvent(await screen.findByText('Droit constitutionnel, et toi ?'), 'longPress', {
+      nativeEvent: { pageY: 300 },
+    });
+    const items = (await screen.findAllByRole('menuitem')).map((i) => i.props.accessibilityLabel);
+    expect(items).toEqual(['Répondre', 'Modifier', 'Supprimer']);
+    await fireEvent.press(
+      screen.getByTestId('message-menu-backdrop', { includeHiddenElements: true }),
+    );
+    expect(screen.queryByRole('menuitem')).toBeNull();
+  });
+
+  it('supprime son propre message après confirmation : « Message supprimé » à sa place', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+      buttons?.find((button) => button.text === 'Supprimer')?.onPress?.();
+    });
+    await renderWithQuery(<ChatScreen id="c_a_bu" />);
+    await fireEvent(await screen.findByText('Droit constitutionnel, et toi ?'), 'longPress');
+    await fireEvent.press(await screen.findByRole('menuitem', { name: 'Supprimer' }));
+    await waitFor(() => expect(deleteMessage).toHaveBeenCalledWith(expect.any(String)));
+    expect(await screen.findByText('Message supprimé')).toBeOnTheScreen();
+    expect(screen.queryByText('Droit constitutionnel, et toi ?')).toBeNull();
+    // La suppression est définitive : elle demande une confirmation.
+    expect(alert).toHaveBeenCalledWith(
+      'Supprimer ce message ?',
+      expect.any(String),
+      expect.any(Array),
+    );
+    alert.mockRestore();
+  });
+
+  it('un participant ne peut pas supprimer le message d’un autre', async () => {
+    await renderWithQuery(<ChatScreen id="c_a_bu" />);
+    await fireEvent(
+      await screen.findByText('Hello Awa ! Tu révises quelle matière ?'),
+      'longPress',
+    );
+    const items = (await screen.findAllByRole('menuitem')).map((i) => i.props.accessibilityLabel);
+    expect(items).toEqual(['Répondre', 'Signaler ce message']);
+  });
+
+  it('l’organisateur peut supprimer le message d’un participant de son groupe', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+      buttons?.find((button) => button.text === 'Supprimer')?.onPress?.();
+    });
+    await renderWithQuery(<ChatScreen id="c_a_thieb" />);
+    await fireEvent(
+      await screen.findByText('Le thieb de la Médina, j’attendais ça depuis des semaines'),
+      'longPress',
+    );
+    await fireEvent.press(await screen.findByRole('menuitem', { name: 'Supprimer' }));
+    expect(await screen.findByText('Message supprimé')).toBeOnTheScreen();
     alert.mockRestore();
   });
 
@@ -283,17 +345,14 @@ describe('ChatScreen', () => {
   });
 
   it('appui long sur le message de quelqu’un : le signaler', async () => {
-    const alert = jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
-      buttons?.find((button) => button.text === 'Signaler ce message')?.onPress?.();
-    });
     await renderWithQuery(<ChatScreen id="d_u_awa__u_moussa" />);
     const message = await screen.findByText('Oui, samedi matin ! Je crée la sortie ce soir');
     await fireEvent(message, 'longPress');
+    await fireEvent.press(await screen.findByRole('menuitem', { name: 'Signaler ce message' }));
     expect(router.push).toHaveBeenCalledWith({
       pathname: '/report',
       params: { targetType: 'message', targetId: expect.any(String) },
     });
-    alert.mockRestore();
   });
 
   it('personne bloquée : la discussion est fermée', async () => {

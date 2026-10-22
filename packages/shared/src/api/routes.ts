@@ -295,6 +295,14 @@ export const routes = {
     input: updateMessageInputSchema,
     output: messageSchema,
   }),
+  // Son propre message, ou n'importe quel message de son groupe pour l'organisateur.
+  'messages.delete': route({
+    method: 'DELETE',
+    path: '/messages/:id',
+    auth: true,
+    input: byId,
+    output: messageSchema,
+  }),
 
   // Sécurité
   'reports.create': route({

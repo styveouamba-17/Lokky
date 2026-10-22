@@ -14,6 +14,7 @@ const msg = (id: string, createdAt: string, overrides: Partial<Message> = {}): M
   body: id,
   replyTo: null,
   editedAt: null,
+  deletedAt: null,
   createdAt,
   ...overrides,
 });

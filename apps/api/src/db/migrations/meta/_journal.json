@@ -85,6 +85,13 @@
       "when": 1792513216189,
       "tag": "0011_activity_cover",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792678848541,
+      "tag": "0012_message_deletion",
+      "breakpoints": true
     }
   ]
 }

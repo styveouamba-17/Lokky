@@ -238,6 +238,7 @@ export function createProcessors({ db, push, now }: ProcessorDeps): Processors {
           and(
             eq(messages.conversationId, conversationId),
             eq(messages.type, 'text'),
+            isNull(messages.deletedAt),
             ne(messages.senderId, userId),
             membership.lastReadAt ? gt(messages.createdAt, membership.lastReadAt) : undefined,
             cutOff.length ? notInArray(messages.senderId, cutOff) : undefined,

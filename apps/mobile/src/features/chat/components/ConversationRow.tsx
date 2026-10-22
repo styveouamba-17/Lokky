@@ -26,15 +26,16 @@ export function ConversationRow({
   const unread = c.unreadCount > 0;
   const typing = useChatStore((s) => s.typing[c.id] ?? NO_ONE);
 
+  const lastBody = last?.deletedAt ? t('chat.deleted') : (last?.body ?? '');
   const preview = !last
     ? t('messages.noMessage')
     : last.type === 'system' || !last.sender
-      ? last.body
+      ? lastBody
       : last.sender.id === viewerId
-        ? t('messages.you', { body: last.body })
+        ? t('messages.you', { body: lastBody })
         : c.type === 'direct'
-          ? last.body // en privé, pas besoin de rappeler qui écrit
-          : `${last.sender.firstName} : ${last.body}`;
+          ? lastBody // en privé, pas besoin de rappeler qui écrit
+          : `${last.sender.firstName} : ${lastBody}`;
 
   return (
     <Pressable

@@ -1,0 +1,108 @@
+# Production sur le VPS (/opt/lokky). Lancé par deploy.sh avec --project-directory /opt/lokky :
+# les chemins relatifs partent de ce dossier (sources dans ./src, secrets dans ./.env).
+# Seul Caddy est exposé sur Internet (80/443) ; Postgres et Redis restent sur le réseau interne.
+name: lokky
+
+# Journaux limités à 3 × 10 Mo par service, pour ne pas remplir le disque.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '3'
+
+services:
+  postgres:
+    logging: *logging
+    image: postgis/postgis:17-3.5
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lokky
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans .env}
+      POSTGRES_DB: lokky
+    command: >
+      postgres
+      -c shared_buffers=1GB
+      -c effective_cache_size=4GB
+      -c work_mem=16MB
+      -c maintenance_work_mem=256MB
+      -c max_connections=100
+    shm_size: 256mb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U lokky -d lokky']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    logging: *logging
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Persistance sur disque ; noeviction est exigé par BullMQ (aucune tâche effacée).
+    command: redis-server --appendonly yes --maxmemory-policy noeviction
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  api:
+    logging: *logging
+    build:
+      context: ./src
+      dockerfile: deploy/Dockerfile
+      target: api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      TRUST_PROXY: 'true'
+      DATABASE_URL: postgres://lokky:${POSTGRES_PASSWORD}@postgres:5432/lokky
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+
+  caddy:
+    logging: *logging
+    build:
+      context: ./src
+      dockerfile: deploy/Dockerfile
+      target: caddy
+    restart: unless-stopped
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?API_DOMAIN manquant dans .env}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:?ADMIN_DOMAIN manquant dans .env}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+
+volumes:
+  postgres-data:
+  redis-data:
+  caddy-data:
+  caddy-config:

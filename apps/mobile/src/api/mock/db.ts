@@ -45,6 +45,7 @@ export interface MockMessage {
   body: string;
   replyToMessageId?: string | null;
   editedAt?: string | null;
+  deletedAt?: string | null;
   createdAt: string;
 }
 

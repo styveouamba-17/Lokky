@@ -11,6 +11,10 @@
     "offline": "Hors connexion. Tes messages partiront dès le retour du réseau.",
     "cancel": "Annuler"
   },
+  "updates": {
+    "ready": "Une nouvelle version de Lokky est prête.",
+    "restart": "Redémarrer"
+  },
   "welcome": {
     "slides": {
       "tonight": {
@@ -132,7 +136,7 @@
       "statusHints": {
         "student": "À l’UCAD, l’ESP, ou ailleurs",
         "newcomer": "Tu viens d’arriver à Dakar",
-        "other": "Tu bosses, tu chilles, tu explores"
+        "other": "Je bosse, je chille, j’explore"
       }
     },
     "interests": {
@@ -496,6 +500,11 @@
     "saveEdit": "Enregistrer",
     "edited": "modifié",
     "editError": "Impossible de modifier ce message. Réessaie.",
+    "delete": "Supprimer",
+    "deleteTitle": "Supprimer ce message ?",
+    "deleteBody": "Il sera remplacé par « Message supprimé » pour tout le monde.",
+    "deleteError": "Impossible de supprimer ce message. Réessaie.",
+    "deleted": "Message supprimé",
     "cancelMessageAction": "Annuler la réponse ou la modification"
   },
   "review": {

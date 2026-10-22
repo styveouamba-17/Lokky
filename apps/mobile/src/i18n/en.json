@@ -11,6 +11,10 @@
     "offline": "You're offline. Your messages will be sent as soon as you're back online.",
     "cancel": "Cancel"
   },
+  "updates": {
+    "ready": "A new version of Lokky is ready.",
+    "restart": "Restart"
+  },
   "welcome": {
     "slides": {
       "tonight": {
@@ -496,6 +500,11 @@
     "saveEdit": "Save",
     "edited": "edited",
     "editError": "Couldn't edit this message. Try again.",
+    "delete": "Delete",
+    "deleteTitle": "Delete this message?",
+    "deleteBody": "It will be replaced with “Message deleted” for everyone.",
+    "deleteError": "Couldn't delete this message. Try again.",
+    "deleted": "Message deleted",
     "cancelMessageAction": "Cancel reply or edit"
   },
   "review": {

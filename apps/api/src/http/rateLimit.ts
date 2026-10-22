@@ -50,6 +50,7 @@ export const IP_POLICIES: Partial<Record<RouteName, Policy>> = {
 export const USER_POLICIES: Partial<Record<RouteName, Policy>> = {
   'messages.send': { limit: 30, windowSeconds: MINUTE },
   'messages.update': { limit: 30, windowSeconds: MINUTE },
+  'messages.delete': { limit: 30, windowSeconds: MINUTE },
   'activities.create': { limit: 10, windowSeconds: DAY },
   'activities.join': { limit: 60, windowSeconds: HOUR },
   'activities.leave': { limit: 60, windowSeconds: HOUR },

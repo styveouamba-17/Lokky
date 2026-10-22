@@ -188,6 +188,82 @@ describe('chat de groupe', () => {
     ).toBe(403);
   });
 
+  it('supprimer son message : « Message supprimé » pour tous, plus de texte transmis', async () => {
+    const moussa = await createMember(t, 'Moussa');
+    const awa = await createMember(t, 'Awa');
+    const { id, conversationId } = await createActivity(t, moussa.id, { startsAt: at(8) });
+    await awa.call('POST', `/activities/${id}/join`);
+    const sent = await awa.call('POST', `/conversations/${conversationId}/messages`, {
+      clientId: 'client-oups',
+      body: 'Mon numéro : 77 000 00 00',
+    });
+    const messageId = sent.json().id as string;
+    const reply = await moussa.call('POST', `/conversations/${conversationId}/messages`, {
+      clientId: 'client-reponse',
+      body: 'Noté !',
+      replyToMessageId: messageId,
+    });
+
+    later(1);
+    const deleted = await awa.call('DELETE', `/messages/${messageId}`);
+    expect(deleted.statusCode).toBe(200);
+    expect(messageSchema.parse(deleted.json())).toMatchObject({
+      id: messageId,
+      body: '',
+      deletedAt: clock.toISOString(),
+    });
+
+    const page = messagesPage.parse(
+      (await moussa.call('GET', `/conversations/${conversationId}/messages`)).json(),
+    );
+    expect(page.items.find((m) => m.id === messageId)).toMatchObject({ body: '', type: 'text' });
+    expect(page.items.find((m) => m.id === reply.json().id)?.replyTo).toMatchObject({
+      id: messageId,
+      body: '',
+    });
+    expect(JSON.stringify(page)).not.toContain('77 000');
+
+    // Plus de modification ni de réponse ; supprimer à nouveau ne change rien.
+    expect((await awa.call('PATCH', `/messages/${messageId}`, { body: 'Re' })).statusCode).toBe(
+      404,
+    );
+    const replyToDeleted = await moussa.call('POST', `/conversations/${conversationId}/messages`, {
+      clientId: 'client-trop-tard',
+      body: 'Hein ?',
+      replyToMessageId: messageId,
+    });
+    expect(replyToDeleted.statusCode).toBe(404);
+    expect((await awa.call('DELETE', `/messages/${messageId}`)).statusCode).toBe(200);
+  });
+
+  it('l’organisateur supprime le message d’un participant ; un participant ne peut pas', async () => {
+    const moussa = await createMember(t, 'Moussa');
+    const awa = await createMember(t, 'Awa');
+    const fatou = await createMember(t, 'Fatou');
+    const { id, conversationId } = await createActivity(t, moussa.id, { startsAt: at(8) });
+    await awa.call('POST', `/activities/${id}/join`);
+    await fatou.call('POST', `/activities/${id}/join`);
+    const fromAwa = await awa.call('POST', `/conversations/${conversationId}/messages`, {
+      clientId: 'client-awa',
+      body: 'Message déplacé',
+    });
+    const fromOrganizer = await moussa.call('POST', `/conversations/${conversationId}/messages`, {
+      clientId: 'client-moussa',
+      body: 'Rendez-vous à 18h',
+    });
+
+    expect((await fatou.call('DELETE', `/messages/${fromAwa.json().id}`)).statusCode).toBe(403);
+    expect((await awa.call('DELETE', `/messages/${fromOrganizer.json().id}`)).statusCode).toBe(403);
+    const removed = await moussa.call('DELETE', `/messages/${fromAwa.json().id}`);
+    expect(removed.statusCode).toBe(200);
+    expect(removed.json()).toMatchObject({ body: '', sender: { firstName: 'Awa' } });
+
+    const system = messagesPage
+      .parse((await moussa.call('GET', `/conversations/${conversationId}/messages`)).json())
+      .items.find((m) => m.type === 'system');
+    expect((await moussa.call('DELETE', `/messages/${system!.id}`)).statusCode).toBe(403);
+  });
+
   it('refuse une réponse qui cible un message d’une autre discussion', async () => {
     const moussa = await createMember(t, 'Moussa');
     const awa = await createMember(t, 'Awa');

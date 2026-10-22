@@ -1,0 +1,43 @@
+# Certificats HTTPS obtenus et renouvelés automatiquement par Caddy.
+# Domaines fournis par le fichier .env du serveur (API_DOMAIN, ADMIN_DOMAIN).
+
+# En-têtes communs : HTTPS imposé, pas de version de serveur divulguée.
+(common) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	# Corps de requête plafonné (l'API ne reçoit que du JSON ; les photos partent vers R2).
+	request_body {
+		max_size 1MB
+	}
+}
+
+# Les en-têtes de sécurité de l'API viennent d'elle-même (@fastify/helmet).
+{$API_DOMAIN} {
+	import common
+	reverse_proxy api:3000
+}
+
+# Admin et API sur la même origine : cookie de session SameSite=Strict, pas de CORS.
+{$ADMIN_DOMAIN} {
+	import common
+	header {
+		X-Robots-Tag "noindex, nofollow"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		# Avatars servis par R2 (https), polices et scripts embarqués dans le build.
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+	}
+	handle_path /api/* {
+		reverse_proxy api:3000
+	}
+	handle {
+		root * /srv/admin
+		try_files {path} /index.html
+		file_server
+	}
+}

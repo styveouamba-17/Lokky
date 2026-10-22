@@ -13,6 +13,7 @@ const asMessage = (o: OutgoingMessage): Message => ({
   body: o.body,
   replyTo: o.replyTo ?? null,
   editedAt: null,
+  deletedAt: null,
   createdAt: o.createdAt,
 });
 

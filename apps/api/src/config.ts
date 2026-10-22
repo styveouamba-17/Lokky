@@ -46,7 +46,9 @@ const envSchema = z.object({
 export type Config = z.infer<typeof envSchema>;
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  const parsed = envSchema.safeParse(env);
+  // Une ligne « CLE= » laissée vide dans un fichier .env compte comme absente.
+  const defined = Object.fromEntries(Object.entries(env).filter(([, value]) => value !== ''));
+  const parsed = envSchema.safeParse(defined);
   if (!parsed.success) {
     const problems = parsed.error.issues.map((i) => `  - ${i.path.join('.')} : ${i.message}`);
     throw new Error(`Configuration invalide :\n${problems.join('\n')}`);

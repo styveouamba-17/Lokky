@@ -1,8 +1,10 @@
+import { X } from 'phosphor-react-native/src/icons/X';
 import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Modal, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from '@/i18n';
-import { makeStyles } from '@/theme';
+import { makeStyles, useTheme } from '@/theme';
+import { IconButton } from './IconButton';
 import { Text } from './Text';
 
 export function Sheet({
@@ -18,6 +20,7 @@ export function Sheet({
 }) {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const { t } = useTranslation();
   return (
     <Modal
@@ -32,6 +35,7 @@ export function Sheet({
           clavier s'ouvre. La feuille remonte d'elle-même pour garder le champ visible. */}
       <KeyboardAvoidingView behavior="padding" style={styles.root}>
         <Pressable
+          testID="sheet-backdrop"
           accessibilityRole="button"
           accessibilityLabel={t('common.close')}
           onPress={onClose}
@@ -44,11 +48,21 @@ export function Sheet({
           style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}
         >
           <View style={styles.handle} />
-          {title ? (
-            <Text variant="heading" accessibilityRole="header">
-              {title}
-            </Text>
-          ) : null}
+          {/* Croix toujours visible : une feuille haute ne laisse presque pas de fond à toucher. */}
+          <View style={styles.header}>
+            {title ? (
+              <Text variant="heading" accessibilityRole="header" style={styles.title}>
+                {title}
+              </Text>
+            ) : (
+              <View style={styles.title} />
+            )}
+            <IconButton
+              accessibilityLabel={t('common.close')}
+              onPress={onClose}
+              icon={<X size={22} color={colors.text} weight="bold" />}
+            />
+          </View>
           {children}
         </View>
       </KeyboardAvoidingView>
@@ -75,6 +89,8 @@ const useStyles = makeStyles((t) => ({
     paddingTop: t.spacing.md,
     gap: t.spacing.lg,
   },
+  header: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.md },
+  title: { flex: 1 },
   handle: {
     alignSelf: 'center',
     width: 40,

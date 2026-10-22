@@ -14,10 +14,19 @@ describe('Sheet', () => {
     );
     expect(screen.getByRole('header', { name: 'Signaler' })).toBeOnTheScreen();
     expect(screen.getByText('Choisis un motif')).toBeOnTheScreen();
-    // Le fond est masqué aux lecteurs d'écran (feuille modale) : on le cherche parmi les éléments cachés.
-    await fireEvent.press(
-      screen.getByRole('button', { name: 'Fermer', includeHiddenElements: true }),
+    // Le fond est masqué aux lecteurs d'écran (feuille modale) : on le touche par son identifiant.
+    await fireEvent.press(screen.getByTestId('sheet-backdrop', { includeHiddenElements: true }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('se ferme avec la croix, même sans titre', async () => {
+    const onClose = jest.fn();
+    await renderWithProviders(
+      <Sheet visible onClose={onClose}>
+        <Text>Choisis un motif</Text>
+      </Sheet>,
     );
+    await fireEvent.press(screen.getByRole('button', { name: 'Fermer' }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

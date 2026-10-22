@@ -130,15 +130,17 @@ export const toMessage = (m: MockMessage, db: MockDb): Message => {
     conversationId: m.conversationId,
     sender: sender ? toUserPreview(sender) : null,
     type: m.type,
-    body: m.body,
+    body: m.deletedAt ? '' : m.body,
     replyTo: replied
       ? {
           id: replied.id,
-          body: replied.body,
+          body: replied.deletedAt ? '' : replied.body,
           sender: replySender ? toUserPreview(replySender) : null,
+          deletedAt: replied.deletedAt ?? null,
         }
       : null,
     editedAt: m.editedAt ?? null,
+    deletedAt: m.deletedAt ?? null,
     createdAt: m.createdAt,
   };
 };

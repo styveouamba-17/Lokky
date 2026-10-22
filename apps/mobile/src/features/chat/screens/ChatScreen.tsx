@@ -1,9 +1,13 @@
 import type { MessageReply, UserPreview } from '@lokky/shared';
 import { router } from 'expo-router';
+import { ArrowBendUpLeft } from 'phosphor-react-native/src/icons/ArrowBendUpLeft';
 import { ArrowLeft } from 'phosphor-react-native/src/icons/ArrowLeft';
 import { ChatsCircle } from 'phosphor-react-native/src/icons/ChatsCircle';
+import { Flag } from 'phosphor-react-native/src/icons/Flag';
 import { GearSix } from 'phosphor-react-native/src/icons/GearSix';
 import { LockSimple } from 'phosphor-react-native/src/icons/LockSimple';
+import { PencilSimple } from 'phosphor-react-native/src/icons/PencilSimple';
+import { Trash } from 'phosphor-react-native/src/icons/Trash';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { ActivityIndicator, Alert, FlatList, Pressable, View } from 'react-native';
@@ -28,6 +32,7 @@ import { useChatStore } from '../chatStore';
 import { ChatBubble } from '../components/ChatBubble';
 import { ActivityGroupAvatar } from '../components/ActivityGroupAvatar';
 import { Composer } from '../components/Composer';
+import { MessageMenu, type MessageMenuItem } from '../components/MessageMenu';
 import { PinnedMeetupBanner } from '../components/PinnedMeetupBanner';
 import { DaySeparator, SystemMessage, TypingIndicator } from '../components/TimelineMarkers';
 import { useConversation, useGroupActivity } from '../hooks/useConversations';
@@ -38,6 +43,7 @@ import { useTypingSignal } from '../hooks/useTypingSignal';
 import { useOutbox } from '../outbox';
 import { GroupOrganizerTools } from '../components/GroupOrganizerTools';
 import { buildTimeline, type TimelineItem } from '../timeline';
+import { useDeleteMessage } from '../hooks/useDeleteMessage';
 import { useEditMessage } from '../hooks/useEditMessage';
 import { chatKeys } from '../queryKeys';
 
@@ -59,10 +65,15 @@ export function ChatScreen({ id }: { id: string }) {
   const { send, resend } = useSendMessage(id);
   const typingSignal = useTypingSignal(id);
   const editMessage = useEditMessage();
+  const deleteMessage = useDeleteMessage();
   const toast = useToast();
   const [replyTo, setReplyTo] = useState<MessageReply | null>(null);
   const [editing, setEditing] = useState<{ id: string; body: string } | null>(null);
   const [organizerOpen, setOrganizerOpen] = useState(false);
+  const [menu, setMenu] = useState<{
+    item: Extract<TimelineItem, { kind: 'text' }>;
+    touchY: number | null;
+  } | null>(null);
   const [jumpToMessageId, setJumpToMessageId] = useState<string | null>(null);
   const listRef = useRef<FlatList<TimelineItem>>(null);
   const now = new Date();
@@ -140,9 +151,9 @@ export function ChatScreen({ id }: { id: string }) {
   const readOnly = conversation.data?.isReadOnly ?? false;
 
   const replyToMessage = (item: Extract<TimelineItem, { kind: 'text' }>) => {
-    if (!item.id || item.status !== 'sent') return;
+    if (!item.id || item.status !== 'sent' || item.deleted) return;
     setEditing(null);
-    setReplyTo({ id: item.id, body: item.body, sender: item.sender });
+    setReplyTo({ id: item.id, body: item.body, sender: item.sender, deletedAt: null });
   };
 
   const openRepliedMessage = async (messageId: string) => {
@@ -166,27 +177,88 @@ export function ChatScreen({ id }: { id: string }) {
     setJumpToMessageId(messageId);
   };
 
-  const openMessageActions = (item: Extract<TimelineItem, { kind: 'text' }>) => {
-    if (!item.id || item.status !== 'sent') return;
-    Alert.alert(t('chat.messageActions'), undefined, [
-      item.mine
-        ? {
-            text: t('chat.edit'),
-            onPress: () => {
-              setReplyTo(null);
-              setEditing({ id: item.id!, body: item.body });
-            },
-          }
-        : {
-            text: t('chat.reportMessage'),
-            onPress: () =>
-              router.push({
-                pathname: '/report',
-                params: { targetType: 'message', targetId: item.id! },
-              }),
-          },
+  // L'organisateur peut retirer le message d'un participant de son groupe.
+  const isOrganizer = a?.viewerState.isCreator ?? false;
+
+  const confirmDelete = (messageId: string) =>
+    Alert.alert(t('chat.deleteTitle'), t('chat.deleteBody'), [
       { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('chat.delete'),
+        style: 'destructive',
+        onPress: () =>
+          deleteMessage.mutate(messageId, {
+            onSuccess: () => {
+              if (editing?.id === messageId) setEditing(null);
+              if (replyTo?.id === messageId) setReplyTo(null);
+            },
+            onError: () => toast.show(t('chat.deleteError'), 'error'),
+          }),
+      },
     ]);
+
+  const openMessageActions = (
+    item: Extract<TimelineItem, { kind: 'text' }>,
+    touchY: number | null,
+  ) => {
+    if (!item.id || item.status !== 'sent' || item.deleted) return;
+    setMenu({ item, touchY });
+  };
+
+  // Actions du message ouvert : répondre et modifier tant que la discussion est ouverte,
+  // signaler le message d'un autre, supprimer le sien (ou tout message pour l'organisateur).
+  const menuItems = (item: Extract<TimelineItem, { kind: 'text' }>): MessageMenuItem[] => {
+    const id = item.id!;
+    return [
+      ...(readOnly
+        ? []
+        : [
+            {
+              key: 'reply',
+              label: t('chat.reply'),
+              icon: ArrowBendUpLeft,
+              onPress: () => replyToMessage(item),
+            },
+          ]),
+      ...(item.mine && !readOnly
+        ? [
+            {
+              key: 'edit',
+              label: t('chat.edit'),
+              icon: PencilSimple,
+              onPress: () => {
+                setReplyTo(null);
+                setEditing({ id, body: item.body });
+              },
+            },
+          ]
+        : []),
+      ...(!item.mine
+        ? [
+            {
+              key: 'report',
+              label: t('chat.reportMessage'),
+              icon: Flag,
+              onPress: () =>
+                router.push({
+                  pathname: '/report',
+                  params: { targetType: 'message', targetId: id },
+                }),
+            },
+          ]
+        : []),
+      ...(item.mine || isOrganizer
+        ? [
+            {
+              key: 'delete',
+              label: t('chat.delete'),
+              icon: Trash,
+              destructive: true,
+              onPress: () => confirmDelete(id),
+            },
+          ]
+        : []),
+    ];
   };
 
   const saveEdit = (messageId: string, body: string) => {
@@ -207,15 +279,16 @@ export function ChatScreen({ id }: { id: string }) {
         body={item.body}
         replyTo={item.replyTo}
         editedAt={item.editedAt}
+        deleted={item.deleted}
         createdAt={item.createdAt}
         mine={item.mine}
         sender={item.sender}
         showSender={item.showSender}
         status={item.status}
         onRetry={item.clientId ? () => resend(item.clientId!) : undefined}
-        onReply={() => replyToMessage(item)}
+        onReply={item.deleted ? undefined : () => replyToMessage(item)}
         onOpenReply={item.replyTo ? () => void openRepliedMessage(item.replyTo!.id) : undefined}
-        onActions={() => openMessageActions(item)}
+        onActions={item.deleted ? undefined : (touchY) => openMessageActions(item, touchY)}
       />
     );
   };
@@ -297,6 +370,15 @@ export function ChatScreen({ id }: { id: string }) {
         />
       ) : null}
       {a ? <PinnedMeetupBanner activity={a} now={now} onPress={openActivity} /> : null}
+      {menu ? (
+        <MessageMenu
+          visible
+          touchY={menu.touchY}
+          mine={menu.item.mine}
+          items={menuItems(menu.item)}
+          onClose={() => setMenu(null)}
+        />
+      ) : null}
 
       <KeyboardAvoidingView behavior="padding" style={styles.flex}>
         {messages.isPending ? (

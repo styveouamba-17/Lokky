@@ -154,7 +154,7 @@ export const chatHandlers: MockHandlers = {
     const message = [...db.messages.values()].flat().find((m) => m.id === id);
     if (!message) throw new ApiError('not_found', 'Message introuvable.', 404);
     const r = resolve(db, message.conversationId, viewerId);
-    if (message.senderId !== viewerId || message.type !== 'text') {
+    if (message.senderId !== viewerId || message.type !== 'text' || message.deletedAt) {
       throw new ApiError('forbidden', 'Tu peux uniquement modifier tes propres messages.', 403);
     }
     const n = now();
@@ -163,6 +163,24 @@ export const chatHandlers: MockHandlers = {
     }
     message.body = body;
     message.editedAt = n.toISOString();
+    db.bus.publishUpdated(message);
+    return toMessage(message, db);
+  },
+
+  // Comme le serveur : son message, ou n'importe lequel de son groupe pour l'organisateur.
+  'messages.delete': ({ id }, { db, now, viewerId }) => {
+    const message = [...db.messages.values()].flat().find((m) => m.id === id);
+    if (!message) throw new ApiError('not_found', 'Message introuvable.', 404);
+    const r = resolve(db, message.conversationId, viewerId);
+    if (message.type !== 'text') {
+      throw new ApiError('forbidden', 'Ce message ne peut pas être supprimé.', 403);
+    }
+    if (message.deletedAt) return toMessage(message, db);
+    const isOrganizer = r.kind === 'group' && r.activity.creatorId === viewerId;
+    if (message.senderId !== viewerId && !isOrganizer) {
+      throw new ApiError('forbidden', 'Tu peux uniquement supprimer tes propres messages.', 403);
+    }
+    message.deletedAt = now().toISOString();
     db.bus.publishUpdated(message);
     return toMessage(message, db);
   },

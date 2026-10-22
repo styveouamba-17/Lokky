@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { createQueryClient, setupFocusManager } from '@/api/queryClient';
 import { connectSession, handleApiError } from '@/features/auth/sessionBridge';
 import { configureForegroundNotifications } from '@/features/notifications/push';
+import { UpdateBanner } from '@/features/updates/components/UpdateBanner';
 import { i18n, useTranslation } from '@/i18n'; // charge aussi la configuration i18n
 import { initMonitoring, navigationIntegration, wrapRoot } from '@/lib/monitoring';
 import { useNetworkStore, watchNetwork } from '@/state/network';
@@ -71,6 +72,7 @@ function ThemedStack() {
         </Stack.Protected>
       </Stack>
       <OfflineBanner visible={!online} message={t('common.offline')} />
+      <UpdateBanner />
     </>
   );
 }

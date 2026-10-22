@@ -17,6 +17,12 @@ describe('configuration', () => {
     expect(() => loadConfig({ ...valid, DATABASE_URL: undefined })).toThrow(/DATABASE_URL/);
   });
 
+  it('une variable vide dans le fichier .env compte comme absente', () => {
+    const config = loadConfig({ ...valid, AVATAR_PUBLIC_BASE_URL: '', EMAIL_FROM: '' });
+    expect(config.AVATAR_PUBLIC_BASE_URL).toBeUndefined();
+    expect(config.EMAIL_FROM).toBe('Lokky <connexion@akylian.com>');
+  });
+
   it('en production, les emails doivent pouvoir partir (clé Resend obligatoire)', () => {
     expect(() => loadConfig({ ...valid, NODE_ENV: 'production' })).toThrow(/RESEND_API_KEY/);
   });

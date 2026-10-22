@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 // Le navigateur passe par /api en développement : Vite relaie vers l'API sans exposer de CORS.
-const API_URL = process.env.LOKKY_API_URL ?? 'https://lokky.onrender.com';
+const API_URL = process.env.LOKKY_API_URL ?? 'https://api.lokky.app';
 
 export default defineConfig({
   plugins: [react()],

@@ -11,7 +11,7 @@ const PHOTOS_TEXT = 'Lokky accède à tes photos pour ta photo de profil.';
 const config: ExpoConfig = {
   name: 'Lokky',
   slug: 'Frontend', // slug historique du projet EAS : ne pas changer
-  version: '2.0.0',
+  version: '2.1',
   orientation: 'portrait',
   icon: './assets/icon.png',
   scheme: 'lokky',

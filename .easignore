@@ -1,0 +1,53 @@
+# Fichiers envoyés à EAS Build (lu à la racine du dépôt git). Quand ce fichier existe, EAS
+# ignore TOUS les .gitignore : leurs règles sont donc reprises ci-dessous. Seule l'app mobile
+# et ce dont elle dépend (packages/shared, manifestes npm des espaces de travail) partent.
+
+# --- Repris de .gitignore (racine) ---
+node_modules/
+.expo/
+dist/
+web-build/
+coverage/
+ios/
+android/
+*.log
+.env*.local
+.DS_Store
+.superpowers/
+apps/api/.env
+apps/api/dist-load/
+
+# --- Repris de apps/mobile/.gitignore ---
+expo-env.d.ts
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.pem
+*.tsbuildinfo
+
+# --- Inutile au build mobile ---
+/docs/
+/deploy/
+/.github/
+/.dockerignore
+# Sources en pleine résolution des couvertures (l'app utilise assets/covers, en WebP).
+/apps/mobile/assets/activities-paints/
+
+# Autres espaces de travail : seul leur package.json reste, pour que « npm ci » retrouve le
+# lockfile tel quel.
+/apps/api/*
+!/apps/api/package.json
+/apps/admin/*
+!/apps/admin/package.json
+/apps/web/*
+!/apps/web/package.json
+/apps/social/*
+!/apps/social/package.json

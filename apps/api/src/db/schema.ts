@@ -256,6 +256,10 @@ export const messages = pgTable(
       onDelete: 'set null',
     }),
     editedAt: timestamp('edited_at', { withTimezone: true }),
+    // Supprimé par son auteur ou par l'organisateur du groupe : le texte reste en base pour la
+    // modération (admin), mais n'est plus jamais renvoyé à l'app.
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    deletedBy: uuid('deleted_by').references((): AnyPgColumn => users.id, { onDelete: 'set null' }),
     // Identifiant choisi par l'app : un message renvoyé après une coupure n'est pas dupliqué.
     clientId: text('client_id'),
     ...timestamps,

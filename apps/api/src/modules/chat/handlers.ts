@@ -1,5 +1,5 @@
 import { isChatReadOnly, LIMITS } from '@lokky/shared';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import type { Database } from '../../db/client';
 import { conversationMembers, conversations, messages } from '../../db/schema';
 import type { EventBus } from '../../events';
@@ -226,11 +226,11 @@ export const chatHandlers: Handlers = {
     }
     if (replyToMessageId) {
       const [replied] = await ctx.db
-        .select({ id: messages.id, type: messages.type })
+        .select({ id: messages.id, type: messages.type, deletedAt: messages.deletedAt })
         .from(messages)
         .where(and(eq(messages.id, replyToMessageId), eq(messages.conversationId, conversationId)))
         .limit(1);
-      if (!replied || replied.type !== 'text') {
+      if (!replied || replied.type !== 'text' || replied.deletedAt) {
         throw new HttpError('not_found', 'Le message auquel répondre est introuvable.');
       }
     }
@@ -265,6 +265,7 @@ export const chatHandlers: Handlers = {
     if (found.senderId !== me || found.type !== 'text') {
       throw new HttpError('forbidden', 'Tu peux uniquement modifier tes propres messages.');
     }
+    if (found.deletedAt) throw new HttpError('not_found', 'Message introuvable.');
     const now = ctx.now();
     if (row.type === 'direct') {
       const others = (await membersOf(ctx.db, found.conversationId)).filter((m) => m !== me);
@@ -281,11 +282,51 @@ export const chatHandlers: Handlers = {
     const [updated] = await ctx.db
       .update(messages)
       .set({ body, editedAt: now })
-      .where(and(eq(messages.id, id), eq(messages.senderId, me), eq(messages.type, 'text')))
+      .where(
+        and(
+          eq(messages.id, id),
+          eq(messages.senderId, me),
+          eq(messages.type, 'text'),
+          isNull(messages.deletedAt),
+        ),
+      )
       .returning();
     if (!updated) throw new HttpError('not_found', 'Message introuvable.');
     await publishUpdate(ctx.db, ctx.events, updated);
     return (await toMessages(ctx.db, [updated]))[0]!;
+  },
+
+  // Son propre message, à tout moment (même discussion fermée ou personne bloquée : retirer ce
+  // qu'on a écrit protège). L'organisateur peut aussi retirer celui d'un participant de son groupe.
+  // Le texte reste en base pour la modération ; les membres voient « Message supprimé ».
+  'messages.delete': async ({ id }, ctx) => {
+    const me = viewer(ctx);
+    const [found] = await ctx.db.select().from(messages).where(eq(messages.id, id)).limit(1);
+    if (!found) throw new HttpError('not_found', 'Message introuvable.');
+    const row = await memberConversation(ctx.db, found.conversationId, me);
+    if (found.type !== 'text') {
+      throw new HttpError('forbidden', 'Ce message ne peut pas être supprimé.');
+    }
+    if (found.deletedAt) return (await toMessages(ctx.db, [found]))[0]!;
+    const isOrganizer =
+      row.type === 'group' &&
+      !!row.activityId &&
+      (await findActivity(ctx.db, row.activityId)).creatorId === me;
+    if (found.senderId !== me && !isOrganizer) {
+      throw new HttpError('forbidden', 'Tu peux uniquement supprimer tes propres messages.');
+    }
+    const [deleted] = await ctx.db
+      .update(messages)
+      .set({ deletedAt: ctx.now(), deletedBy: me })
+      .where(and(eq(messages.id, id), isNull(messages.deletedAt)))
+      .returning();
+    // Supprimé au même instant par une autre requête : même réponse, sans la publier deux fois.
+    if (!deleted) {
+      const [current] = await ctx.db.select().from(messages).where(eq(messages.id, id)).limit(1);
+      return (await toMessages(ctx.db, [current!]))[0]!;
+    }
+    await publishUpdate(ctx.db, ctx.events, deleted);
+    return (await toMessages(ctx.db, [deleted]))[0]!;
   },
 };
 

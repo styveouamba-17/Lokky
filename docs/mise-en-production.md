@@ -108,42 +108,44 @@ reconstruire le profil concerné pour envoyer les source maps.
 
 Chaque écran a son écran d'erreur illustré (« Réessayer ») : une erreur dans un écran n'arrête plus toute l'app, et elle est signalée à Sentry.
 
-## 4. Admin de modération (`apps/admin`)
+## 4. Serveur de production (VPS OVH) et admin
 
-L'admin est une application web statique. Pour la publier sur Render Static Site :
+L'API, son worker, PostgreSQL/PostGIS, Redis et l'admin tournent sur un VPS OVH (Varsovie,
+4 vCores, 8 Go, Ubuntu 26.04, IP `54.37.137.215`). Le site public reste sur Vercel.
 
-- **Build command** (depuis la racine du monorepo) : `npm ci && npm run build --workspace @lokky/admin`
-- **Publish directory** : `apps/admin/dist` (ne pas publier `apps/admin` lui-même ni son dossier source).
-- Ajouter `VITE_API_URL=https://lokky.onrender.com` aux variables de build du site statique.
-- Ajouter `ADMIN_WEB_ORIGIN=https://<domaine-exact-du-site-admin>` aux variables du backend Render,
-  puis redéployer le backend. Cette origine unique est autorisée en CORS pour les routes admin ;
-  les cookies de session sont envoyés avec les requêtes (`HttpOnly`, `Secure`, `SameSite=None`)
-  et les requêtes gardent l'en-tête CSRF `x-lokky-admin: 1`.
+- `https://api.lokky.app` : API et Socket.IO (Caddy → conteneur `api`).
+- `https://admin.lokky.app` : admin statique ; `/api/*` y est relayé vers l'API, sur la même
+  origine (cookie `SameSite=Strict`, pas de CORS, `ADMIN_WEB_ORIGIN` laissé vide).
+- DNS chez Cloudflare : enregistrements `A` `api` et `admin` vers l'IP, nuage **gris**
+  (DNS only) pour que Caddy obtienne et renouvelle seul les certificats Let's Encrypt.
 
-En local, `npm run dev --workspace @lokky/admin` utilise par défaut le backend Render via le proxy
-Vite, sans configuration CORS dans le navigateur. Pour viser un autre backend, définir
-`LOKKY_API_URL` avant de démarrer Vite (par exemple `http://127.0.0.1:3000`).
+Fichiers dans `deploy/` : `Dockerfile` (cibles `api` et `caddy`, l'admin est compilé dans
+l'image Caddy), `docker-compose.yml`, `Caddyfile`, `deploy.sh`. Seul Caddy est exposé (80/443) ;
+pare-feu ufw (SSH, 80, 443), SSH par clé uniquement, fail2ban, mises à jour de sécurité
+automatiques, journaux Docker limités à 3 × 10 Mo par service.
 
-Le déploiement doit servir les fichiers compilés de `apps/admin/dist`. Servir `index.html` depuis
-le code source ou ouvrir le fichier directement peut faire demander `/src/main.tsx` au serveur ;
-celui-ci renvoie alors du HTML au lieu d'un module JavaScript et le navigateur affiche l'erreur
-de type MIME.
+**Déployer** (depuis Git Bash, à la racine du dépôt) : `bash deploy/deploy.sh`. Le script envoie
+la copie de travail (fichiers suivis et nouveaux fichiers non ignorés), reconstruit les images et
+redémarre ce qui a changé. Les migrations s'appliquent au démarrage de l'API.
 
-Caddy (domaine à adapter) :
+**Secrets** : `/opt/lokky/.env` sur le serveur (droits 600, jamais dans le dépôt) : domaines,
+`POSTGRES_PASSWORD` (généré sur le serveur), `JWT_PRIVATE_KEY` (générée sur le serveur),
+Resend, R2. Une ligne laissée vide compte comme absente. Après modification : `bash deploy/deploy.sh`
+ou `docker compose ... up -d api`.
+
+**Commandes utiles** (sur le serveur, dans `/opt/lokky`) :
 
 ```
-admin.<domaine> {
-	handle_path /api/* {
-		reverse_proxy api:3000
-	}
-	handle {
-		root * /srv/admin
-		try_files {path} /index.html
-		file_server
-	}
-	header X-Robots-Tag "noindex, nofollow"
-}
+alias dc='docker compose --project-directory /opt/lokky -f src/deploy/docker-compose.yml'
+dc ps                    # état des services
+dc logs -f api           # journaux de l'API
+dc exec api npx tsx scripts/staff.ts <email> admin|moderator|none
+dc exec api npx tsx scripts/moderate.ts <email> <statut> [jours]
+dc exec postgres psql -U lokky lokky
 ```
+
+En local, `npm run dev --workspace @lokky/admin` utilise par défaut l'API de production via le
+proxy Vite. Pour viser l'API locale : `LOKKY_API_URL=http://127.0.0.1:3000`.
 
 Équipe (jamais depuis l'API ; le compte est créé s'il n'existe pas) :
 
@@ -155,8 +157,8 @@ Connexion par code email (le même que l'app), session de 12 heures. Chaque déc
 lecture d'une conversation (chat de groupe, contexte d'un message privé signalé) est inscrite dans
 la table `admin_audit`.
 
-En local : `npm run dev -w @lokky/api` puis `npm run dev -w @lokky/admin` → http://localhost:5180
-(Vite relaie `/api` vers l'API sur le port 3000).
+En local : `npm run dev -w @lokky/api` puis `LOKKY_API_URL=http://127.0.0.1:3000 npm run dev -w @lokky/admin`
+→ http://localhost:5180 (Vite relaie `/api` vers l'API locale).
 
 ## 5. Site public (`apps/web`)
 
@@ -208,13 +210,10 @@ sur `/activity/:id`, favicon PNG/ICO et `apple-touch-icon`. Une fois le site en 
 
 ## 6. Reste à faire hors code
 
-- Surveillance Render : l'API expose `GET https://lokky.onrender.com/health` sans authentification.
+- Surveillance : l'API expose `GET https://api.lokky.app/health` sans authentification.
   La route vérifie PostgreSQL et Redis et renvoie `200` avec `{ "ok": true, ... }` s'ils répondent,
-  sinon `503`. Le worker BullMQ démarre désormais dans le même processus que l'API : aucun service
-  Background Worker Render séparé n'est requis. Sur l'offre gratuite, le Web Service peut toutefois
-  s'endormir après une période sans trafic ; le traitement des tâches et l'envoi des push peuvent
-  donc être retardés jusqu'à son réveil. Un moniteur UptimeRobot sur cette URL peut générer du
-  trafic régulier, sans garantir une disponibilité continue.
+  sinon `503`. Le worker BullMQ tourne dans le même processus que l'API. Un moniteur (UptimeRobot,
+  Better Stack…) sur cette URL prévient si le serveur tombe.
 - Publier les deux fichiers de liens et la page web de secours.
 - Faire relire les textes légaux (`src/features/settings/legal/`) et confirmer l'adresse de contact.
 - Générer les illustrations (`docs/illustrations.md`).

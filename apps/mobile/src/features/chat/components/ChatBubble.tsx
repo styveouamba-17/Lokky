@@ -1,5 +1,6 @@
 import type { UserPreview } from '@lokky/shared';
 import { Clock } from 'phosphor-react-native/src/icons/Clock';
+import { Prohibit } from 'phosphor-react-native/src/icons/Prohibit';
 import { WarningCircle } from 'phosphor-react-native/src/icons/WarningCircle';
 import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
@@ -23,6 +24,7 @@ export function ChatBubble({
   body,
   replyTo,
   editedAt,
+  deleted = false,
   createdAt,
   mine,
   sender,
@@ -34,8 +36,15 @@ export function ChatBubble({
   onActions,
 }: {
   body: string;
-  replyTo: { id: string; body: string; sender: UserPreview | null } | null;
+  replyTo: {
+    id: string;
+    body: string;
+    sender: UserPreview | null;
+    deletedAt: string | null;
+  } | null;
   editedAt: string | null;
+  // Message supprimé : la bulle reste à sa place, sans texte ni actions.
+  deleted?: boolean;
   createdAt: string;
   mine: boolean;
   sender: UserPreview | null;
@@ -44,7 +53,8 @@ export function ChatBubble({
   onRetry?: () => void;
   onReply?: () => void;
   onOpenReply?: () => void;
-  onActions?: () => void;
+  // Appui long : hauteur du doigt dans la fenêtre (null via les actions d'accessibilité).
+  onActions?: (touchY: number | null) => void;
 }) {
   const styles = useStyles();
   const { colors } = useTheme();
@@ -75,13 +85,32 @@ export function ChatBubble({
       <Text variant="caption" style={styles.replySender} numberOfLines={1}>
         {replyTo.sender?.firstName ?? t('chat.replyUnknown')}
       </Text>
-      <Text variant="caption" color="text" numberOfLines={2}>
-        {replyTo.body}
+      <Text
+        variant="caption"
+        color={replyTo.deletedAt ? 'textMuted' : 'text'}
+        numberOfLines={2}
+        style={replyTo.deletedAt ? styles.deletedText : undefined}
+      >
+        {replyTo.deletedAt ? t('chat.deleted') : replyTo.body}
       </Text>
     </View>
   ) : null;
 
-  const bubble = (
+  const bubble = deleted ? (
+    <View style={[styles.bubble, styles.deleted]}>
+      {showSender && sender ? (
+        <Text variant="caption" color="secondary">
+          {sender.firstName}
+        </Text>
+      ) : null}
+      <View style={styles.deletedRow}>
+        <Prohibit size={14} color={colors.textMuted} />
+        <Text variant="caption" color="textMuted" style={styles.deletedText}>
+          {t('chat.deleted')}
+        </Text>
+      </View>
+    </View>
+  ) : (
     <View style={[styles.bubble, mine ? styles.mine : styles.theirs, pending && styles.pending]}>
       {replyPreview ? (
         onOpenReply && replyTo ? (
@@ -146,9 +175,9 @@ export function ChatBubble({
               ]}
               onAccessibilityAction={(event) => {
                 if (event.nativeEvent.actionName === 'reply') onReply?.();
-                else onActions();
+                else onActions(null);
               }}
-              onLongPress={onActions}
+              onLongPress={(event) => onActions(event?.nativeEvent?.pageY ?? null)}
               delayLongPress={350}
             >
               {bubble}
@@ -166,7 +195,7 @@ export function ChatBubble({
                   ? t('chat.waiting')
                   : status === 'sending'
                     ? t('chat.sending')
-                    : `${formatHour(new Date(createdAt))}${editedAt ? ` · ${t('chat.edited')}` : ''}`}
+                    : `${formatHour(new Date(createdAt))}${editedAt && !deleted ? ` · ${t('chat.edited')}` : ''}`}
             </Text>
           </View>
         </View>
@@ -196,6 +225,14 @@ const useStyles = makeStyles((t) => ({
     borderBottomLeftRadius: t.radius.sm / 2,
   },
   pending: { opacity: 0.7 },
+  deleted: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: t.colors.border,
+  },
+  deletedRow: { flexDirection: 'row', alignItems: 'center', gap: t.spacing.xs },
+  deletedText: { fontStyle: 'italic' },
   meta: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: t.spacing.xs },
   reply: {
     borderLeftWidth: 2,

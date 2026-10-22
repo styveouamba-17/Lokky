@@ -11,6 +11,7 @@ export const listMessages = (conversationId: string, cursor?: string) =>
 export const sendMessage = (input: SendMessageInput) => apiClient.request('messages.send', input);
 export const updateMessage = (input: UpdateMessageInput) =>
   apiClient.request('messages.update', input);
+export const deleteMessage = (id: string) => apiClient.request('messages.delete', { id });
 // L'en-tête et la bannière du RDV lisent l'activité du groupe.
 export const getGroupActivity = (id: string) => apiClient.request('activities.get', { id });
 export const getGroupParticipants = (id: string) =>

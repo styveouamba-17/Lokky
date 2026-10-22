@@ -28,6 +28,7 @@ export function withUpdatedMessage(data: Pages<Message> | undefined, message: Me
               ...item.replyTo,
               body: message.body,
               sender: message.sender,
+              deletedAt: message.deletedAt,
             },
           };
         }
@@ -76,7 +77,11 @@ export function receiveUpdatedMessage(queryClient: QueryClient, message: Message
                   ...conversation,
                   lastMessage: {
                     ...conversation.lastMessage,
-                    replyTo: { ...conversation.lastMessage.replyTo, body: message.body },
+                    replyTo: {
+                      ...conversation.lastMessage.replyTo,
+                      body: message.body,
+                      deletedAt: message.deletedAt,
+                    },
                   },
                 }
               : conversation,

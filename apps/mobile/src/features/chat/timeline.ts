@@ -14,6 +14,8 @@ export type TimelineItem =
       body: string;
       replyTo: MessageReply | null;
       editedAt: string | null;
+      // Supprimé par son auteur ou l'organisateur : plus de texte, plus d'actions.
+      deleted: boolean;
       createdAt: string;
       mine: boolean;
       sender: UserPreview | null;
@@ -79,6 +81,7 @@ export function buildTimeline({
         body: m.body,
         replyTo: m.replyTo,
         editedAt: m.editedAt,
+        deleted: m.deletedAt !== null,
         createdAt: m.createdAt,
         mine,
         sender: m.sender,
@@ -101,6 +104,7 @@ export function buildTimeline({
         body: o.body,
         replyTo: o.replyTo ?? null,
         editedAt: null,
+        deleted: false,
         createdAt: o.createdAt,
         mine: true,
         sender: null,

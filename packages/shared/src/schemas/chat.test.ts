@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { conversationSchema, sendMessageInputSchema } from './chat';
+import { conversationSchema, messageSchema, sendMessageInputSchema } from './chat';
 
 const base = { conversationId: 'c1', clientId: 'client-123456' };
 
@@ -64,5 +64,30 @@ describe('conversation', () => {
   });
   it('refuse un groupe sans catégorie d’activité', () => {
     expect(conversationSchema.safeParse({ ...conv, activityCategory: null }).success).toBe(false);
+  });
+});
+
+const message = {
+  id: 'm1',
+  clientId: null,
+  conversationId: 'c1',
+  sender: { id: 'u1', firstName: 'Awa', avatarUrl: null },
+  type: 'text',
+  body: 'On se retrouve à 18h',
+  replyTo: null,
+  editedAt: null,
+  deletedAt: null,
+  createdAt: '2026-10-22T10:00:00.000Z',
+};
+
+describe('message', () => {
+  it('un message visible a toujours un texte', () => {
+    expect(messageSchema.safeParse(message).success).toBe(true);
+    expect(messageSchema.safeParse({ ...message, body: '' }).success).toBe(false);
+  });
+
+  it('un message supprimé ne transmet plus son texte', () => {
+    const deleted = { ...message, body: '', deletedAt: '2026-10-22T10:05:00.000Z' };
+    expect(messageSchema.safeParse(deleted).success).toBe(true);
   });
 });
